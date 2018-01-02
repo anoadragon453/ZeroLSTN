@@ -1,0 +1,60 @@
+{
+  "name": "zero-exchange",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "patch-package"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krixano/ZeroExchange.git"
+  },
+  "keywords": [],
+  "author": "Christian Seibold",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/krixano/ZeroExchange/issues"
+  },
+  "homepage": "https://github.com/krixano/ZeroExchange#readme",
+  "description": "",
+  "devDependencies": {
+    "browserify": "^14.4.0",
+    "browserify-shim": "^3.8.14",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^4.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-minify-css": "^1.2.4",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.1",
+    "gulp-uglify": "^3.0.0",
+    "gulp-util": "^3.0.8",
+    "patch-package": "^4.0.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0"
+  },
+  "dependencies": {
+    "animejs": "^2.2.0",
+    "markdown-it": "^8.4.0",
+    "materialize-css": "^1.0.0-alpha.2",
+    "medium-editor": "^5.23.3",
+    "moment": "^2.20.1",
+    "node-sass": "^4.7.2",
+    "sanitize-html": "^1.16.3",
+    "vue": "^2.5.13",
+    "vue-hot-reload-api": "^2.2.4",
+    "vueify": "^9.4.1"
+  },
+  "browser": {
+    "vue": "vue/dist/vue.common.js"
+  },
+  "browserify-shim": {
+    "jquery": "$"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  }
+}
