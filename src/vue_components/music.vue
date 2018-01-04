@@ -40,25 +40,50 @@
                     <li class="collection-item">Rock</li>
                     <li class="collection-item">Metal</li>
                     <li class="collection-item">Spacebass</li>
+                    <li class="collection-item">Drum n' Bass</li>
+                    <li class="collection-item">Rock</li>
+                    <li class="collection-item">Metal</li>
+                    <li class="collection-item">Spacebass</li>
+                    <li class="collection-item">Drum n' Bass</li>
+                    <li class="collection-item">Rock</li>
+                    <li class="collection-item">Metal</li>
+                    <li class="collection-item">Spacebass</li>
+                    <li class="collection-item">Drum n' Bass</li>
+                    <li class="collection-item">Rock</li>
+                    <li class="collection-item">Metal</li>
+                    <li class="collection-item">Last</li>
                 </ul>
             </div>
             <div id="playlists" class="col s12">
-                <ul class="collapsible" data-collapsible="accordion">
+                <ul class="collapsible" data-collapsible="expandable">
                     <li>
-                    <div class="collapsible-header"><i class="material-icons">filter_drama</i>First</div>
+                    <div class="collapsible-header"><i class="material-icons">playlist_play</i>Best Songs 2017</div>
+                    <div class="collapsible-body">
+                        <div class="row">
+                        <div class="col s12">
+                            <ul class="collection with-header">
+                                <li class="collection-header"><h4>Best Songs 2017</h4></li>
+                                <li class="collection-item">Strawberry Swing</li>
+                                <li class="collection-item">Past Winters</li>
+                                <li class="collection-item">Snowcone</li>
+                                <li class="collection-item">Here We Play</li>
+                            </ul>
+                        </div>
+                        </div>
+                    </div>
+                    </li>
+                    <li>
+                    <div class="collapsible-header"><i class="material-icons">playlist_play</i>Second</div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
                     </li>
                     <li>
-                    <div class="collapsible-header"><i class="material-icons">place</i>Second</div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-                    </li>
-                    <li>
-                    <div class="collapsible-header"><i class="material-icons">whatshot</i>Third</div>
+                    <div class="collapsible-header"><i class="material-icons">playlist_play</i>Third</div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
                     </li>
                 </ul>
             </div>
         </div>
+        <div class="row"></div>
     </div>
 </template>
 

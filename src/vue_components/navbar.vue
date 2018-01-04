@@ -39,8 +39,8 @@
 					<li>
 						<a @click.prevent="goto('uploads')">Uploads</a>
 					</li>
-					<li v-if="!userInfo"><a @click.prevent="login()">Login</a></li>
-					<li v-else><a @click.prevent="">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
+					<li v-if="!isLoggedIn"><a @click.prevent="login()">Login</a></li>
+					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
 			</div>
 		</div>
@@ -49,7 +49,6 @@
 
 <script>
     var Router = require("../libs/router.js");
-    var M = require("materialize-css");
 
 	module.exports = {
 		props: ["userInfo"],
