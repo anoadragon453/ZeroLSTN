@@ -1,6 +1,6 @@
 {
-	"db_name": "ZeroExchange",
-	"db_file": "merged-ZeroExchange/ZeroExchange.db",
+	"db_name": "ZeroLSTN",
+	"db_file": "merged-ZeroLSTN/ZeroLSTN.db",
 	"version": 3,
 	"maps": {
 		".+/data/users/.+/content.json": {
