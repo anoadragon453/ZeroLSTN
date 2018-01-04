@@ -1,8 +1,8 @@
 <template>
-	<nav id="navbar" class="indigo darken-3">
+	<nav id="navbar" class="blue lighten-2">
 		<div class="nav-wrapper">
 			<div class="container">
-				<a href="./?/" class="brand-logo" v-on:click.prevent="navbarLinkClick({ route: '' })">{{ ZiteName }}</a>
+				<a href="./?/" class="brand-logo" v-on:click.prevent="goto('')">{{ ZiteName }}</a>
 				<a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 				<!--<ul class="left">-->
 				<!--</ul>-->
@@ -18,11 +18,11 @@
                         </div>
                         </a>
                     </li>
-					<li v-for="link in navbarLinks">
-						<a :href="'./?/' + link.route" v-on:click.prevent="navbarLinkClick(link)">{{ link.name }}</a>
+					<li>
+						<a @click.prevent="goto('uploads')">Uploads</a>
 					</li>
-					<li v-if="!isLoggedIn"><a v-on:click.prevent="login()">Login</a></li>
-					<li v-else><a v-on:click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
+					<li v-if="!isLoggedIn"><a @click.prevent="login()">Login</a></li>
+					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
 				<ul id="mobile-nav" class="sidenav">
                     <li>
@@ -36,11 +36,11 @@
                         </div>
                         </a>
                     </li>
-					<li v-for="link in navbarLinks">
-						<a :href="'./?/' + link.route" v-on:click.prevent="navbarLinkClick(link)">{{ link.name }}</a>
+					<li>
+						<a @click.prevent="goto('uploads')">Uploads</a>
 					</li>
-					<li v-if="!isLoggedIn"><a v-on:click.prevent="login()">Login</a></li>
-					<li v-else><a v-on:click.prevent="">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
+					<li v-if="!userInfo"><a @click.prevent="login()">Login</a></li>
+					<li v-else><a @click.prevent="">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
 			</div>
 		</div>
@@ -48,17 +48,15 @@
 </template>
 
 <script>
-	var Router = require("../libs/router.js");
-	var M = require("materialize-css");
+    var Router = require("../libs/router.js");
+    var M = require("materialize-css");
+
 	module.exports = {
 		props: ["userInfo"],
 		name: "navbar",
 		data: () => {
 			return {
 				ZiteName: "ZeroLSTN",
-				navbarLinks: [
-					{ name: "Browse", route: "browse" },
-                ],
                 downloadedOnly: false
 			}
 		},
@@ -67,12 +65,7 @@
   			var instance = new M.Sidenav(elem, {
   				edge: "left",
   				draggable: true
-  			});
-			if (!this.userInfo) {
-				/*this.$parent.on('setUserInfo', function() {
-					// TODO
-				});*/
-			}
+              });
 		},
 		computed: {
 			isLoggedIn: function() {
@@ -81,13 +74,13 @@
 			}
 		},
 		methods: {
-			navbarLinkClick: function(link) {
-				if (link.route !== null || link.route === "#") {
-					Router.navigate(link.route);
-				} else {
-					link.onclick(this);
-				}
-			},
+			goto: function(to) {
+                // Go to upload page
+                Router.navigate(to);
+
+                // Show  page where you pick name, genre (for merger site), album art (unless
+                // it's embedded?), artist etc.
+            },
 			login: function() {
 				console.log("Login button clicked!");
 				console.log(this.userInfo);
@@ -96,6 +89,7 @@
             },
             downloadedToggle: function() {
                 // Toggle the downloaded switch
+                // TODO: Place a rule in localstorage to remember this
                 this.downloadedOnly = !this.downloadedOnly;
                 console.log(this.downloadedOnly);
             }

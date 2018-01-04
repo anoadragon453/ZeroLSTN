@@ -19,23 +19,51 @@ Vue.use(VueZeroFrameRouter.VueZeroFrameRouter);
 
 // Vue components
 var NavBar = require("./vue_components/navbar.vue");
+var FooterBar = require("./vue_components/footer_bar.vue");
 
 var app = new Vue({
 	el: "#app",
 	template: `<div>
 			<component ref="navbar" :is="navbar" :user-info="userInfo"></component>
 			<component ref="view" :is="currentView"></component>
+			<component ref="footerBar" :is="footerBar"></component>
 		</div>`,
 	data: {
 		currentView: null,
 		navbar: NavBar,
+		footerBar: FooterBar,
 		userInfo: null
+	},
+	methods: {
+		getUserInfo: function(f = null) { // TODO: This can be passed in a function as a callback
+            if (this.siteInfo == null || this.siteInfo.cert_user_id == null) {
+                this.userInfo = null;
+                return;
+            }
+
+            console.log("Getting User Info");
+
+            var that = this;
+
+            that.userInfo = {
+                cert_user_id: that.siteInfo.cert_user_id,
+                auth_address: that.siteInfo.auth_address
+            };
+            that.$emit("setUserInfo", that.userInfo);
+            if (f !== null && typeof f === "function") f();
+		}
 	}
 });
 
 class ZeroApp extends ZeroFrame {
 	onOpenWebsocket() {
-		var self = this;
+		// Check if user is logged in on pageload
+		this.cmdp("siteInfo", {})
+			.then(siteInfo => {
+				self.siteInfo = siteInfo;
+				app.siteInfo = siteInfo;
+				app.getUserInfo();
+			});
 	}
 
 	// Needed for ZeroRouter to work properly
@@ -67,8 +95,12 @@ class ZeroApp extends ZeroFrame {
 
 page = new ZeroApp();
 
+var Uploads = require("./router_pages/uploads.vue");
+var Edit = require("./router_pages/edit.vue");
 var Home = require("./router_pages/home.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
+	{ route: "uploads", component: Uploads },
+	{ route: "edit", component: Edit },
 	{ route: "", component: Home }
 ]);
