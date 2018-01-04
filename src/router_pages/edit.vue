@@ -19,12 +19,26 @@
       </div>
       <div class="row">
         <!-- Image Upload -->
-        <div class="file-field input-field">
-          <div class="btn waves-effect waves-light">
-            <i class="material-icons left">image</i>
-            <span>Upload Image</span>
-            <input type="file">
+        <div class="col s6">
+          <div class="file-field input-field">
+            <div class="btn waves-effect waves-light">
+              <i class="material-icons left">image</i>
+              <span>Upload Image</span>
+              <input type="file">
+            </div>
           </div>
+        </div>
+
+        <!-- Genre Selection -->
+        <!-- TODO: Option to add new genres? -->
+        <div class="col s6 right">
+          <select>
+            <option value="" disabled selected>Choose genre</option>
+            <option value="1">Genre 1</option>
+            <option value="2">Genre 2</option>
+            <option value="3">Genre 3</option>
+          </select>
+          <label>Choose a genre</label>
         </div>
       </div>
       <div class="row">
@@ -51,6 +65,12 @@
         title: "",
         artist: ""
       }
+    },
+    mounted: function() {
+      // Initialize Genre Selection
+      console.log("init");
+      var select = document.querySelector("select");
+			var instance = new M.Select(select, {});
     },
     methods: {
       saveClicked: function() {

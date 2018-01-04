@@ -101,6 +101,8 @@
             // Initialize collapsible
             var collap = document.querySelector("ul.collapsible");
             var collapInstance = new M.Collapsible(collap, {});
+
+            console.log(M);
         },
         data: () => {
             return {
