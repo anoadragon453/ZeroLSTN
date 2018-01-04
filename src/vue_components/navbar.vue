@@ -1,7 +1,7 @@
 <template>
 	<nav id="navbar" class="blue lighten-2">
 		<div class="nav-wrapper">
-			<div class="container">
+			<div class="nav-container">
 				<a href="./?/" class="brand-logo" v-on:click.prevent="goto('')">{{ ZiteName }}</a>
 				<a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 				<!--<ul class="left">-->

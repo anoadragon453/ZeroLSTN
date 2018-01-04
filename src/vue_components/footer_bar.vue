@@ -3,13 +3,15 @@
 		<div class="container">
 			<div class="row">
 				<div class="col s4">
-					Left
+					
+				</div>
+				<div class="col s4 center">
+					<a @click="previous()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_rewind</i></a>
+					<a @click="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ playing ? "pause" : "play_arrow" }}</i></a>
+					<a @click="next()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_forward</i></a>
 				</div>
 				<div class="col s4">
-					Middle
-				</div>
-				<div class="col s4">
-					Right
+					
 				</div>
 			</div>
 		</div>
@@ -18,24 +20,39 @@
 
 <script>
 	var Router = require("../libs/router.js");
-	var M = require("materialize-css");
+
 	module.exports = {
 		props: [],
 		name: "BottomBar",
 		data: () => {
 			return {
-				
+				playing: false
 			}
 		},
 		mounted: function() {
 		},
 		methods: {
-			navbarLinkClick: function(link) {
-				if (link.route !== null || link.route === "#") {
-					Router.navigate(link.route);
+			previous: function() {
+
+			},
+			playPause: function() {
+				// Toggle playing music
+				this.playing = !this.playing;
+				if(this.playing) {
+					// Get current song?
+					this.playSong();
 				} else {
-					link.onclick(this);
+					this.pauseSong();
 				}
+			},
+			playSong: function() {
+				console.log("Playing");
+			},
+			pauseSong: function() {
+				console.log("Paused");
+			},
+			next: function() {
+
 			}
 		}
 	}

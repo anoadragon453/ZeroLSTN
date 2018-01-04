@@ -33,6 +33,10 @@
         existingUploads: false
       }
     },
+    mounted: function() {
+      var action = document.querySelector("a.btn-floating");
+			var instance = new M.FloatingActionButton(action, {});
+    },
     computed: {
       existingUploads: function() {
         // TODO: Query to see if user has already uploaded anything

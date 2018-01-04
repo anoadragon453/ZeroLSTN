@@ -5,7 +5,8 @@
                 <img class="materialboxed" width="100%" src="/1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3/src/deleteme.jpg">
             </div>
             <div id="queue" class="col s12">
-                <ul class="collection">
+                <ul class="collection with-header">
+                    <li class="collection-header"><h4>Play Queue</h4></li>
                     <li class="collection-item">Dream Drop Distance</li>
                     <li class="collection-item">Perfect Weather</li>
                     <li class="collection-item">Lost Tracks</li>
@@ -22,14 +23,15 @@
 <script>
     var Router = require("../libs/router.js");
     
-    // Use Materialize's Material Box for Album art, allows zooming
+    // TODO: Figure out Material Box zooming
     module.exports = {
         props: [],
         name: "ArtQueue",
         mounted: function() {
-            // Initialize image view
-            var box = document.querySelector(".materialboxed");
-            var instance = new M.Material(box, {});
+            // Initialize Material box
+            // TODO: Image grows bigger than screen for some reason
+            //var box = document.querySelector(".materialboxed");
+			//var instance = new M.Materialbox(box, {});
         }
     }
 </script>
