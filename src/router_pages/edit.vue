@@ -18,8 +18,23 @@
         </div>
       </div>
       <div class="row">
-        <a @click="saveClicked()" class="waves-effect waves-light btn">Save</a>
-        <a @click="imageClicked()" class="waves-effect waves-light btn"><i class="material-icons left">image</i>Upload Image</a>
+        <!-- Image Upload -->
+        <div class="file-field input-field">
+          <div class="btn waves-effect waves-light">
+            <i class="material-icons left">image</i>
+            <span>Upload Image</span>
+            <input type="file">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12">
+          <!-- Save Button -->
+          <a @click="saveClicked()" class="right waves-effect waves-light btn">Save</a>
+
+          <!-- Cancel Button -->
+          <a @click="cancelClicked()" class="right btn-flat">Cancel</a>
+        </div>
       </div>
     </form>
   </div>
@@ -50,6 +65,10 @@
         // TODO: Grab image, convert to b64, store intelligently in db with reference.
         // Store reference with user file
         // Somehow deduplicate if already exists? Hash?
+      },
+      cancelClicked: function() {
+        // Go back to the uploads back if they hit cancel
+        Router.navigate('uploads');
       }
     }
   }
