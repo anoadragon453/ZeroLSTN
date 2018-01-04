@@ -1,33 +1,35 @@
 version = "0.1"
 
+// JS Animations
 var anime = require("animejs");
 window.anime = anime;
-var Materialize = require("materialize-css/dist/js/materialize.min.js");
 
-var MarkdownIt = require("markdown-it");
-md = new MarkdownIt({
-	html: false,
-	linkify: true
-});
+// Material CSS
+var Materialize = require("materialize-css/dist/js/materialize.min.js");
 
 var ZeroFrame = require("./libs/ZeroFrame.js");
 var Router = require("./libs/router.js");
-
 var Vue = require("vue/dist/vue.min.js");
-
 var VueZeroFrameRouter = require("./libs/vue-zeroframe-router.js");
 
 var { sanitizeStringForUrl, sanitizeStringForUrl_SQL, html_substr, sanitizeHtmlForDb } = require("./util.js");
 
+// Initial Vue plugins
 Vue.use(VueZeroFrameRouter.VueZeroFrameRouter);
+
+// Vue components
+var NavBar = require("./vue_components/navbar.vue");
 
 var app = new Vue({
 	el: "#app",
 	template: `<div>
+			<component ref="navbar" :is="navbar" :user-info="userInfo"></component>
 			<component ref="view" :is="currentView"></component>
 		</div>`,
 	data: {
-		currentView: null
+		currentView: null,
+		navbar: NavBar,
+		userInfo: null
 	}
 });
 

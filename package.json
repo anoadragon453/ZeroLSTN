@@ -1,5 +1,5 @@
 {
-  "name": "zero-exchange",
+  "name": "zero-lstn",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,15 +8,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/krixano/ZeroExchange.git"
+    "url": "git+https://github.com/anoadragon453/ZeroLSTN.git"
   },
   "keywords": [],
-  "author": "Christian Seibold",
+  "author": "Andrew Morgan",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/krixano/ZeroExchange/issues"
+    "url": "https://github.com/anoadragon453/ZeroLSTN/issues"
   },
-  "homepage": "https://github.com/krixano/ZeroExchange#readme",
+  "homepage": "https://github.com/anoadragon453/ZeroLSTN#readme",
   "description": "",
   "devDependencies": {
     "browserify": "^14.4.0",
