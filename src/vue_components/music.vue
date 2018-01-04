@@ -9,12 +9,55 @@
                 </ul>
             </div>
             <div id="artists" class="col s12">
-                
+                <ul class="collection with-header">
+                    <li class="collection-header"><h4>Artists</h4></li>
+                    <li class="collection-item">Alvin and the Chipmunks</li>
+                    <li class="collection-item">Coldplay</li>
+                    <li class="collection-item">Deadmau5</li>
+                </ul>
             </div>
-            <div id="albums" class="col s12">Test 2</div>
-            <div id="songs" class="col s12">Test 3</div>
-            <div id="genres" class="col s12">Test 4</div>
-            <div id="playlists" class="col s12">Test 5</div>
+            <div id="albums" class="col s12">
+                <ul class="collection with-header">
+                    <li class="collection-header"><h4>Albums</h4></li>
+                    <li class="collection-item">Dream Drop Distance</li>
+                    <li class="collection-item">Perfect Weather</li>
+                    <li class="collection-item">Lost Tracks</li>
+                </ul>
+            </div>
+            <div id="songs" class="col s12">
+                <ul class="collection with-header">
+                    <li class="collection-header"><h4>Songs</h4></li>
+                    <li class="collection-item">Strawberry Swing</li>
+                    <li class="collection-item">Past Winters</li>
+                    <li class="collection-item">Snowcone</li>
+                    <li class="collection-item">Here We Play</li>
+                </ul>
+            </div>
+            <div id="genres" class="col s12">
+                <ul class="collection with-header">
+                    <li class="collection-header"><h4>Genres</h4></li>
+                    <li class="collection-item">Drum n' Bass</li>
+                    <li class="collection-item">Rock</li>
+                    <li class="collection-item">Metal</li>
+                    <li class="collection-item">Spacebass</li>
+                </ul>
+            </div>
+            <div id="playlists" class="col s12">
+                <ul class="collapsible" data-collapsible="accordion">
+                    <li>
+                    <div class="collapsible-header"><i class="material-icons">filter_drama</i>First</div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    </li>
+                    <li>
+                    <div class="collapsible-header"><i class="material-icons">place</i>Second</div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    </li>
+                    <li>
+                    <div class="collapsible-header"><i class="material-icons">whatshot</i>Third</div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
@@ -29,6 +72,10 @@
             // Initialize tabs
             var tabs = document.querySelector("ul.tabs");
             var instance = new M.Tabs(tabs, {});
+
+            // Initialize collapsible
+            var collap = document.querySelector("ul.collapsible");
+            var collapInstance = new M.Collapsible(collap, {});
         },
         data: () => {
             return {
