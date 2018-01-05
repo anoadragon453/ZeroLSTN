@@ -105,6 +105,16 @@
           
           // Add event listener for whenever autocomplete field is edited
           autocomplete.addEventListener('keyup', self.autocompleteChanged);
+
+          // Show list of uploads
+          page.cmdp("siteInfo", {})
+			      .then(siteInfo => {
+              page.getSongsByUser(siteInfo.auth_address)
+                .then((songs) => {
+                  // TODO: List songs on page
+                  console.log(songs);
+                });
+            });
         });
     },
     computed: {
@@ -167,9 +177,13 @@
 
           // "Upload" the file
           page.uploadBigFile(genreAddress, file, function(fileNameWithDate) {
-            // Navigate to the edit page. Prefill the title with the updated filename
-            console.log("Routing to edit/"+fileNameWithDate);
-            Router.navigate('edit/'+fileNameWithDate);
+            // Add default song information to data.json
+            // TODO: Infer this data from file
+            page.uploadSong(genreAddress, fileNameWithDate, fileNameWithDate, "", "", function(songID) {
+              // Navigate to the edit page. Prefill the title with genre/songID
+              console.log("Routing to edit/"+genreAddress+"/"+songID);
+              Router.navigate('edit/'+genreAddress+"/"+songID);
+            });
           });
         });
       }

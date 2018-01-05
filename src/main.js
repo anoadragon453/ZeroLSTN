@@ -59,12 +59,18 @@ var app = new Vue({
 
 class ZeroApp extends ZeroFrame {
 	onOpenWebsocket() {
+		var self = this;
+
 		// Check if user is logged in on pageload
 		this.cmdp("siteInfo", {})
 			.then(siteInfo => {
+				console.log("Gettin it!");
 				self.siteInfo = siteInfo;
 				app.siteInfo = siteInfo;
 				app.getUserInfo();
+
+				console.log("this.siteInfo:");
+				console.log(self.siteInfo);
 
 			// Add initial merger sites/genres
 			page.requestPermission("Merger:ZeroLSTN", siteInfo, function() {
@@ -147,8 +153,8 @@ class ZeroApp extends ZeroFrame {
         }
 
 		// Get the user's data.json filepath
-        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-        var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + this.siteInfo.auth_address + "/data.json";
+        var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + this.siteInfo.auth_address + "/content.json";
 
         // Verify that user has correct "optional" and "ignore" values
         page.cmd("fileGet", { "inner_path": content_inner_path, "required": false }, (data) => {
@@ -189,7 +195,7 @@ class ZeroApp extends ZeroFrame {
         });
 	}
 	
-	// Uploads a file using the BigFile API
+	// Uploads a file using the BigFile API. Returns new filename.
 	uploadBigFile(genreAddress, file, f = null) {
 		console.log("Got it!");
         var date_added = Date.now();
@@ -218,70 +224,183 @@ class ZeroApp extends ZeroFrame {
         });
 	}
 
-	// TODO: Adapt for editing song information
-	editStory(story_id, title, description, body, tags, language, f = null) {
-        if (!app.userInfo || !app.userInfo.cert_user_id) {
-            this.cmd("wrapperNotification", ["info", "Please login first."]);
-            //page.selectUser(); // TODO: Check if user has data, if not, show the registration modal.
-            return;
-        }
+	// Add new song info to user's data.json. Returns new song ID.
+	uploadSong(genreAddress, filename, title, album, artist, f = null) {
+		// Check user is logged in (assume they are, but just in case...)
+		if (!app.siteInfo.cert_user_id) {
+    		return this.cmdp("wrapperNotification", ["error", "You must be logged in to post a song."]);
+		}
+		
+		// Get the user's data.json filepath
+        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+        var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 
-        var data_inner_path = "merged-ZeroLSTN/data/users/" + app.userInfo.auth_address + "/data.json";
-        var content_inner_path = "merged-ZeroLSTN/data/users/" + app.userInfo.auth_address + "/content.json";
+		var self = this;
+		var date = Date.now();
+    	return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+    		.then((data) => {
+				// Get user's existing data
+    			data = JSON.parse(data);
+    			if (!data) { // If no existing data, make some
+    				data = {};
+    			}
 
-        page.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
-            if (!data) {
-                console.log("ERROR");
-                return;
-            } else {
-                data = JSON.parse(data);
-            }
+				// If no songs uploaded yet, create empty array
+    			if (!data["songs"]) data["songs"] = [];
 
-            if (!data["stories"]) {
-                console.log("ERROR");
-                return;
-            }
+				// Add new song with default data
+    			data["songs"].push({
+					"id": '' + date, // Convert ID to string
+					"filename": filename,
+					"title": title,
+					"album": album,
+					"artist": artist,
+					"uploader": app.siteInfo.auth_address,
+    				"date_added": date
+    			});
 
-            // Is slug already exists, append (updated) date to it
-            var storyDate = Date.now();
-            var storySlug = sanitizeStringForUrl(title);
+				// Write values back to JSON string and the data.json
+    			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
 
-            for (var story of data["stories"]) {
-                if (story.slug == storySlug && story.story_id != story_id) {
-                    storySlug += "-" + storyDate;
-                    break;
-                }
-            }
+				return self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]);
+				
+				// Sign and publish site
+    		}).then((res) => {
+    			if (res === "ok") {
+    				return self.cmdp("siteSign", { "inner_path": content_inner_path });
+    			} else {
+    				return self.cmdp("wrapperNotification", ["error", "Failed to write to data file."]);
+    			}
+    		}).then((res) => {
+				// Run callback function
+				if (f !== null && typeof f === "function") f(date);
+		});
+	}
 
-            for (var i = 0; i < data["stories"].length; i++) {
-                var story = data["stories"][i];
-                if (story.story_id == story_id) {
-                    story.title = title;
-                    story.slug = storySlug;
-                    story.body = page.sanitizeHtml(body);
-                    story.tags = tags;
-                    if (language && language !== "") {
-                        story.language = language;
-                    }
-                    story.description = description;
-                    story.date_updated = storyDate;
-                    break;
-                }
-            }
+	// Edit existing song stored in user's data.json. Returns songID.
+	editSong(genreAddress, songID, title, album, artist, f = null) {
+		// Check user is logged in (assume they are, but just in case...)
+		if (!app.siteInfo.cert_user_id) {
+    		return this.cmdp("wrapperNotification", ["error", "You must be logged in to post a song."]);
+		}
+		
+		// Get the user's data.json filepath
+        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+        var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 
-            var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+		var self = this;
+    	return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+    		.then((data) => {
+				// Get user's existing data
+    			if (!data) {
+					// Can't edit a song if there aren't any yet
+					console.log("ERROR");
+					return;
+				} else {
+					// Parse user's data into JS object
+					data = JSON.parse(data);
+				}
+	
+				// Can't edit a song if there aren't any yet
+				if (!data["songs"]) {
+					console.log("ERROR");
+					return;
+				}
 
-            page.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
-                if (res === "ok") {
-                    page.cmd("siteSign", { "inner_path": content_inner_path }, (res) => {
-                        if (f != null && typeof f === "function") {
-                            f(storySlug);
-                        }
-						page.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
-                    });
-                }
-            });
-        });
+				// Find and edit song with given ID
+				var songToEdit = null;
+				for (var song of data["songs"]) {
+					if (song.id === songID) {
+						songToEdit = song
+						break;
+					}
+				}
+
+				if(!songToEdit) {
+					console.log("Unable to find song. Given ID: " + songID + ", list:");
+					console.log(data["songs"]);
+					return;
+				}
+
+				// Update with new values
+				songToEdit.title = title;
+				songToEdit.album = album;
+				songToEdit.artist = artist;
+
+				// Write values back to JSON string and the data.json
+    			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
+
+				return self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]);
+				
+				// Sign and publish site
+    		}).then((res) => {
+    			if (res === "ok") {
+    				return self.cmdp("siteSign", { "inner_path": content_inner_path });
+    			} else {
+    				return self.cmdp("wrapperNotification", ["error", "Failed to write to data file."]);
+    			}
+    		}).then((res) => {
+    			if (res === "ok") {
+    				return self.cmdp("sitePublish", { "inner_path": content_inner_path, "sign": false });
+    			} else {
+    				return self.cmdp("wrapperNotification", ["error", "Failed to sign user data."]);
+				}
+			}).then((res) => {
+				// Run callback function
+				if (f !== null && typeof f === "function") f(songID);
+			});
+	}
+
+	// Get song info from ID. Returns song object.
+	retrieveSongInfo(genreAddress, songID, authAddress, f = null) {	
+		// Get the user's data.json filepath
+        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + authAddress + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + authAddress + "/content.json";
+		
+    	return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+    		.then((data) => {
+				// Get user's existing data
+    			if (!data) {
+					// Can't edit a song if there aren't any yet
+					console.log("ERROR");
+					return;
+				} else {
+					// Parse user's data into JS object
+					data = JSON.parse(data);
+				}
+	
+				// Can't edit a song if there aren't any yet
+				if (!data["songs"]) {
+					console.log("ERROR");
+					return;
+				}
+
+				// Find and edit song with given ID
+				var songToRetrieve = null;
+				for (var song of data["songs"]) {
+					if (song.id === songID) {
+						songToRetrieve = song
+						break;
+					}
+				}
+
+				console.log("Got song:");
+				console.log(songToRetrieve);
+
+				// Run callback function
+				if (f !== null && typeof f === "function") f(songToRetrieve);
+		});
+	}
+
+	getSongsByUser(userAuthAddress) {
+		var query = `
+		SELECT * FROM songs
+			LEFT JOIN json USING (json_id)
+			WHERE uploader='${userAuthAddress}'
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query]);
 	}
 }
 
@@ -293,6 +412,6 @@ var Home = require("./router_pages/home.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
-	{ route: "edit/:filename", component: Edit },
+	{ route: "edit/:genre/:songID", component: Edit },
 	{ route: "", component: Home }
 ]);
