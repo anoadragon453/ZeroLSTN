@@ -1,7 +1,7 @@
 <template>
 	<footer class="page-footer blue lighten-2" id="Bottombar">
 		<div class="row">
-			<div class="col s5">
+			<div class="col s0 m5 l5">
 				<div class="col s2">
 				<b>0:00</b>
 				</div>
@@ -12,12 +12,12 @@
 				</div>
 				<div class="col s2"><b>-0:00</b></div>
 			</div>
-			<div class="col s2 center">
+			<div class="col s12 m2 l2 center">
 				<a @click="previous()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_rewind</i></a>
 				<a @click="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ playing ? "pause" : "play_arrow" }}</i></a>
 				<a @click="next()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_forward</i></a>
 			</div>
-			<div class="col s5">
+			<div class="col s0 m5 l5">
 				<div class="col s1">
 				<i class="material-icons">volume_up</i>
 				</div>

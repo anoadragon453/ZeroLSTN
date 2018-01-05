@@ -20,7 +20,7 @@
   var ArtQueue = require("../vue_components/art_queue.vue");
 
   module.exports = {
-    props: [],
+    props: ["mergerZites"],
     name: "mainapp",
     data: () => {
       return {

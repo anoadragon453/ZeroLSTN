@@ -58,7 +58,7 @@
   var Router = require("../libs/router.js");
 
   module.exports = {
-    props: ["uploadID"],
+    props: ["uploadID", "mergerZites"],
     name: "edit",
     data: () => {
       return {
@@ -68,9 +68,8 @@
     },
     mounted: function() {
       // Initialize Genre Selection
-      console.log("init");
       var select = document.querySelector("select");
-			var instance = new M.Select(select, {});
+      var instance = new M.Select(select, {});
     },
     methods: {
       saveClicked: function() {
