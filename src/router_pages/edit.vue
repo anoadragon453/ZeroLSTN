@@ -97,7 +97,10 @@
     methods: {
       saveClicked: function() {
         // Save file along with details
-        page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], this.title, this.album, this.artist, function() {
+        var title = document.getElementById("title").value;
+        var album = document.getElementById("album").value;
+        var artist = document.getElementById("title").artist;
+        page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], title, album, artist, function() {
           // Head back to uploads page
           Router.navigate('uploads');
         });
