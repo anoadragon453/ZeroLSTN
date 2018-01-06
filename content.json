@@ -1,0 +1,114 @@
+{
+ "address": "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3",
+ "address_index": 55327918,
+ "background-color": "#FFF",
+ "clone_root": "template-new",
+ "cloned_from": "1HeLLo4uzjaLetFx6NH3PMwFP3qbRbTf3D",
+ "description": "Listen to music",
+ "files": {
+  "README.md": {
+   "sha512": "1545f8e358f74ddb1f88a1bedafd39db2e3fe3203eb101d1bda3d464a4078268",
+   "size": 307
+  },
+  "css/main.css": {
+   "sha512": "44bf73b4231bc44758ab7d93ed525a43f53a56804e8fa4aa9f9dd95c90527869",
+   "size": 120504
+  },
+  "dbschema.json": {
+   "sha512": "9356f73dfdfa854af44b2bb2ddc0103f78247654527dd99783a6e3ae3a4a3d7b",
+   "size": 1054
+  },
+  "fonts/material-icons/MaterialIcons-Regular.eot": {
+   "sha512": "5022976817b89349a71e0438b573f53dc5b743acc865163102d6d657cc3fbeff",
+   "size": 143258
+  },
+  "fonts/material-icons/MaterialIcons-Regular.svg": {
+   "sha512": "3fc9b9cb5556b85d2c9ab70c8274978ed217a6f64327b3518930cf0ddfc8220b",
+   "size": 281657
+  },
+  "fonts/material-icons/MaterialIcons-Regular.ttf": {
+   "sha512": "cd8784a162ed428ca5a76e5e877349d50620773e3a3d202d5199fefb5d69a9b8",
+   "size": 128180
+  },
+  "fonts/material-icons/MaterialIcons-Regular.woff": {
+   "sha512": "0ab5e18ee3972fcd599ead183d81cd38d8c559a5e87ca86eebcb6a2cfae2078a",
+   "size": 57620
+  },
+  "fonts/material-icons/MaterialIcons-Regular.woff2": {
+   "sha512": "baa17185bedd1f04b138a1de3741b7a6052a02c1d4848d5359ae3ecc80061c54",
+   "size": 44300
+  },
+  "fonts/material-icons/material-icons.css": {
+   "sha512": "0da86e9891ed4942714f2863624cedbeaed1f1ebc45f3406ee6d61e79ba326c0",
+   "size": 969
+  },
+  "fonts/roboto/Roboto-Bold.woff": {
+   "sha512": "1e6ca54849ac193138780a7171fc1b83f4f6e580d033e331f4b58973bf793c9d",
+   "size": 90308
+  },
+  "fonts/roboto/Roboto-Bold.woff2": {
+   "sha512": "5e876f06ab8538594b2adba59e792fb449b1a5d96cc68789030169e777017844",
+   "size": 64800
+  },
+  "fonts/roboto/Roboto-Light.woff": {
+   "sha512": "665301f37b91f3b484e3cca70a9d0b7afa40cda17bc5fea69bbaa816b2a8aeec",
+   "size": 89672
+  },
+  "fonts/roboto/Roboto-Light.woff2": {
+   "sha512": "710584464ab3ea37b1fe10588d1580dd5c2a1e1b6f389dedc93bfbd553235708",
+   "size": 64268
+  },
+  "fonts/roboto/Roboto-Medium.woff": {
+   "sha512": "5c50975116364e37d4e75e92c00a74a5b2322221b5ceb9e162251138750fe1cb",
+   "size": 90560
+  },
+  "fonts/roboto/Roboto-Medium.woff2": {
+   "sha512": "c2904300c1c1b12f143cb300e84fbd7c825bdbf3b92d3355efc02fd752aa05cc",
+   "size": 65412
+  },
+  "fonts/roboto/Roboto-Regular.woff": {
+   "sha512": "b8ef03ff5735387ad8c6d6ccebac75c8874307a28af837d966da307a54da90f4",
+   "size": 89828
+  },
+  "fonts/roboto/Roboto-Regular.woff2": {
+   "sha512": "0c2e0f6f5d6938ccbdcdd56f8dae7a3e6b845d63d3c6152c69331779dea87313",
+   "size": 64832
+  },
+  "fonts/roboto/Roboto-Thin.woff": {
+   "sha512": "2b23f3e4ce1b9be6fc13145b966ba55877d3e4379c772d4fdc686b0563c47367",
+   "size": 88132
+  },
+  "fonts/roboto/Roboto-Thin.woff2": {
+   "sha512": "f78d8fc0980cc6809949a5f16f64c9c921d70b65f19c11e717d7b0280de0c959",
+   "size": 63056
+  },
+  "gulpfile.js": {
+   "sha512": "7fd27954bb65744da548d15c82ec3aa9af459504ab644663cebef35ba0db0985",
+   "size": 1676
+  },
+  "index.html": {
+   "sha512": "08772531f0fe2121c5144cb0f05bd40583d4a5afb07e23897e50ed3717086293",
+   "size": 790
+  },
+  "js/bundle.js": {
+   "sha512": "0f63df636834d1d8ad9d46cb48722d4355e3f2ee5cdffa64747fc3e668a13fcf",
+   "size": 1408131
+  },
+  "js/bundle.js.map": {
+   "sha512": "f6415d7ae6ab31c7f7949c5a01276018e061bc24da6d7ca1f852bcc85cd64dfa",
+   "size": 3722711
+  }
+ },
+ "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
+ "inner_path": "content.json",
+ "modified": 1515243502,
+ "postmessage_nonce_security": true,
+ "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
+ "signs": {
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G9fkd7foYAf2nioca7NW5JDVJvsf+fEx/UDjj1RiRVPoWb2pyep5B0aQfHqQQ2e0B34jVfeKFrQ571xhOKEcGKg="
+ },
+ "signs_required": 1,
+ "title": "ZeroLSTN",
+ "translate": ["js/all.js"],
+ "zeronet_version": "0.6.0"
+}
