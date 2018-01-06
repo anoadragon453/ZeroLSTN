@@ -118,16 +118,9 @@
                 .then((songs) => {
                   // Store and later list songs on page
                   this.songs = songs;
-                  console.log(songs);
                 });
             });
         });
-    },
-    computed: {
-      hasExistingUploads: function() {
-        // TODO: Query to see if user has already uploaded anything
-        return false;
-      }
     },
     methods: {
       validateGenre: function() {

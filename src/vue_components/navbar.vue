@@ -83,8 +83,6 @@
                 Router.navigate(to);
             },
 			login: function() {
-				console.log("Login button clicked!");
-				console.log(this.userInfo);
 				page.selectUser();
 				return false;
             },

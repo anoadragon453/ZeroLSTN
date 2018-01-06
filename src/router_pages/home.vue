@@ -21,7 +21,7 @@
   var PlayQueue = require("../vue_components/play_queue.vue");
 
   module.exports = {
-    props: ["mergerZites"],
+    props: [],
     name: "mainapp",
     data: () => {
       return {

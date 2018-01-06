@@ -9,7 +9,7 @@ var Materialize = require("materialize-css/dist/js/materialize.min.js");
 
 var ZeroFrame = require("./libs/ZeroFrame.js");
 var Router = require("./libs/router.js");
-var Vue = require("vue/dist/vue.min.js");
+var Vue = require("vue/dist/vue.js");
 var VueZeroFrameRouter = require("./libs/vue-zeroframe-router.js");
 
 // Data types
@@ -28,7 +28,7 @@ var app = new Vue({
 	el: "#app",
 	template: `<div>
 			<component ref="navbar" :is="navbar" :user-info="userInfo"></component>
-			<component ref="view" :is="currentView" :merger-zites="mergerZites"></component>
+			<component ref="view" :is="currentView" :play-queue="playQueue" :merger-zites="mergerZites"></component>
 			<component ref="footerBar" :is="footerBar"></component>
 		</div>`,
 	data: {
@@ -50,8 +50,7 @@ var app = new Vue({
                 return;
             }
 
-            console.log("Getting User Info");
-
+			// Keep a reference to our own state
             var that = this;
 
             that.userInfo = {
@@ -71,13 +70,9 @@ class ZeroApp extends ZeroFrame {
 		// Check if user is logged in on pageload
 		this.cmdp("siteInfo", {})
 			.then(siteInfo => {
-				console.log("Gettin it!");
 				self.siteInfo = siteInfo;
 				app.siteInfo = siteInfo;
 				app.getUserInfo();
-
-				console.log("this.siteInfo:");
-				console.log(self.siteInfo);
 
 			// Add initial merger sites/genres
 			page.requestPermission("Merger:ZeroLSTN", siteInfo, function() {
@@ -441,7 +436,7 @@ class ZeroApp extends ZeroFrame {
 		this.queueIndex = this.playQueue.length - 1;
 
 		// Update Vue components that queue index changed
-		//app.$emit("updatePlayQueueIndex", this.queueIndex);
+		app.$emit("updatePlayQueueIndex", this.queueIndex);
 
 		// Play the song
 		this.playSongFile(filepath);
@@ -461,6 +456,12 @@ class ZeroApp extends ZeroFrame {
 			this.playQueue = new Deque();
 		}
 		this.playQueue.insertBack(song);
+
+		// Update Vue components that play queue changed
+		console.log("Emitting update!")
+		console.log("Mainapp's queue:")
+		console.log(this.playQueue.toArray());
+		app.$emit("updatePlayQueue", this.playQueue);
 	}
 
 	// Return the queue contents as an array of songs
@@ -489,11 +490,17 @@ class ZeroApp extends ZeroFrame {
 
 	// Play the current running audio
 	playCurrentSong() {
-		// If there isn't any audio available yet, do nothing
+		// If there isn't any audio available yet, play first song in queue
 		if (!this.audioObject) {
-			return;
+			if(this.playQueue && this.playQueue.length > 0) {
+				this.playSongAtQueueIndex(0);
+			} else {
+				// If we've got no queue, don't play anything
+				return;
+			}
+		} else {
+			this.audioObject.play();
 		}
-		this.audioObject.play();
 
 		// Tell Vue objects that the current song is being played
 		app.$emit("songPlaying", true);

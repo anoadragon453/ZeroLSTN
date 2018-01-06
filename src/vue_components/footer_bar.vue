@@ -53,6 +53,8 @@
             var volumeSlider = document.getElementById("volume-slider");
 			//var instance = new M.Slider(slider, {});
 
+			// Listen for user input
+			// TODO: @input.prevent on object instead?
 			volumeSlider.addEventListener("input", this.volumeChanged);
 
 			// Catch song duration updates
@@ -67,12 +69,11 @@
 		methods: {
 			playPause: function() {
 				// Toggle playing music
-				this.playing = !this.playing;
+				//this.playing = !this.playing;
 				if(this.playing) {
-					// Get current song?
-					this.playSong();
-				} else {
 					this.pauseSong();
+				} else {
+					this.playSong();
 				}
 			},
 			playSong: function() {
