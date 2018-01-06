@@ -25,7 +25,10 @@
 					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
 				<ul id="mobile-nav" class="sidenav">
-                    <li>
+					<li><a @click.prevent="goto('')">Home</a></li>
+					<li><a @click.prevent="goto('uploads')">Uploads</a></li>
+					<li><a @click.prevent="goto('playqueue')">Play Queue</a></li>
+					<li>
                         <a @click.prevent="downloadedToggle()">
                         <div class="switch">
                             Downloaded
@@ -36,9 +39,6 @@
                         </div>
                         </a>
                     </li>
-					<li>
-						<a @click.prevent="goto('uploads')">Uploads</a>
-					</li>
 					<li v-if="!isLoggedIn"><a @click.prevent="login()">Login</a></li>
 					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
@@ -56,12 +56,13 @@
 		data: () => {
 			return {
 				ZiteName: "ZeroLSTN",
-                downloadedOnly: false
+				downloadedOnly: false,
+				sidebar: null
 			}
 		},
 		mounted: function() {
 			var elem = document.querySelector('.sidenav');
-  			var instance = new M.Sidenav(elem, {
+  			this.sidebar = new M.Sidenav(elem, {
   				edge: "left",
   				draggable: true
               });
@@ -74,11 +75,12 @@
 		},
 		methods: {
 			goto: function(to) {
-                // Go to upload page
-                Router.navigate(to);
+				// Hide sidebar by "clicking" the overlay
+				var sidenavOverlay = document.querySelector(".sidenav-overlay");
+				sidenavOverlay.click();
 
-                // Show  page where you pick name, genre (for merger site), album art (unless
-                // it's embedded?), artist etc.
+                // Go to specified page
+                Router.navigate(to);
             },
 			login: function() {
 				console.log("Login button clicked!");

@@ -575,10 +575,12 @@ page = new ZeroApp();
 
 var Uploads = require("./router_pages/uploads.vue");
 var Edit = require("./router_pages/edit.vue");
+var PlayQueue = require("./router_pages/playqueue.vue");
 var Home = require("./router_pages/home.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
 	{ route: "edit/:genre/:songID", component: Edit },
+	{ route: "playqueue", component: PlayQueue },
 	{ route: "", component: Home }
 ]);

@@ -1,10 +1,11 @@
 <<template>
   <div id="mainapp">
     <div class="row">
-      <div class="col s4">
-        <component :is="artQueue"></component>
+      <div class="col s1 m1 l4 hide-on-med-and-down">
+        <component :is="albumArt"></component>
+        <component :is="playQueue"></component>
       </div>
-      <div class="col s8">
+      <div class="col s12 m12 l8">
         <component :is="music"></component>
       </div>
     </div>
@@ -15,18 +16,18 @@
   var Router = require("../libs/router.js");
 
   // All the Vue components that make up the homepage
-  var NavBar = require("../vue_components/navbar.vue");
   var Music = require("../vue_components/music.vue");
-  var ArtQueue = require("../vue_components/art_queue.vue");
+  var AlbumArt = require("../vue_components/album_art.vue");
+  var PlayQueue = require("../vue_components/play_queue.vue");
 
   module.exports = {
     props: ["mergerZites"],
     name: "mainapp",
     data: () => {
       return {
-        navbar: NavBar,
         music: Music,
-        artQueue: ArtQueue
+        albumArt: AlbumArt,
+        playQueue: PlayQueue
       }
     }
   }

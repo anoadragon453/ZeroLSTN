@@ -1,9 +1,6 @@
 <template>
-    <div id="ArtQueue">
+    <div id="playqueuecomponent">
         <div class="row">
-            <div class="col s12">
-                <img class="materialboxed" width="100%" src="/1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3/src/deleteme.jpg">
-            </div>
             <div id="queue" class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Play Queue</h4></li>
@@ -28,12 +25,9 @@
     // TODO: Figure out Material Box zooming
     module.exports = {
         props: [],
-        name: "ArtQueue",
+        name: "playqueuecomponent",
         mounted: function() {
-            // Initialize Material box
-            // TODO: Image grows bigger than screen for some reason
-            //var box = document.querySelector(".materialboxed");
-			//var instance = new M.Materialbox(box, {});
+            // TODO: Set up listeners for play queue changes
         }
     }
 </script>
