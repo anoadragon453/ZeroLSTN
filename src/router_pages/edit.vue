@@ -60,8 +60,6 @@
     },
     mounted: function() {
       // Get file information
-      console.log("Running?");
-
       page.cmdp("siteInfo", {})
 			.then(siteInfo => {
         page.retrieveSongInfo(Router.currentParams["genre"], Router.currentParams["songID"], siteInfo.auth_address, function(song) {
@@ -99,7 +97,7 @@
         // Save file along with details
         var title = document.getElementById("title").value;
         var album = document.getElementById("album").value;
-        var artist = document.getElementById("title").artist;
+        var artist = document.getElementById("artist").value;
         page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], title, album, artist, function() {
           // Head back to uploads page
           Router.navigate('uploads');

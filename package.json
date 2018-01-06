@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "animejs": "^2.2.0",
+    "double-ended-queue": "^2.1.0-0",
     "markdown-it": "^8.4.0",
     "materialize-css": "^1.0.0-alpha.2",
     "medium-editor": "^5.23.3",

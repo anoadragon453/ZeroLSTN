@@ -1,10 +1,5 @@
 <<template>
   <div id="edit">
-    <!-- Floating action button -->
-    <div class="fixed-action-btn">   
-      <a @click.prevent="uploadModal.M_Modal.open()" class="btn-floating btn-large waves-effect waves-light red"><i class="material-icons">add</i></a>
-    </div>
-
     <!-- Modal Structure -->
     <div class="modal">
       <div class="modal-content">
@@ -20,7 +15,7 @@
             </div>
           </div>
           <div class="col s12 m6 l6">
-            <!-- Upload button TODO: Disable until genre picked-->
+            <!-- Upload button -->
             <a id="uploadButton" @click="uploadClicked()" class="right disabled waves-effect waves-light btn">
               Upload
               <div class="file-field"><input type="file" accept="audio/*"></div>
@@ -31,17 +26,26 @@
     </div>
 
     <!-- Show uploads if there are any -->
-    <div v-if="hasExistingUploads" class="container">
-      <!-- TODO: Show existing uploads -->
-      <!-- <ul>
-        <li v-for="upload in uploads">
-          ...
-        </li>
-      </ul>-->
-    </div>
-    <div v-else>
-      <div class="container center">
-        No uploads. Press the Add button to get started!
+    <div class="container">
+      <div class="row"></div>
+      <div class="row">
+        <div class="col s12">
+          <a @click.prevent="uploadModal.M_Modal.open()" class="btn waves-effect waves-light right"><i class="material-icons left">cloud_upload</i>New Song</a>
+        </div>
+      </div>
+      <div class="row">
+        <ul v-if="songs" class="collection with-header">
+            <li class="collection-item" v-for="song in songs">
+                <a href="#" @click.prevent="songEditClicked(song)">
+                  {{ song.title }}
+                </a>
+                <a class="secondary-content">
+                  <a href="#" @click.prevent="songPlayClicked(song)"><i class="material-icons">play_arrow</i></a>
+                  <a href="#" @click.prevent="songQueueClicked(song)"><i class="material-icons">add</i></a>
+                </a>
+            </li>
+        </ul>
+        <p v-else>No uploads. Press the Add button to get started!</p>
       </div>
     </div>
   </div>
@@ -57,6 +61,7 @@
       return {
         uploadModal: null,
         genres: null,
+        songs: null,
         uploadingFile: false
       }
     },
@@ -111,7 +116,8 @@
 			      .then(siteInfo => {
               page.getSongsByUser(siteInfo.auth_address)
                 .then((songs) => {
-                  // TODO: List songs on page
+                  // Store and later list songs on page
+                  this.songs = songs;
                   console.log(songs);
                 });
             });
@@ -140,6 +146,20 @@
             uploadButton.classList.add("disabled");
           }
         }
+      },
+      songEditClicked: function(song) {
+        // Navigate to edit page with correct data
+        Router.navigate('edit/'+song.site+"/"+song.id);
+      },
+      songPlayClicked: function(song) {
+        // Immediately play song
+        var songFilepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename;
+        page.playSong(songFilepath, song);
+      },
+      songQueueClicked: function(song) {
+        // Add song to the play queue
+        var songFilepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename;
+        page.queueSong(songFilepath, song);
       },
       uploadClicked: function() {
         // Query user info
