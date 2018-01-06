@@ -27,5 +27,5 @@ yarn
 Simply run:
 
 ```
-gulp # Compile all html/js/css
+gulp #Compile all html/js/css
 ```
