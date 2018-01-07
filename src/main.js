@@ -441,12 +441,32 @@ class ZeroApp extends ZeroFrame {
 		// Play the song
 		this.playSongFile(filepath);
 
+		// Keep a reference to ourself
 		var self = this;
 
 		// Update footer with new song duration once metadata has been loaded
 		this.audioObject.addEventListener('loadedmetadata', function() {
 			app.$emit("updateSongDuration", self.audioObject.duration);
 		});
+
+		// TODO: Add event listener for when song finishes, so we can either move to the next song,
+		// or stop the playback if it's the last song in the queue
+		this.audioObject.addEventListener('ended', function() {
+			self.songEnded();
+		});
+	}
+
+	// Called when the current song ends
+	songEnded() {
+		// Check if this is the same song in the queue
+		if (this.queueIndex == this.playQueue.length - 1){
+			// Tell Vue components song has stopped playing
+			app.$emit("songPlaying", false);
+			return;
+		}
+
+		// Otherwise move on to the next song in the queue
+		this.nextSong();
 	}
 
 	// Add a song to the end of the play queue

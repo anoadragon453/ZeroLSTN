@@ -7,8 +7,8 @@
  "description": "Listen to music",
  "files": {
   "README.md": {
-   "sha512": "1545f8e358f74ddb1f88a1bedafd39db2e3fe3203eb101d1bda3d464a4078268",
-   "size": 307
+   "sha512": "7601a3bb707137c50e0fe6001c55bdd955a4ca108620012ffdbf4c0a40d453d5",
+   "size": 306
   },
   "css/main.css": {
    "sha512": "44bf73b4231bc44758ab7d93ed525a43f53a56804e8fa4aa9f9dd95c90527869",
@@ -91,21 +91,21 @@
    "size": 790
   },
   "js/bundle.js": {
-   "sha512": "0f63df636834d1d8ad9d46cb48722d4355e3f2ee5cdffa64747fc3e668a13fcf",
-   "size": 1408131
+   "sha512": "2b686c99b6edbceaf99a57a8dae752559fd8b443bdbb01faa19e09035259d0bd",
+   "size": 1611171
   },
   "js/bundle.js.map": {
-   "sha512": "f6415d7ae6ab31c7f7949c5a01276018e061bc24da6d7ca1f852bcc85cd64dfa",
-   "size": 3722711
+   "sha512": "1208c500403dda8e3da984406f5b390df9088c0b34eec6ee1e6c1d657ac57935",
+   "size": 4342209
   }
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1515243502,
+ "modified": 1515286526,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G9fkd7foYAf2nioca7NW5JDVJvsf+fEx/UDjj1RiRVPoWb2pyep5B0aQfHqQQ2e0B34jVfeKFrQ571xhOKEcGKg="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G+pXD+LvY+wKnyljxpPT6KMeJs99be3/CYuESte8ELwqUH+Kw36n/ljWFuKeWF1vfKQVaRwJ9Sm+8Nd5A2lH6Gc="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",
