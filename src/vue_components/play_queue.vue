@@ -6,10 +6,10 @@
                     <li class="collection-header"><h4>Play Queue</h4></li>
                     <li class="collection-item" v-if="!playQueueObj || playQueueObj.length == 0">No songs in queue.</li>
                     <!-- TODO: Add play (to skip to) and remove-from-queue buttons -->
-                    <li class="collection-item" v-else v-for="(song, index) in playQueueObj.toArray()">
+                    <a href="#" @click.prevent="playSongAtIndex(index)" class="collection-item" v-else v-for="(song, index) in playQueueObj.toArray()">
                         <span v-if="index == queueIndex"><b>{{ song.title }}</b></span>
                         <span v-else>{{ song.title }}</span>
-                    </li>
+                    </a>
                 </ul>
             </div>
             <div class="row"></div>
@@ -33,6 +33,10 @@
             goto: function(to) {
                 // Go to specified page
                 Router.navigate(to);
+            },
+            playSongAtIndex: function(index) {
+                // Skip to clicked play queue song index
+                page.playSongAtQueueIndex(index);
             }
         }
     }

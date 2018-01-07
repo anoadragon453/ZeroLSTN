@@ -15,9 +15,11 @@
 					<!--<img class="hide-on-med-and-down" id="album-art" src="./logo.png" width="94em">-->
 				</div>
 				<div id="song-details" class="small hide-on-small-only col s4 m2">
-					<!--<h6>Teen Pregnancy</h6>
-					YouTube's Greatest Hits<br>
-					BLANK BANSHEE-->
+					<span v-if="currentSong">
+						<h6>{{ currentSong.title }}</h6>
+						{{ currentSong.album }}<br>
+						{{ currentSong.artist }}
+					</span>
 				</div>
 			</div>
 			<div class="col s10 m4 l2 center">
@@ -41,7 +43,7 @@
 	var Router = require("../libs/router.js");
 
 	module.exports = {
-		props: [],
+		props: ["currentSong"],
 		name: "BottomBar",
 		data: () => {
 			return {

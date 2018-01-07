@@ -32,7 +32,7 @@ var app = new Vue({
 	el: "#app",
 	template: `<div>
 			<navbar ref="navbar" :user-info="userInfo"></navbar>
-			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
+			<component ref="view" :is="currentView" :current-song="currentSong" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
 			<footerBar ref="footerBar"></footerBar>
 		</div>`,
 	data: {
@@ -44,6 +44,7 @@ var app = new Vue({
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
 		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
+		currentSong: null,				// Song that is currently loaded
 		playlists: []					// User's playlists, pulled from data.json on reload
 		// TODO: Sharing playlists?
 	},
@@ -628,6 +629,9 @@ class ZeroApp extends ZeroFrame {
 		// Play the song
 		this.playSongFile(filepath);
 
+		// Allow Vue components to access the current playing song
+		this.currentSong = song;
+
 		// Update footer with new song duration once metadata has been loaded
 		app.audioObject.addEventListener('loadedmetadata', function() {
 			console.log("Updating with duration: " + app.audioObject.duration);
@@ -701,6 +705,9 @@ class ZeroApp extends ZeroFrame {
 
 	// Play a song at an index in the current queue
 	playSongAtQueueIndex(index) {
+		// Update the queue index
+		app.queueIndex = index;
+		
 		this.playSong(app.playQueue.get(index));
 	}
 
