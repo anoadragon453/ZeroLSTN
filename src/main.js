@@ -32,7 +32,7 @@ var app = new Vue({
 	el: "#app",
 	template: `<div>
 			<navbar ref="navbar" :user-info="userInfo"></navbar>
-			<component ref="view" :is="currentView" :play-queue="playQueue" :merger-zites="mergerZites"></component>
+			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
 			<footerBar ref="footerBar"></footerBar>
 		</div>`,
 	data: {
@@ -160,6 +160,10 @@ class ZeroApp extends ZeroFrame {
 		}
 	}
 
+	isUserSignedIn() {
+		return app.siteInfo.cert_user_id != null;
+	}
+
 	selectUser() {
 		return this.cmdp("certSelect", { accepted_domains: ["zeroid.bit", "kaffie.bit", "cryptoid.bit", "peak.id"] });
     }
@@ -183,8 +187,8 @@ class ZeroApp extends ZeroFrame {
         }
 
 		// Get the user's data.json filepath
-        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + this.siteInfo.auth_address + "/data.json";
-        var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + this.siteInfo.auth_address + "/content.json";
+        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+        var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 
         // Verify that user has correct "optional" and "ignore" values
         page.cmd("fileGet", { "inner_path": content_inner_path, "required": false }, (data) => {

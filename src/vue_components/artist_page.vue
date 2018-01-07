@@ -6,7 +6,7 @@
                     <li class="collection-header"><h4>{{ artist }}</h4>Artist</li>
                 </ul>
                 <ul class="collapsible popout" data-collapsible="accordion">
-                    <li v-for="album in albums">
+                    <li v-for="(album, index) in albums">
                     <div class="collapsible-header"><b>{{ Object.keys(albums)[Object.values(albums).indexOf(album)] }}</b></div>
                     <div class="collapsible-body">
                         <div class="collection">

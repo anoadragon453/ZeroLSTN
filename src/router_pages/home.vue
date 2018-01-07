@@ -2,7 +2,7 @@
   <div id="mainapp">
     <div class="row">
       <div class="col s1 m1 l4 hide-on-med-and-down">
-        <playQueue></playQueue>
+        <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
       </div>
       <div class="col s12 m12 l8">
         <span  v-if="currentPage != 'music'">
@@ -35,7 +35,7 @@
       artistPage: ArtistPage,
       albumPage: AlbumPage
     },
-    props: [],
+    props: ["playQueueObj", "queueIndex"],
     name: "mainapp",
     data: () => {
       return {

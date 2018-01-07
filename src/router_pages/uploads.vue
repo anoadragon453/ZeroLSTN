@@ -33,7 +33,7 @@
           <h5 class="hide-on-med-and-down">Uploads</h5>
         </div>
         <div class="col s6">
-          <a @click.prevent="uploadModal.M_Modal.open()" class="btn waves-effect waves-light right"><i class="material-icons left">cloud_upload</i>New Song</a>
+          <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">cloud_upload</i>New Song</a>
         </div>
       </div>
       <div class="row">
@@ -122,6 +122,17 @@
         });
     },
     methods: {
+      showModal: function() {
+        // Make sure user is signed in first
+        if(!page.isUserSignedIn()) {
+          // Show sign in prompt
+          page.selectUser();
+          return;
+        }
+
+        // Reveal the upload modal
+        this.uploadModal.M_Modal.open()
+      },
       validateGenre: function() {
         // Return whether the genre in the autocomplete field is valid
         return this.genres.hasOwnProperty(document.getElementById("autocomplete-input").value);
@@ -140,13 +151,11 @@
         }
       },
       uploadClicked: function() {
-        // Query user info
-
         // Open file upload window
         var fileUploadButton = document.querySelector('input[type=file]');
         fileUploadButton.click();
 
-        // Keep a reference to ourself
+        // Keep a reference to ourselves
         var self = this;
 
         // Listen for when a file has been uploaded
