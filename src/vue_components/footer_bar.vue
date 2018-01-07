@@ -12,7 +12,7 @@
 			</div>
 			<div class="col s4 m3 l4">
 				<div class="col s4 m1">
-					<img class="hide-on-med-and-down" id="album-art" src="./logo.png" width="94em">
+					<!--<img class="hide-on-med-and-down" id="album-art" src="./logo.png" width="94em">-->
 				</div>
 				<div id="song-details" class="small hide-on-small-only col s4 m2">
 					<!--<h6>Teen Pregnancy</h6>

@@ -71,6 +71,7 @@
                     </li>
                 </ul>
             </div>
+            <!--
             <div id="playlists" class="col s12">
                 <ul class="collapsible" data-collapsible="expandable">
                     <li>
@@ -99,6 +100,7 @@
                     </li>
                 </ul>
             </div>
+            -->
         </div>
         <div class="row"></div>
         <div class="row"></div>
@@ -189,8 +191,8 @@
                     { name: "Artists", icon: "people", active: false, show: "artists" },
                     { name: "Albums", icon: "album", active: false, show: "albums" },
                     { name: "Songs", icon: "music_note", active: true, show: "songs" },
-                    { name: "Genres", icon: "library_music", active: false, show: "genres" },
-                    { name: "Playlists", icon: "playlist_play", active: false, show: "playlists" }
+                    { name: "Genres", icon: "library_music", active: false, show: "genres" }
+                    //{ name: "Playlists", icon: "playlist_play", active: false, show: "playlists" }
                 ],
                 artists: [],
                 albums: [],
