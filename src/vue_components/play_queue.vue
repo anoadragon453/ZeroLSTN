@@ -18,8 +18,6 @@
 
 <script>
     var Router = require("../libs/router.js");
-    
-    // TODO: Figure out Material Box zooming
     module.exports = {
         props: ["playQueue"],
         name: "playqueuecomponent",

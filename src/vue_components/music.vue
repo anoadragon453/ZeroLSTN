@@ -11,9 +11,9 @@
             <div id="artists" class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Artists</h4></li>
-                    <li class="collection-item">Alvin and the Chipmunks</li>
-                    <li class="collection-item">Coldplay</li>
-                    <li class="collection-item">Deadmau5</li>
+                    <li v-for="artist in artists" class="collection-item">
+                        <a href="#!" @click.prevent="goToArtist(artist)">{{ artist }}</a>
+                    </li>
                 </ul>
             </div>
             <div id="albums" class="col s12">
@@ -104,7 +104,13 @@
             var collap = document.querySelector("ul.collapsible");
             var collapInstance = new M.Collapsible(collap, {});
 
-            console.log(M);
+            // Get all known artists
+            var self = this;
+            page.getKnownArtists()
+                .then((artists) => {
+                    self.artists = artists;
+                });
+
         },
         data: () => {
             return {
@@ -114,10 +120,15 @@
                     { name: "Songs", icon: "music_note", active: true, show: "songs" },
                     { name: "Genres", icon: "library_music", active: false, show: "genres" },
                     { name: "Playlists", icon: "playlist_play", active: false, show: "playlists" }
-                ]
+                ],
+                artists: []
             }
         },
         methods: {
+            goToArtist: function(artist) {
+                // Tell the parent view to go to the specified artist's page
+                this.$parent.goToArtistPage(artist)
+            }
         }
     }
 </script>

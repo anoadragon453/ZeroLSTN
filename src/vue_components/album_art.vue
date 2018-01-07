@@ -2,7 +2,7 @@
     <div id="albumart">
         <div class="row">
             <div class="col s12">
-                <img class="materialboxed" width="100%" src="/1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3/src/deleteme.jpg">
+                <img id="album-art" class="materialboxed" width="100%">
             </div>
         </div>
     </div>
@@ -18,7 +18,10 @@
             // Initialize Material box
             // TODO: Image grows bigger than screen for some reason
             //var box = document.querySelector(".materialboxed");
-			//var instance = new M.Materialbox(box, {});
+            //var instance = new M.Materialbox(box, {});
+            
+            // Set default album art image
+            document.getElementById("album-art").src = "./logo.png";;
         }
     }
 </script>

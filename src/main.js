@@ -25,16 +25,18 @@ var NavBar = require("./vue_components/navbar.vue");
 var FooterBar = require("./vue_components/footer_bar.vue");
 
 var app = new Vue({
+	components: {
+		navbar: NavBar,					// Navbar - Vue component
+		footerBar: FooterBar			// Footer - Vue component
+	},
 	el: "#app",
 	template: `<div>
-			<component ref="navbar" :is="navbar" :user-info="userInfo"></component>
+			<navbar ref="navbar" :user-info="userInfo"></navbar>
 			<component ref="view" :is="currentView" :play-queue="playQueue" :merger-zites="mergerZites"></component>
-			<component ref="footerBar" :is="footerBar"></component>
+			<footerBar ref="footerBar"></footerBar>
 		</div>`,
 	data: {
 		currentView: null,				// Current View - Vue component (dynamic)
-		navbar: NavBar,					// Navbar - Vue component
-		footerBar: FooterBar,			// Footer - Vue component
 		userInfo: null,					// ZeroFrame userInfo object
 		siteInfo: null,					// ZeroFrame siteInfo object
 		mergerZites: null,				// List of all merger Zites (genres) we know of
@@ -409,57 +411,141 @@ class ZeroApp extends ZeroFrame {
 		return this.cmdp("dbQuery", [query]);
 	}
 
+	// TODO: Return a list of all songs, with an optional max song amount and offset
+	getAllSongs(limit = 0, offset = 0) {
+
+	}
+
+	// Returns an array of all known artist names
+	getKnownArtists() {
+		var query = `
+		SELECT DISTINCT artist FROM songs
+			LEFT JOIN json USING (json_id)
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query])
+			.then((artistObjs) => {
+				// Unpack "artist" string attribute into its own array of strings
+				return new Promise((resolve, reject) => {
+					resolve(artistObjs.map(function(a) {return a.artist;}));
+				});
+			});
+	}
+
+	// Returns an array of album titles, made by the given artist
+	getAlbumsByArtist(artistName) {
+		var query = `
+		SELECT DISTINCT album FROM songs
+			LEFT JOIN json USING (json_id)
+			WHERE artist='${artistName}'
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query])
+			.then((albumObjs) => {
+				// Unpack "albums" string attribute into its own array of strings
+				return new Promise((resolve, reject) => {
+					resolve(albumObjs.map(function(a) {return a.album;}));
+				});
+			});
+	}
+
+	// Return an array of objects with album titles and songs in the form of
+	// {"title": [song1, song2...]}
+	getAlbumsWithSongsByArtist(artistName) {
+		var query = `
+		SELECT * FROM songs
+			LEFT JOIN json USING (json_id)
+			WHERE artist='${artistName}'
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query])
+			.then((songObjs) => {
+				// Unpack "albums" string attribute into its own array of strings
+				console.log(songObjs);
+				return new Promise((resolve, reject) => {
+					var albums = {};
+
+					// Iterate over songObjs
+					songObjs.forEach(function(song) {
+						// Check to see if we've seen this album yet
+						var albumTitle = song.album;
+						if (!albums.hasOwnProperty(albumTitle)) {
+							// If not, create a new array for its song to live in
+							console.log("Creating new album: " + song.album)
+							albums[albumTitle] = [];
+						}
+
+						// Add the song to this album's array
+						albums[albumTitle].push(song);
+					});
+					// Create a new promise to return to whoever called getAlbumsWithSongsByArtist
+					resolve(albums);
+				});
+			});
+	}
+
+	// Returns all songs in a given album
+	getSongsInAlbum(albumName) {
+		var query = `
+		SELECT * FROM songs
+			LEFT JOIN json USING (json_id)
+			WHERE album='${albumName}'
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query]);
+	}
+
 	// -------------------------------------------------- //
 	// ------------- Play Queue Operations -------------- //
 
 	// Play a music file
 	playSongFile(filepath) {
-		this.audioObject = new Audio(filepath);
-		if(!this.audioVolume) {
-			this.audioVolume = 80;
+		// If audioObject already exists, change its source
+		if(app.audioObject) {
+			app.audioObject.src = filepath;
+			app.audioObject.load();
+		} else { // Otherwise make a new audio object
+			app.audioObject = new Audio(filepath);
 		}
-		this.audioObject.volume = this.audioVolume / 100;
-		this.audioObject.play();
+
+		// Set the audio source's volume
+		app.audioObject.volume = app.audioVolume / 100;
+		app.audioObject.play();
 
 		// Tell Vue objects that the current song is being played
 		app.$emit("songPlaying", true);
 	}
 
-	// Place a song at end of play queue and skip to it.
-	playSong(filepath, song) {
-		console.log("Playing " + song.title + " by " + song.artist + ". Filepath: " + filepath);
-
-		// Add song to end of queue
-		this.queueSong(filepath, song);
-
-		// Set index to end of queue
-		this.queueIndex = this.playQueue.length - 1;
-
-		// Update Vue components that queue index changed
-		app.$emit("updatePlayQueueIndex", this.queueIndex);
+	// Play a given song object
+	playSong(song) {
+		var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename;
 
 		// Play the song
 		this.playSongFile(filepath);
 
-		// Keep a reference to ourself
-		var self = this;
-
 		// Update footer with new song duration once metadata has been loaded
-		this.audioObject.addEventListener('loadedmetadata', function() {
-			app.$emit("updateSongDuration", self.audioObject.duration);
+		app.audioObject.addEventListener('loadedmetadata', function() {
+			console.log("Updating with duration: " + app.audioObject.duration);
+			app.$emit("updateSongDuration", app.audioObject.duration);
 		});
 
-		// TODO: Add event listener for when song finishes, so we can either move to the next song,
+		// Add event listener for when song finishes, so we can either move to the next song,
 		// or stop the playback if it's the last song in the queue
-		this.audioObject.addEventListener('ended', function() {
+		var self = this;
+		app.audioObject.addEventListener('ended', function() {
 			self.songEnded();
 		});
 	}
 
 	// Called when the current song ends
 	songEnded() {
+		console.log("Song ended. Current index: " + app.queueIndex);
 		// Check if this is the same song in the queue
-		if (this.queueIndex == this.playQueue.length - 1){
+		if (app.queueIndex == app.playQueue.length - 1){
 			// Tell Vue components song has stopped playing
 			app.$emit("songPlaying", false);
 			return;
@@ -469,57 +555,67 @@ class ZeroApp extends ZeroFrame {
 		this.nextSong();
 	}
 
-	// Add a song to the end of the play queue
-	queueSong(filepath, song) {
-		console.log("Queueing " + song.title + " by " + song.artist + ". Filepath: " + filepath);
-		if (!this.playQueue) {
-			this.playQueue = new Deque();
-		}
-		this.playQueue.insertBack(song);
+	// Place a song at end of play queue and skip to it.
+	playSongImmediately(song) {
+		// Add song to the queue
+		app.playQueue.insertBack(song);
 
+		// Set index to end of queue
+		app.queueIndex = app.playQueue.length - 1;
+
+		// Update Vue components that queue index changed
+		app.$emit("updatePlayQueueIndex", app.queueIndex);
+
+		this.playSongAtQueueIndex(app.queueIndex);
+	}
+
+	// Add a song to the end of the play queue
+	queueSong(song) {
+		console.log("Queueing " + song.title + " by " + song.artist);
+		app.playQueue.insertBack(song);
+
+		// Make sure our queueIndex exists
 		// Update Vue components that play queue changed
 		console.log("Emitting update!")
 		console.log("Mainapp's queue:")
-		console.log(this.playQueue.toArray());
-		app.$emit("updatePlayQueue", this.playQueue);
+		console.log(app.playQueue.toArray());
+		console.log("Current queue index: " + app.queueIndex);
+		app.$emit("updatePlayQueue", app.playQueue);
 	}
 
 	// Return the queue contents as an array of songs
 	getPlayQueue() {
-		return this.playQueue.toArray();
+		return app.playQueue.toArray();
 	}
 
 	// Return the current queue index
 	getQueueIndex() {
-		return this.queueIndex;
+		return app.queueIndex;
 	}
 
 	// Return the current audio object
 	getAudioObject() {
-		return this.audioObject;
+		return app.audioObject;
 	}
 
 	// Play a song at an index in the current queue
 	playSongAtQueueIndex(index) {
-		// If there isn't any audio available yet, do nothing
-		if (!this.audioObject) {
-			return;
-		}
-		this.playSong(this.playQueue.get(index));
+		this.playSong(app.playQueue.get(index));
 	}
 
 	// Play the current running audio
 	playCurrentSong() {
 		// If there isn't any audio available yet, play first song in queue
-		if (!this.audioObject) {
-			if(this.playQueue && this.playQueue.length > 0) {
+		console.log("Playing current song")
+		if (!app.audioObject) {
+			if(app.playQueue && app.playQueue.length > 0) {
 				this.playSongAtQueueIndex(0);
 			} else {
 				// If we've got no queue, don't play anything
 				return;
 			}
 		} else {
-			this.audioObject.play();
+			app.audioObject.play();
 		}
 
 		// Tell Vue objects that the current song is being played
@@ -529,70 +625,89 @@ class ZeroApp extends ZeroFrame {
 	// Pause the current running audio
 	pauseCurrentSong() {
 		// If there isn't any audio available yet, do nothing
-		if (!this.audioObject) {
+		if (!app.audioObject) {
+			console.log("Necessary? pause");
 			return;
 		}
-		this.audioObject.pause();
+		app.audioObject.pause();
 
 		// Tell Vue objects that the current song has been paused
 		app.$emit("songPlaying", false);
 	}
 
+	stopPlaying() {
+		console.log("Stopping playback.");
+		// Stop playing all songs
+		app.audioObject.currentTime = 0;
+		app.audioObject.pause();
+
+		// Set the queueIndex to the beginning
+		app.queueIndex = 0;
+
+		// Update Vue components that queue index changed
+		app.$emit("updatePlayQueueIndex", app.queueIndex);
+
+		// Tell Vue objects that the current song has been paused
+		app.$emit("songPlaying", false);
+
+		// Update footer with no song duration
+		app.$emit("updateSongDuration", 0);
+	}
+
 	// Skip to the next song
 	nextSong() {
-		// Check if queue exists, if not create it
-		if (!this.playQueue) {
-			this.playQueue = new Deque();
-		}
+		console.log("Going to next song. Index: " + app.queueIndex);
 
 		// Move the index forward
-		this.queueIndex++;
-		if(this.queueIndex >= this.playQueue.length) {
-			this.queueIndex = this.playQueue.length - 1;
+		app.queueIndex++;
+		if(app.queueIndex >= app.playQueue.length) {
+			// We've reached the end of the queue, stop playing
+			this.stopPlaying();
+			return;
 		}
 
 		// Update Vue components that queue index changed
-		app.$emit("updatePlayQueueIndex", this.queueIndex);
+		app.$emit("updatePlayQueueIndex", app.queueIndex);
 
 		// Play whatever song is at that index
-		this.playSongAtQueueIndex(this.queueIndex);
+		this.playSongAtQueueIndex(app.queueIndex);
 	}
 
 	// Go back to the previous song
 	prevSong() {
 		// Check if queue exists, if not create it
-		if (!this.playQueue) {
-			this.playQueue = new Deque();
+		if (!app.playQueue) {
+			app.playQueue = new Deque();
 		}
 
 		// Move the index back
-		this.queueIndex--;
-		if(this.queueIndex < 0) {
-			this.queueIndex = 0;
+		app.queueIndex--;
+		if(app.queueIndex < 0) {
+			app.queueIndex = 0;
 		}
 
 		// Update Vue components that queue index changed
-		//app.$emit("updatePlayQueueIndex", this.queueIndex);
+		//app.$emit("updatePlayQueueIndex", app.queueIndex);
 
 		// Play whatever song is at that index
-		this.playSongAtQueueIndex(this.queueIndex);
+		this.playSongAtQueueIndex(app.queueIndex);
 	}
 
 	// Set the current audio volume
 	setVolume(volume) {
-		this.audioVolume = volume;
+		app.audioVolume = volume;
 
 		// It's alright if we don't have an audio object yet, it'll
 		// get the new volume when it's initialized
-		if(this.audioObject){
+		if(app.audioObject){
 			// If we do have one already, set its volume
-			this.audioObject.volume = volume / 100;
+			app.audioObject.volume = volume / 100;
 		}
 	}
 
 	// Sets the current track time
 	setTime(time) {
-		this.audioObject.currentTime = time;
+		app.audioObject.currentTime = time;
 	}
 
 	// -------------------------------------------------- //

@@ -1,5 +1,5 @@
 <<template>
-  <component :play-queue="playQueue" :is="playQueueComponent"></component>
+  <playQueueComponent :play-queue="playQueue"></playQueueComponent>
 </template>
 
 <script>
@@ -11,12 +11,13 @@
   var PlayQueueComponent = require("../vue_components/play_queue.vue");
 
   module.exports = {
+    components: {
+      playQueueComponent: PlayQueueComponent
+    },
     props: ["playQueue"],
     name: "playqueue",
     data: () => {
-      return {
-        playQueueComponent: PlayQueueComponent
-      }
+      return {};
     }
   }
 </script>

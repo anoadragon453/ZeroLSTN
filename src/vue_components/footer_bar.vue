@@ -127,9 +127,6 @@
 
 				// Convert to second using track duration
 				page.setTime(desiredProgress * this.songTotalDuration);
-
-				// Play song if it was paused
-				page.playCurrentSong();
 			},
 			// Show time progress changing even though the song is still playing
 			// Allows user to navigate to exact time in song while still listening while doing so

@@ -35,15 +35,7 @@
       </div>
       <div class="row">
         <ul v-if="songs" class="collection with-header">
-            <li class="collection-item" v-for="song in songs">
-                <a href="#" @click.prevent="songEditClicked(song)">
-                  {{ song.title }}
-                </a>
-                <a class="secondary-content">
-                  <a href="#" @click.prevent="songPlayClicked(song)"><i class="material-icons">play_arrow</i></a>
-                  <a href="#" @click.prevent="songQueueClicked(song)"><i class="material-icons">add</i></a>
-                </a>
-            </li>
+            <songitem  v-for="song in songs" :editable="true" :song="song"></songitem>
         </ul>
         <p v-else>No uploads. Press the Add button to get started!</p>
       </div>
@@ -53,8 +45,12 @@
 
 <script>
   var Router = require("../libs/router.js");
+  var SongItem = require("../vue_components/song_item.vue");
 
   module.exports = {
+    components: {
+      songitem: SongItem
+    },
     props: ["mergerZites"],
     name: "uploads",
     data: () => {
@@ -140,24 +136,10 @@
           }
         }
       },
-      songEditClicked: function(song) {
-        // Navigate to edit page with correct data
-        Router.navigate('edit/'+song.site+"/"+song.id);
-      },
-      songPlayClicked: function(song) {
-        // Immediately play song
-        var songFilepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename;
-        page.playSong(songFilepath, song);
-      },
-      songQueueClicked: function(song) {
-        // Add song to the play queue
-        var songFilepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename;
-        page.queueSong(songFilepath, song);
-      },
       uploadClicked: function() {
         // Query user info
 
-        // TODO: Select file then go to file edit screen where you can set details
+        // Open file upload window
         var fileUploadButton = document.querySelector('input[type=file]');
         fileUploadButton.click();
 
