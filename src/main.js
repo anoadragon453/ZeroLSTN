@@ -43,7 +43,9 @@ var app = new Vue({
 		playQueue: new Deque(),			// Play Queue itself
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
-		audioObject: null 				// Object housing JS audio object (play, pause, etc)
+		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
+		playlists: []					// User's playlists, pulled from data.json on reload
+		// TODO: Sharing playlists?
 	},
 	methods: {
 		getUserInfo: function(f = null) {
@@ -67,6 +69,8 @@ var app = new Vue({
 
 class ZeroApp extends ZeroFrame {
 	onOpenWebsocket() {
+		// Make the webpage mobile-compatible
+		this.cmdp("wrapperSetViewport", ["width=device-width", "initial=scale=1.0"]);
 		var self = this;
 
 		// Check if user is logged in on pageload

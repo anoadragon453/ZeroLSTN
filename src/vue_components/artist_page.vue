@@ -3,7 +3,7 @@
         <div class="row">
             <div id="queue" class="col s12">
                 <ul class="collection with-header">
-                    <li class="collection-header"><h4>{{ artist }}</h4><p>Albums</p></li>
+                    <li class="collection-header"><h4>{{ artist }}</h4>Artist</li>
                 </ul>
                 <ul class="collapsible popout" data-collapsible="accordion">
                     <li v-for="album in albums">

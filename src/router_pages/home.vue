@@ -2,7 +2,6 @@
   <div id="mainapp">
     <div class="row">
       <div class="col s1 m1 l4 hide-on-med-and-down">
-        <albumArt></albumArt>
         <playQueue></playQueue>
       </div>
       <div class="col s12 m12 l8">

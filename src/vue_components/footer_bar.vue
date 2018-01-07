@@ -1,32 +1,37 @@
 <template>
 	<footer class="page-footer blue lighten-2" id="Bottombar">
+		<div id="song-progress" class="hide-on-med-and-down range-field center">
+			<input type="range" @input="visualChangeSongProgress()" @change="changeSongProgress()" v-model="songProgress" id="track-progress" min="0" max="100" />
+		</div>
+		<div id="song-progress-slightly-higher" class="show-on-medium-and-down hide-on-large-only range-field center">
+			<input type="range" @input="visualChangeSongProgress()" @change="changeSongProgress()" v-model="songProgress" id="track-progress" min="0" max="100" />
+		</div>
 		<div class="row">
-			<div class="col hide-on-med-and-down m5 l5">
-				<div class="col s2">
+			<div class="col s1 m1 l1">
 				<b>{{ songProgressLeft }}</b>
-				</div>
-				<div class="col s8">
-					<div class="range-field center">
-						<input type="range" @input="visualChangeSongProgress()" @change="changeSongProgress()" v-model="songProgress" id="track-progress" min="0" max="100" />
-					</div>
-				</div>
-				<div class="col s2"><b>{{ songProgressRight }}</b></div>
 			</div>
-			<div class="col s12 m12 l2 center">
+			<div class="col s4 m3 l4">
+				<div class="col s4 m1">
+					<img class="hide-on-med-and-down" id="album-art" src="./logo.png" width="94em">
+				</div>
+				<div id="song-details" class="small hide-on-small-only col s4 m2">
+					<!--<h6>Teen Pregnancy</h6>
+					YouTube's Greatest Hits<br>
+					BLANK BANSHEE-->
+				</div>
+			</div>
+			<div class="col s10 m4 l2 center">
 				<a @click="prev()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_rewind</i></a>
 				<a @click="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ playing ? "pause" : "play_arrow" }}</i></a>
 				<a @click="next()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_forward</i></a>
 			</div>
-			<div class="col hide-on-med-and-down m5 l5">
-				<div class="col s1">
-				<i class="material-icons">volume_up</i>
+			<div class="col hide-on-small-only m2 l2">
+				<div class="range-field center">
+					<input type="range" v-model="volume" id="volume-slider" min="0" max="100" />
 				</div>
-				<div class="col s9">
-					<div class="range-field center">
-						<input type="range" v-model="volume" id="volume-slider" min="0" max="100" />
-					</div>
-				</div>
-				<div class="col s2"><b>{{ volume }}%</b></div>
+			</div>
+			<div class="col s1 m2 l3">
+				<b class="right">{{ songProgressRight }}</b>
 			</div>
 		</div>
 	</footer>
@@ -45,7 +50,8 @@
 				songProgress: 0,
 				songProgressLeft: "00:00",
 				songProgressRight: "00:00",
-				songTotalDuration: 0
+				songTotalDuration: 0,
+				progressCurrentlyChanging: false
 			}
 		},
 		mounted: function() {
@@ -112,13 +118,19 @@
 				}
 
 				// Update slider bar with song % complete
-				this.songProgress = audioObject.currentTime / audioObject.duration * 100;
-
+				// Prevent slider from slipping away from user while they're moving it
+				if (!this.progressCurrentlyChanging) {
+					this.songProgress = audioObject.currentTime / audioObject.duration * 100;
+					// Update progress values on page
+					this.alterShownProgress(audioObject.currentTime);
+				}
+			},
+			alterShownProgress: function(currentTime) {
 				// Get current song progress in mm:ss and update view
-				this.songProgressLeft = this.secondsToMinutesSeconds(audioObject.currentTime);
+				this.songProgressLeft = this.secondsToMinutesSeconds(currentTime);
 
 				// Get remaining song progress in -mm:ss and update view
-				this.songProgressRight = "-" + this.secondsToMinutesSeconds(this.songTotalDuration - audioObject.currentTime);
+				this.songProgressRight = "-" + this.secondsToMinutesSeconds(this.songTotalDuration - currentTime);
 			},
 			// Change the current track time of the playing song
 			changeSongProgress: function() {
@@ -127,11 +139,16 @@
 
 				// Convert to second using track duration
 				page.setTime(desiredProgress * this.songTotalDuration);
+
+				this.progressCurrentlyChanging = false;
 			},
 			// Show time progress changing even though the song is still playing
 			// Allows user to navigate to exact time in song while still listening while doing so
 			visualChangeSongProgress: function() {
-
+				this.progressCurrentlyChanging = true;
+				
+				var movingProgress = document.getElementById("track-progress").value / 100;
+				this.alterShownProgress(movingProgress * this.songTotalDuration);
 			},
 			// Runs on new songs, shows full duration
 			updateSongDuration: function(duration) {

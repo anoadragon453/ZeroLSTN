@@ -5,14 +5,15 @@
  "clone_root": "template-new",
  "cloned_from": "1HeLLo4uzjaLetFx6NH3PMwFP3qbRbTf3D",
  "description": "Listen to music",
+ "domain": "ZeroLSTN.bit",
  "files": {
   "README.md": {
    "sha512": "7601a3bb707137c50e0fe6001c55bdd955a4ca108620012ffdbf4c0a40d453d5",
    "size": 306
   },
   "css/main.css": {
-   "sha512": "44bf73b4231bc44758ab7d93ed525a43f53a56804e8fa4aa9f9dd95c90527869",
-   "size": 120504
+   "sha512": "434281040fc04491ad019e074572c1491705b6f35b330e349a681cc50d92d62c",
+   "size": 120763
   },
   "dbschema.json": {
    "sha512": "9356f73dfdfa854af44b2bb2ddc0103f78247654527dd99783a6e3ae3a4a3d7b",
@@ -87,16 +88,16 @@
    "size": 1676
   },
   "index.html": {
-   "sha512": "08772531f0fe2121c5144cb0f05bd40583d4a5afb07e23897e50ed3717086293",
-   "size": 790
+   "sha512": "ee0375c859ab9eeb90b96c1bce80e8729aa37112ca4cef6a1c701a591a801e65",
+   "size": 723
   },
   "js/bundle.js": {
-   "sha512": "bd6a7d5c0be2591b82598388eb53ff1298afc61d8d4d38c015475544cc7812e6",
-   "size": 1631228
+   "sha512": "3723edc907c37f84d0c541a0170d46315eb5e8a9a33559cf5a04fe44a4349687",
+   "size": 1632546
   },
   "js/bundle.js.map": {
-   "sha512": "cd57b480967c5e72d54357e279f57d5f756a23c5e195f3ac6267ab2233d5f319",
-   "size": 4389334
+   "sha512": "7056801f33baabdb5bb8d6cfc03d7bf1f5fb57012acb05be71f0c7786d744a0b",
+   "size": 4392469
   },
   "logo.png": {
    "sha512": "a05f698dbe70e850afbe59ef5cf2e2c6cabea6f0d5e370afdb5381c1a81ca005",
@@ -105,11 +106,11 @@
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1515330947,
+ "modified": 1515350986,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G3kOmOM216sXIg1Z5WDYJpfYyQfLE7AGbOGf4oz9AVkAL3UePbPWK+WSYpdOcuBH1Yvzsa54OJqouIHMOqLu7Ds="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "HCwwrTWgCPyGti0Z00la34RfzZC8WnnBMdCxpZgZ/LB6MkG706M5Pgt39RoMDPAcE9bY1MTumBmDJSESys8CUSQ="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",
