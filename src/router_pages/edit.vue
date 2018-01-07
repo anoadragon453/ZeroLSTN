@@ -28,7 +28,6 @@
             </div>
           </div>
         </div>
-
         <!-- TODO: Ability to switch genre? -->
       </div>
       <div class="row">

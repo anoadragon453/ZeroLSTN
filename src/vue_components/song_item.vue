@@ -1,11 +1,15 @@
 <template>
     <li id="songitem" class="collection-item">
-        <a href="#" @click.prevent="songEditClicked(song)">
-            {{ song.title }}
+        <a href="#" v-if="editable" @click.prevent="songEditClicked(song)">
+            {{ song.title }} - {{ song.artist }}
         </a>
+        <span v-else>
+            {{ song.title }}
+        </span>
         <a class="secondary-content">
             <a href="#" @click.prevent="songPlayClicked(song)"><i class="material-icons">play_arrow</i></a>
             <a href="#" @click.prevent="songQueueClicked(song)"><i class="material-icons">add</i></a>
+            <a href="#" v-if="editable" @click.prevent="deleteClicked(song)"><i class="material-icons">delete</i></a>
         </a>
     </li>
 </template>
@@ -29,6 +33,9 @@
                 // Add song to the play queue
                 page.queueSong(song);
             },
+            deleteClicked: function(song) {
+                page.deleteSong(song);
+            }
         }
     }
 </script>

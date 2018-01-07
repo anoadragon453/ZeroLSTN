@@ -358,6 +358,33 @@ class ZeroApp extends ZeroFrame {
 			});
 	}
 
+	deleteSong(song) {
+		// Delete song file and it's piecemap and remove from user's data.json
+		var songFilepath = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/" + song.filename;
+		var pieceMapFilepath = songFilepath + ".piecemap.msgpack";
+
+		return this.cmdp("fileDelete", { "inner_path": songFilepath})
+			.then((res) => {
+				// If delete was not successful, show the error in a notification
+				if (res != "ok") {
+					return self.cmdp("wrapperNotification", ["error", res]);	
+				}
+
+				return this.cmdp("fileDelete", { "inner_path": pieceMapFilepath})
+					.then((res) => {
+						// If delete was not successful, show the error in a notification
+						if (res != "ok") {
+							return self.cmdp("wrapperNotification", ["error", res]);	
+						}
+
+						// If both deletes successful, remove the song entry from user's data.json
+						console.log("Delete successful");
+						var data_inner_path = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+
+					});
+			});
+	}
+
 	// Get song info from ID. Returns song object.
 	retrieveSongInfo(genreAddress, songID, authAddress, f = null) {	
 		// Get the user's data.json filepath
@@ -404,20 +431,45 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
-			WHERE uploader='${userAuthAddress}'
+			WHERE uploader="${userAuthAddress}"
 			ORDER BY date_added ASC
 		`;
 	
 		return this.cmdp("dbQuery", [query]);
 	}
 
-	// TODO: Return a list of all songs, with an optional max song amount and offset
+	// Returns a list of all songs, with an optional max song amount and offset
 	getAllSongs(limit = 0, offset = 0) {
-
+		var query = `
+		SELECT * FROM songs
+			LEFT JOIN json USING (json_id)
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query]);
 	}
 
-	// Returns an array of all known artist names
-	getKnownArtists() {
+	// Returns a list of all albums, with an optional max song amount and offset
+	// TODO: Deal with two artists having the same name for an album
+	// Somehow send information back with both artist and album...
+	getAllAlbums(limit = 0, offset = 0) {
+		var query = `
+		SELECT DISTINCT album FROM songs
+			LEFT JOIN json USING (json_id)
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query])
+			.then((albumsObjs) => {
+				// Unpack "artist" string attribute into its own array of strings
+				return new Promise((resolve, reject) => {
+					resolve(albumsObjs.map(function(a) {return a.album;}));
+				});
+			});
+	}
+
+	// Returns an array of all known artist names, with an optional max song amount and offset
+	getAllArtists(limit = 0, offset = 0) {
 		var query = `
 		SELECT DISTINCT artist FROM songs
 			LEFT JOIN json USING (json_id)
@@ -438,7 +490,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT DISTINCT album FROM songs
 			LEFT JOIN json USING (json_id)
-			WHERE artist='${artistName}'
+			WHERE artist="${artistName}"
 			ORDER BY date_added ASC
 		`;
 	
@@ -457,7 +509,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
-			WHERE artist='${artistName}'
+			WHERE artist="${artistName}"
 			ORDER BY date_added ASC
 		`;
 	
@@ -492,7 +544,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
-			WHERE album='${albumName}'
+			WHERE album="${albumName}"
 			ORDER BY date_added ASC
 		`;
 	

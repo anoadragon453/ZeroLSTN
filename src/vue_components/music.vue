@@ -19,18 +19,15 @@
             <div id="albums" class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Albums</h4></li>
-                    <li class="collection-item">Dream Drop Distance</li>
-                    <li class="collection-item">Perfect Weather</li>
-                    <li class="collection-item">Lost Tracks</li>
+                    <li v-for="album in albums" class="collection-item">
+                        <a href="#!" @click.prevent="goToAlbum(album)">{{ album }}</a>
+                    </li>
                 </ul>
             </div>
             <div id="songs" class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Songs</h4></li>
-                    <li class="collection-item">Strawberry Swing</li>
-                    <li class="collection-item">Past Winters</li>
-                    <li class="collection-item">Snowcone</li>
-                    <li class="collection-item">Here We Play</li>
+                    <songitem  v-for="song in songs" :editable="false" :song="song"></songitem>
                 </ul>
             </div>
             <div id="genres" class="col s12">
@@ -91,8 +88,12 @@
 
 <script>
     var Router = require("../libs/router.js");
+    var SongItem = require("../vue_components/song_item.vue");
 
     module.exports = {
+        components: {
+            songitem: SongItem
+        },
         props: [],
         name: "Music",
         mounted: function() {
@@ -104,11 +105,25 @@
             var collap = document.querySelector("ul.collapsible");
             var collapInstance = new M.Collapsible(collap, {});
 
+            // TODO: Paginate
+
             // Get all known artists
             var self = this;
-            page.getKnownArtists()
+            page.getAllArtists(limit=20, offset=0)
                 .then((artists) => {
                     self.artists = artists;
+                });
+
+            // Get all known albums
+            page.getAllAlbums(limit=20, offset=0)
+                .then((albums) => {
+                    self.albums = albums;
+                });
+
+            // Get all known songs
+            page.getAllSongs(limit=20, offset=0)
+                .then((songs) => {
+                    self.songs = songs;
                 });
 
         },
@@ -121,13 +136,21 @@
                     { name: "Genres", icon: "library_music", active: false, show: "genres" },
                     { name: "Playlists", icon: "playlist_play", active: false, show: "playlists" }
                 ],
-                artists: []
+                artists: [],
+                albums: [],
+                genres: [],
+                songs: [],
+                playlists: []
             }
         },
         methods: {
             goToArtist: function(artist) {
                 // Tell the parent view to go to the specified artist's page
                 this.$parent.goToArtistPage(artist)
+            },
+            goToAlbum: function(album) {
+                // Tell the parent view to go to the specified album's page
+                this.$parent.goToAlbumPage(album)
             }
         }
     }

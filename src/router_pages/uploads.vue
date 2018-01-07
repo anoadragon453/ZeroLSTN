@@ -34,7 +34,8 @@
         </div>
       </div>
       <div class="row">
-        <ul v-if="songs" class="collection with-header">
+        <ul v-if="songs && songs.length != 0" class="collection with-header">
+            <li class="collection-header">Uploads</li>
             <songitem  v-for="song in songs" :editable="true" :song="song"></songitem>
         </ul>
         <p v-else>No uploads. Press the Add button to get started!</p>
