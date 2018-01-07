@@ -6,7 +6,10 @@
         <playQueue></playQueue>
       </div>
       <div class="col s12 m12 l8">
-        <a v-if="currentPage != 'music'" @click.prevent="backPressed()" class="waves-effect waves-light btn">Back</a>
+        <span  v-if="currentPage != 'music'">
+          <div class="row"></div>
+          <a @click.prevent="backPressed()" class="waves-effect waves-light btn">Back</a>
+        </span>
         <music v-if="currentPage == 'music'"></music>
         <artistPage v-if="currentPage == 'artist'" :artist="artist"></artistPage>
         <albumPage v-if="currentPage == 'album'" :album="album"></albumPage>

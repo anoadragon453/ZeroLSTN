@@ -1,5 +1,26 @@
 <template>
     <div id="Music">
+        <!-- Modal Structure -->
+        <div class="modal">
+        <div class="modal-content">
+            <div class="row">
+                <div class="col s12">
+                    <h4>Add Genre</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input placeholder="1JErkEXytYwAb8xvwKVKfbNmP2EZxPewbE" id="genre" type="text" class="validate">
+                    <label for="genre">Genre Address</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <a @click="addGenreModal()" class="right waves-effect waves-light btn">Add</a>
+                </div>
+            </div>
+        </div>
+        </div>
         <div class="row">
             <div class="col s12">
                 <ul class="tabs tabs-fixed-width">
@@ -31,6 +52,12 @@
                 </ul>
             </div>
             <div id="genres" class="col s12">
+                <div class="row"></div>
+                <div class="row">
+                    <div class="col s12">
+                        <a @click.prevent="genreModal.M_Modal.open()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
+                    </div>
+                </div>
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Genres</h4></li>
                     <li v-for="genre in connectedGenres" class="collection-item">
@@ -150,6 +177,11 @@
             // Initialize collapsible
             var collap = document.querySelector("ul.collapsible");
             var collapInstance = new M.Collapsible(collap, {});
+
+            // Initialize modal view
+            var modal = document.querySelector(".modal");
+            var instance_modal = new M.Modal(modal, {});
+            this.genreModal = modal;
         },
         data: () => {
             return {
@@ -165,7 +197,8 @@
                 genres: [],
                 connectedGenres: [],
                 songs: [],
-                playlists: []
+                playlists: [],
+                genreModal: null
             }
         },
         methods: {
@@ -178,7 +211,19 @@
                 this.$parent.goToAlbumPage(album)
             },
             addGenre: function(address) {
+                // Add a genre by clicking the '+' on the genre page
                 page.addMerger(address);
+            },
+            addGenreModal: function() {
+                // Add a genre manually by address
+                var genreAddress = document.getElementById("genre").value;
+                page.addMerger(genreAddress);
+
+                // Close modal
+                this.genreModal.M_Modal.close()
+
+                // Inform user they'll need to refresh to see new content
+                page.cmdp("wrapperNotification", ["info", "Refresh to see new content!"]);
             }
         }
     }
