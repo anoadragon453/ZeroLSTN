@@ -95,6 +95,25 @@ class ZeroApp extends ZeroFrame {
 		});
 	}
 
+	// This is the list of genres (merger zites) that I'm hardcoding for people
+	// to use and discover. You can always add more in the UI.
+	getAllHardcodedGenres() {
+		var genres = [
+			{
+				"name": "Vaporwave",
+				"address": "1JErkEXytYwAb8xvwKVKfbNmP2EZxPewbE"
+			},
+			{
+				"name": "Rock",
+				"address": "1KYaxj41APJowLYZsnxBJx8iPj1HbJzEho"
+			}
+		]
+
+		return new Promise((resolve, reject) => {
+			resolve(genres);
+		});
+	}
+
 	// Request permission to the ZeroLSTN merger/access ZeroLSTN site data
 	requestPermission(permission, siteInfo, callback) {
 		// Already have permission
@@ -150,7 +169,7 @@ class ZeroApp extends ZeroFrame {
 	}
 
 	// -------------------------------------------------- //
-	// ---------- Uploading and Editing Songs ----------- //
+	// ------ Uploading, Editing and Deleting Songs ----- //
 
 	checkOptional(genreAddress, doSignPublish, f) {
 		// Make sure user is logged in first
@@ -385,6 +404,9 @@ class ZeroApp extends ZeroFrame {
 			});
 	}
 
+	// -------------------------------------------------- //
+	// ----- Retrieving Song/Album/Artist/Genre info ---- //
+
 	// Get song info from ID. Returns song object.
 	retrieveSongInfo(genreAddress, songID, authAddress, f = null) {	
 		// Get the user's data.json filepath
@@ -483,6 +505,25 @@ class ZeroApp extends ZeroFrame {
 					resolve(artistObjs.map(function(a) {return a.artist;}));
 				});
 			});
+	}
+
+	// Returns an array of all genres and their addresses
+	// [{"name": "Vaporwave", "address": "1abcxyz"}]
+	getConnectedGenres() {
+		// Get list of merger zites
+		return page.cmdp("mergerSiteList", [true])
+        	.then((mergerZites) => {
+			// Compute genres from Merger Zites
+			var genres = [];
+			for (var ziteAddress in mergerZites) {
+				genres.push({"name": mergerZites[ziteAddress].content.title, "address": ziteAddress});
+			}
+			
+			// Return genres as a promise object
+			return new Promise((resolve, reject) => {
+				resolve(genres);
+			});
+		});
 	}
 
 	// Returns an array of album titles, made by the given artist

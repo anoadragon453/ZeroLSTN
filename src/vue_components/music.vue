@@ -33,22 +33,15 @@
             <div id="genres" class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Genres</h4></li>
-                    <li class="collection-item">Drum n' Bass</li>
-                    <li class="collection-item">Rock</li>
-                    <li class="collection-item">Metal</li>
-                    <li class="collection-item">Spacebass</li>
-                    <li class="collection-item">Drum n' Bass</li>
-                    <li class="collection-item">Rock</li>
-                    <li class="collection-item">Metal</li>
-                    <li class="collection-item">Spacebass</li>
-                    <li class="collection-item">Drum n' Bass</li>
-                    <li class="collection-item">Rock</li>
-                    <li class="collection-item">Metal</li>
-                    <li class="collection-item">Spacebass</li>
-                    <li class="collection-item">Drum n' Bass</li>
-                    <li class="collection-item">Rock</li>
-                    <li class="collection-item">Metal</li>
-                    <li class="collection-item">Last</li>
+                    <li v-for="genre in connectedGenres" class="collection-item">
+                        {{ genre.name }}
+                    </li>
+                    <li v-for="genre in genres" class="collection-item">
+                        {{ genre.name }}
+                        <a class="secondary-content">
+                            <a href="#" @click.prevent="addGenre(genre.address)"><i class="material-icons">add</i></a>
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div id="playlists" class="col s12">
@@ -96,15 +89,7 @@
         },
         props: [],
         name: "Music",
-        mounted: function() {
-            // Initialize tabs
-            var tabs = document.querySelector("ul.tabs");
-            var instance = new M.Tabs(tabs, {});
-
-            // Initialize collapsible
-            var collap = document.querySelector("ul.collapsible");
-            var collapInstance = new M.Collapsible(collap, {});
-
+        beforeMount: function() {
             // TODO: Paginate
 
             // Get all known artists
@@ -126,6 +111,45 @@
                     self.songs = songs;
                 });
 
+            // Get hardcoded genres/merger zites
+            page.getAllHardcodedGenres()
+                .then((genres) => {
+                    self.genres = genres;
+                });
+
+            // Get genres we've already added
+            // TODO: Make this not terrible
+            page.getConnectedGenres()
+                .then((connectedGenres) => {
+                    self.connectedGenres = connectedGenres;
+                    var newGenres = [];
+                    self.genres.forEach(genre => { // For each hardcoded genre
+                        // Check if we're already connected
+                        var shouldAdd = true;
+                        
+                        // If we are, delete it from the hardcoded list.
+                        // Any genre on the hardcoded list will show up with a '+' to add it
+                        // Afterwards, any genres in connectedGenres will be shown with no '+'
+                        for (var i = 0; i < connectedGenres.length; i++) {
+                            if (genre.address === connectedGenres[i].address) {
+                                shouldAdd = false;
+                            }
+                        }
+                        if (shouldAdd) {
+                            newGenres.push(genre);
+                        }
+                    });
+                    self.genres = newGenres;
+                });
+        },
+        mounted: function() {
+            // Initialize tabs
+            var tabs = document.querySelector("ul.tabs");
+            var instance = new M.Tabs(tabs, {});
+
+            // Initialize collapsible
+            var collap = document.querySelector("ul.collapsible");
+            var collapInstance = new M.Collapsible(collap, {});
         },
         data: () => {
             return {
@@ -139,6 +163,7 @@
                 artists: [],
                 albums: [],
                 genres: [],
+                connectedGenres: [],
                 songs: [],
                 playlists: []
             }
@@ -151,6 +176,9 @@
             goToAlbum: function(album) {
                 // Tell the parent view to go to the specified album's page
                 this.$parent.goToAlbumPage(album)
+            },
+            addGenre: function(address) {
+                page.addMerger(address);
             }
         }
     }

@@ -29,13 +29,15 @@
     <div class="container">
       <div class="row"></div>
       <div class="row">
-        <div class="col s12">
+        <div class="col s6">
+          <h5 class="hide-on-med-and-down">Uploads</h5>
+        </div>
+        <div class="col s6">
           <a @click.prevent="uploadModal.M_Modal.open()" class="btn waves-effect waves-light right"><i class="material-icons left">cloud_upload</i>New Song</a>
         </div>
       </div>
       <div class="row">
-        <ul v-if="songs && songs.length != 0" class="collection with-header">
-            <li class="collection-header">Uploads</li>
+        <ul v-if="songs && songs.length != 0" class="collection">
             <songitem  v-for="song in songs" :editable="true" :song="song"></songitem>
         </ul>
         <p v-else>No uploads. Press the Add button to get started!</p>

@@ -1,7 +1,7 @@
 <template>
     <li id="songitem" class="collection-item">
         <a href="#" v-if="editable" @click.prevent="songEditClicked(song)">
-            {{ song.title }} - {{ song.artist }}
+            {{ song.title }}<span class="hide-on-med-and-down"> - {{ song.artist }}</span>
         </a>
         <span v-else>
             {{ song.title }}
