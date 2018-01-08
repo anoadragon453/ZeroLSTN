@@ -1,4 +1,6 @@
 version = "0.1"
+var indexAddress = "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB";
+var defaultGenreAddress = "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY";
 
 // JS Animations
 var anime = require("animejs");
@@ -81,13 +83,14 @@ class ZeroApp extends ZeroFrame {
 				app.siteInfo = siteInfo;
 				app.getUserInfo();
 
-			// Add initial merger sites/genres
+			// Ensure genre index and default genre sites are loaded
 			page.requestPermission("Merger:ZeroLSTN", siteInfo, function() {
 				page.cmdp("mergerSiteList", [true])
 					.then((mergerZites) => {
 						console.log("Got Merger Zites");
-						if (!mergerZites["1VapoRYCxXxkCnzVUZTJYtaMBpbPA1C8H"]) {
-							page.addMerger("1VapoRYCxXxkCnzVUZTJYtaMBpbPA1C8H")
+						if (!mergerZites[defaultGenreAddress] || !mergerZites[indexAddress]) {
+							page.addMerger(indexAddress);
+							page.addMerger(defaultGenreAddress)
 								.then(() => {
 									return self.cmdp("wrapperNotification", ["info", "You may need to refresh to see new music."]);
 								});
@@ -97,28 +100,6 @@ class ZeroApp extends ZeroFrame {
 						}
 					});
 			});
-		});
-	}
-
-	// This is the list of genres (merger zites) that I'm hardcoding for people
-	// to use and discover. You can always add more in the UI.
-	getAllHardcodedGenres() {
-		var genres = [
-			{
-				"name": "Vaporwave",
-				"address": "1VapoRYCxXxkCnzVUZTJYtaMBpbPA1C8H"
-			},
-			{
-				"name": "Rock",
-				"address": "1RockUUrg43iF7FZVaCCg8cFAAdNkDy36"
-			},
-			{
-				
-			}
-		]
-
-		return new Promise((resolve, reject) => {
-			resolve(genres);
 		});
 	}
 
@@ -183,6 +164,7 @@ class ZeroApp extends ZeroFrame {
 	// -------------------------------------------------- //
 	// ------ Uploading, Editing and Deleting Songs ----- //
 
+	// Check user has correct "optional" and "ignore" values set in their own content.json
 	checkOptional(genreAddress, doSignPublish, f) {
 		// Make sure user is logged in first
         if (!app.userInfo || !app.userInfo.cert_user_id) {
@@ -191,13 +173,12 @@ class ZeroApp extends ZeroFrame {
         }
 
 		// Get the user's data.json filepath
-        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
         var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 
         // Verify that user has correct "optional" and "ignore" values
         page.cmd("fileGet", { "inner_path": content_inner_path, "required": false }, (data) => {
             if (!data) {
-				console.log("Creating default data.json...");
+				console.log("Creating default content.json...");
 				data = {};
 			} else {
 				data = JSON.parse(data);
@@ -284,18 +265,16 @@ class ZeroApp extends ZeroFrame {
     			}
 
 				// If no songs uploaded yet, create empty array
-    			if (!data["songs"]) data["songs"] = [];
+				if (!data["songs"]) data["songs"] = {};
 
 				// Add new song with default data
-    			data["songs"].push({
-					"id": '' + date, // Convert ID to string
+    			data["songs"]['' + date] = { // Convert date to string
 					"filename": filename,
 					"title": title,
 					"album": album,
 					"artist": artist,
-					"uploader": app.siteInfo.auth_address,
     				"date_added": date
-    			});
+    			};
 
 				// Write values back to JSON string and the data.json
     			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
@@ -345,25 +324,10 @@ class ZeroApp extends ZeroFrame {
 					return;
 				}
 
-				// Find and edit song with given ID
-				var songToEdit = null;
-				for (var song of data["songs"]) {
-					if (song.id === songID) {
-						songToEdit = song
-						break;
-					}
-				}
-
-				if(!songToEdit) {
-					console.log("Unable to find song. Given ID: " + songID + ", list:");
-					console.log(data["songs"]);
-					return;
-				}
-
 				// Update with new values
-				songToEdit.title = title;
-				songToEdit.album = album;
-				songToEdit.artist = artist;
+				data["songs"][songID].title = title;
+				data["songs"][songID].album = album;
+				data["songs"][songID].artist = artist;
 
 				// Write values back to JSON string and the data.json
     			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
@@ -390,34 +354,181 @@ class ZeroApp extends ZeroFrame {
 	}
 
 	deleteSong(song) {
-		// Delete song file and it's piecemap and remove from user's data.json
+		// Remove from user's data.json then delete song file and its piecemap
+		var data_inner_path = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 		var songFilepath = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/" + song.filename;
 		var pieceMapFilepath = songFilepath + ".piecemap.msgpack";
 
-		return this.cmdp("fileDelete", { "inner_path": songFilepath})
-			.then((res) => {
+		return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+			.then((data) => {
+				// Get user's existing data
+				if (!data) {
+					// Can't remove a song if there aren't any yet
+					console.log("ERROR");
+					return;
+				} else {
+					// Parse user's data into JS object
+					data = JSON.parse(data);
+				}
+	
+				// Return if no songs available
+				if (!data["songs"]) {
+					console.log("ERROR");
+					return;
+				}
+
+				// Remove the song
+				delete data["songs"][song.id];
+
+				// Write values back to JSON string and the data.json
+				var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
+
+				return this.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]);
+			}).then((res) => {
+				// Delete file and piecemap
+				return this.cmdp("fileDelete", { "inner_path": songFilepath})
+			}).then((res) => {
 				// If delete was not successful, show the error in a notification
 				if (res != "ok") {
-					return self.cmdp("wrapperNotification", ["error", res]);	
+					return this.cmdp("wrapperNotification", ["error", res]);	
 				}
 
 				return this.cmdp("fileDelete", { "inner_path": pieceMapFilepath})
-					.then((res) => {
-						// If delete was not successful, show the error in a notification
-						if (res != "ok") {
-							return self.cmdp("wrapperNotification", ["error", res]);	
-						}
+			}).then((res) => {
+				// If delete was not successful, show the error in a notification
+				if (res != "ok") {
+					return this.cmdp("wrapperNotification", ["error", res]);	
+				}
 
-						// If both deletes successful, remove the song entry from user's data.json
-						console.log("Delete successful");
-						var data_inner_path = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+				console.log("Delete successful");
+				// Sign and publish site
+			}).then(() => {
+				// Tell Vue objects that the song has been deleted (refreshes uploads page)
+				app.$emit("songDeleted");
+				
+				return this.cmdp("siteSign", { "inner_path": content_inner_path });
+			}).then((res) => {
+				if (res === "ok") {
+					return this.cmdp("sitePublish", { "inner_path": content_inner_path, "sign": false });
+				} else {
+					return this.cmdp("wrapperNotification", ["error", "Failed to sign user data."]);
+				}
+			})
+		
+	}
 
+	// -------------------------------------------------- //
+	// ------------ Installing/Editing Genres ----------- //
+
+	// Adds a new genre to the index
+	installGenre(genreName, genreAddress, f=null) {
+		console.log("Creating: " + genreAddress);
+		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		this.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
+			if (!data) {
+				console.log("Creating default data.json...");
+				data = {};
+			} else {
+				data = JSON.parse(data);
+			}
+
+			// Create "genres" object if it doesn't exist
+			if (!data.genres) {
+				data.genres = {};
+			}
+
+			// Add genre name and address to the index
+			data.genres[genreAddress] = {
+				name: genreName,
+				date_added: Date.now()
+			}			
+
+			// Write (and Sign and Publish)
+			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+			this.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
+				if (res === "ok") {
+					this.cmd("siteSign", { "inner_path": content_inner_path }, () => {
+						this.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false }, () => {
+							// Run callback function
+							if (f !== null && typeof f === "function") f();
+						});
 					});
+				} else {
+					this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
+					if (f !== null && typeof f === "function") f();
+				}
 			});
+		});
+	}
+
+	// Removes an existing genre from the index
+	removeGenre(genreName, genreAddress, f=null) {
+		console.log("Creating: " + genreAddress);
+		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		this.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
+			// Return if there's no data file
+			if (!data) {
+				if (f !== null && typeof f === "function") f();
+				return;
+			} else {
+				data = JSON.parse(data);
+			}
+
+			// If there are no genres here, just return
+			if (!data.genres) {
+				if (f !== null && typeof f === "function") f();
+				return;
+			}
+
+			// Add genre name and address to the index
+			delete data.genres[genreAddress];	
+
+			// Write (and Sign and Publish)
+			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+			this.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
+				if (res === "ok") {
+					this.cmd("siteSign", { "inner_path": content_inner_path }, () => {
+						this.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false }, () => {
+							// Run callback function
+							if (f !== null && typeof f === "function") f();
+						});
+					});
+				} else {
+					this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
+					if (f !== null && typeof f === "function") f();
+				}
+			});
+		});
 	}
 
 	// -------------------------------------------------- //
 	// ----- Retrieving Song/Album/Artist/Genre info ---- //
+
+	// Return list of genres from Genre Index
+	getGenresFromIndex() {
+		var query = `
+		SELECT * FROM genres
+			LEFT JOIN json USING (json_id)
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query]);
+	}
+
+	// Return list of our own genres from Genre Index
+	getMyGenresFromIndex() {
+		var query = `
+		SELECT * FROM genres
+			LEFT JOIN json USING (json_id)
+			WHERE directory="data/users/${userAuthAddress}"
+			ORDER BY date_added ASC
+		`;
+	
+		return this.cmdp("dbQuery", [query]);
+	}
 
 	// Get song info from ID. Returns song object.
 	retrieveSongInfo(genreAddress, songID, authAddress, f = null) {	
@@ -443,20 +554,17 @@ class ZeroApp extends ZeroFrame {
 					return;
 				}
 
-				// Find and edit song with given ID
-				var songToRetrieve = null;
-				for (var song of data["songs"]) {
-					if (song.id === songID) {
-						songToRetrieve = song
-						break;
-					}
+				// Check for the song by ID
+				if (data["songs"][songID]) {
+					// Add ID to song
+					data["songs"][songID].id = songID;
+
+					// Run callback function
+					if (f !== null && typeof f === "function") f(data["songs"][songID]);
+				} else {
+					// Return null if we didn't find it
+					if (f !== null && typeof f === "function") f(null);
 				}
-
-				console.log("Got song:");
-				console.log(songToRetrieve);
-
-				// Run callback function
-				if (f !== null && typeof f === "function") f(songToRetrieve);
 		});
 	}
 
@@ -465,9 +573,10 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
-			WHERE uploader="${userAuthAddress}"
+			WHERE directory="data/users/${userAuthAddress}"
 			ORDER BY date_added ASC
 		`;
+		console.log(query)
 	
 		return this.cmdp("dbQuery", [query]);
 	}

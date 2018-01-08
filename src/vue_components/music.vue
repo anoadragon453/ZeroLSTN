@@ -120,13 +120,13 @@
                 });
 
             // Get hardcoded genres/merger zites
-            page.getAllHardcodedGenres()
+            page.getGenresFromIndex()
                 .then((genres) => {
                     self.genres = genres;
                 });
 
             // Get genres we've already added
-            // TODO: Make this not terrible
+            // TODO: Make this more efficient
             page.getConnectedGenres()
                 .then((connectedGenres) => {
                     self.connectedGenres = connectedGenres;
@@ -141,12 +141,17 @@
                         for (var i = 0; i < connectedGenres.length; i++) {
                             if (genre.address === connectedGenres[i].address) {
                                 shouldAdd = false;
+                            } else if (connectedGenres[i].address === "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY" ||
+                              connectedGenres[i].address === "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB") {
+                                // Remove default genre site and index from merger site results
+                                self.connectedGenres.splice(i, 1);
                             }
+                            
                         }
                         if (shouldAdd) {
                             newGenres.push(genre);
                         }
-                    });
+                    });            
                     self.genres = newGenres;
                 });
         },
@@ -159,11 +164,6 @@
             // TODO: Uncomment when playlists are live again
             //var collap = document.querySelector("ul.collapsible");
             //var collapInstance = new M.Collapsible(collap, {});
-
-            // Initialize modal view
-            var modal = document.querySelector(".modal");
-            var instance_modal = new M.Modal(modal, {});
-            this.genreModal = modal;
         },
         data: () => {
             return {

@@ -74,6 +74,9 @@
       var instance_modal = new M.Modal(modal, {});
       this.uploadModal = modal;
 
+      // Catch song duration updates
+			this.$parent.$on("songDeleted", this.getSongs);
+
       // Keep a reference to ourself
       var self = this;
 
@@ -110,18 +113,22 @@
           // Add event listener for whenever autocomplete field is edited
           autocomplete.addEventListener('keyup', self.autocompleteChanged);
 
-          // Show list of uploads
-          page.cmdp("siteInfo", {})
-			      .then(siteInfo => {
-              page.getSongsByUser(siteInfo.auth_address)
-                .then((songs) => {
-                  // Store and later list songs on page
-                  this.songs = songs;
-                });
-            });
+          this.getSongs();
         });
     },
     methods: {
+      getSongs: function() {
+        // Get and show list of uploads
+        page.cmdp("siteInfo", {})
+          .then(siteInfo => {
+            page.getSongsByUser(siteInfo.auth_address)
+              .then((songs) => {
+                console.log(songs);
+                // Store and later list songs on page
+                this.songs = songs;
+              });
+          });
+      },
       showModal: function() {
         // Make sure user is signed in first
         if(!page.isUserSignedIn()) {

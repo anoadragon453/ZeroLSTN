@@ -8,7 +8,14 @@
 			"file_name": "data.json"
 		},
 		".+/data/users/.+/data.json": {
-			"to_table": ["songs"]
+			"to_table": [
+				{"table": "songs", "node": "songs", "key_col": "id"}
+			]
+		},
+		"1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB/data/users/.+/data.json": {
+			"to_table": [
+				{"table": "genres", "node": "genres", "key_col": "address"}
+			]
 		}
 	},
 	"tables": {
@@ -30,11 +37,20 @@
 			    ["title", "TEXT"],
 				["artist", "TEXT"],
 				["album", "TEXT"],
-				["uploader", "TEXT"],
 			    ["date_added", "INTEGER"],
 			    ["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
-			"indexes": ["CREATE UNIQUE INDEX song_key ON songs(json_id, id)", "CREATE INDEX song_date_added_idx ON songs (date_added DESC)"],
+			"indexes": ["CREATE UNIQUE INDEX song_id ON songs(json_id, id)"],
+			"schema_changed": 3
+		},
+		"genres": {
+			"cols": [
+				["address", "TEXT"],
+				["name", "TEXT"],
+			    ["date_added", "INTEGER"],
+			    ["json_id", "INTEGER REFERENCES json (json_id)"]
+			],
+			"indexes": ["CREATE UNIQUE INDEX genres_address ON genres(json_id, address)"],
 			"schema_changed": 2
 		}
 	}

@@ -25,9 +25,6 @@
         props: ["playQueueObj", "queueIndex"],
         name: "playqueuecomponent",
         mounted: function() {
-            if (this.playQueueObj) {
-                console.log(this.playQueueObj.toArray());
-            }
         },
         methods: {
             goto: function(to) {
