@@ -15,7 +15,7 @@
 					<!--<img class="hide-on-med-and-down" id="album-art" src="./logo.png" width="94em">-->
 				</div>
 				<div id="song-details" class="small hide-on-small-only col s4 m2">
-					<span v-if="currentSong">
+					<span v-if="false">
 						<h6>{{ currentSong.title }}</h6>
 						{{ currentSong.album }}<br>
 						{{ currentSong.artist }}
@@ -43,12 +43,13 @@
 	var Router = require("../libs/router.js");
 
 	module.exports = {
-		props: ["currentSong"],
+		props: [],
 		name: "BottomBar",
 		data: () => {
 			return {
 				playing: false,
 				volume: 80,
+				currentSong: null,
 				songProgress: 0,
 				songProgressLeft: "00:00",
 				songProgressRight: "00:00",
@@ -71,10 +72,16 @@
 			// Catch song play/pause updates
 			this.$parent.$on("songPlaying", this.updatePlayPauseButton);
 
+			// Catch song changes
+			this.$parent.$on("newSong", this.newSong);
+
 			// Update current song progress every second
 			setInterval(this.updateSongProgress, 1000);
 		},
 		methods: {
+			newSong: function(song) {
+				this.currentSong = song;
+			},
 			playPause: function() {
 				// Toggle playing music
 				//this.playing = !this.playing;

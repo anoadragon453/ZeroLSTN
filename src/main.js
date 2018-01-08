@@ -30,9 +30,10 @@ var app = new Vue({
 		footerBar: FooterBar			// Footer - Vue component
 	},
 	el: "#app",
-	template: `<div>
+	template: `
+		<div>
 			<navbar ref="navbar" :user-info="userInfo"></navbar>
-			<component ref="view" :is="currentView" :current-song="currentSong" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
+			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
 			<footerBar ref="footerBar"></footerBar>
 		</div>`,
 	data: {
@@ -44,7 +45,6 @@ var app = new Vue({
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
 		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
-		currentSong: null,				// Song that is currently loaded
 		playlists: []					// User's playlists, pulled from data.json on reload
 		// TODO: Sharing playlists?
 	},
@@ -86,8 +86,8 @@ class ZeroApp extends ZeroFrame {
 				page.cmdp("mergerSiteList", [true])
 					.then((mergerZites) => {
 						console.log("Got Merger Zites");
-						if (!mergerZites["1JErkEXytYwAb8xvwKVKfbNmP2EZxPewbE"]) {
-							page.addMerger("1JErkEXytYwAb8xvwKVKfbNmP2EZxPewbE")
+						if (!mergerZites["1VapoRYCxXxkCnzVUZTJYtaMBpbPA1C8H"]) {
+							page.addMerger("1VapoRYCxXxkCnzVUZTJYtaMBpbPA1C8H")
 								.then(() => {
 									return self.cmdp("wrapperNotification", ["info", "You may need to refresh to see new music."]);
 								});
@@ -106,11 +106,14 @@ class ZeroApp extends ZeroFrame {
 		var genres = [
 			{
 				"name": "Vaporwave",
-				"address": "1JErkEXytYwAb8xvwKVKfbNmP2EZxPewbE"
+				"address": "1VapoRYCxXxkCnzVUZTJYtaMBpbPA1C8H"
 			},
 			{
 				"name": "Rock",
-				"address": "1KYaxj41APJowLYZsnxBJx8iPj1HbJzEho"
+				"address": "1RockUUrg43iF7FZVaCCg8cFAAdNkDy36"
+			},
+			{
+				
 			}
 		]
 
@@ -630,7 +633,7 @@ class ZeroApp extends ZeroFrame {
 		this.playSongFile(filepath);
 
 		// Allow Vue components to access the current playing song
-		this.currentSong = song;
+		app.$emit("newSong", song);
 
 		// Update footer with new song duration once metadata has been loaded
 		app.audioObject.addEventListener('loadedmetadata', function() {
@@ -707,7 +710,7 @@ class ZeroApp extends ZeroFrame {
 	playSongAtQueueIndex(index) {
 		// Update the queue index
 		app.queueIndex = index;
-		
+
 		this.playSong(app.playQueue.get(index));
 	}
 
@@ -832,5 +835,6 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
 	{ route: "edit/:genre/:songID", component: Edit },
 	{ route: "playqueue", component: PlayQueue },
+	{ route: "addGenre/:genreName/:genreAddress", component: Home },
 	{ route: "", component: Home }
 ]);

@@ -44,6 +44,12 @@
         album: ""
       }
     },
+    mounted: function() {
+      // Check if someone is coming here from creating a new genre
+      if (Router.currentParams["genreName"] && Router.currentParams["genreAddress"]) {
+        console.log(Router.currentParams["genreName"] + "/" + Router.currentParams["genreAddress"])
+      }
+    },
     methods: {
       backPressed: function() {
         // Go back to the main music page

@@ -1,26 +1,5 @@
 <template>
     <div id="Music">
-        <!-- Modal Structure -->
-        <div class="modal">
-        <div class="modal-content">
-            <div class="row">
-                <div class="col s12">
-                    <h4>Add Genre</h4>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12">
-                    <input placeholder="1JErkEXytYwAb8xvwKVKfbNmP2EZxPewbE" id="genre" type="text" class="validate">
-                    <label for="genre">Genre Address</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col s12">
-                    <a @click="addGenreModal()" class="right waves-effect waves-light btn">Add</a>
-                </div>
-            </div>
-        </div>
-        </div>
         <div class="row">
             <div class="col s12">
                 <ul class="tabs tabs-fixed-width">
@@ -55,7 +34,7 @@
                 <div class="row"></div>
                 <div class="row">
                     <div class="col s12">
-                        <a @click.prevent="genreModal.M_Modal.open()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
+                        <a @click.prevent="addNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
                     </div>
                 </div>
                 <ul class="collection with-header">
@@ -177,8 +156,9 @@
             var instance = new M.Tabs(tabs, {});
 
             // Initialize collapsible
-            var collap = document.querySelector("ul.collapsible");
-            var collapInstance = new M.Collapsible(collap, {});
+            // TODO: Uncomment when playlists are live again
+            //var collap = document.querySelector("ul.collapsible");
+            //var collapInstance = new M.Collapsible(collap, {});
 
             // Initialize modal view
             var modal = document.querySelector(".modal");
@@ -214,18 +194,13 @@
             },
             addGenre: function(address) {
                 // Add a genre by clicking the '+' on the genre page
-                page.addMerger(address);
-            },
-            addGenreModal: function() {
-                // Add a genre manually by address
-                var genreAddress = document.getElementById("genre").value;
                 page.addMerger(genreAddress);
+            },
+            addNewGenre: function() {
+                // Clone and navigate to the default genre site
+                page.cmdp("siteClone", ["1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY"]);
 
-                // Close modal
-                this.genreModal.M_Modal.close()
 
-                // Inform user they'll need to refresh to see new content
-                page.cmdp("wrapperNotification", ["info", "Refresh to see new content!"]);
             }
         }
     }
