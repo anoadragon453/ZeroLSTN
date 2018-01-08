@@ -194,13 +194,11 @@
             },
             addGenre: function(address) {
                 // Add a genre by clicking the '+' on the genre page
-                page.addMerger(genreAddress);
+                page.addMerger(address);
             },
             addNewGenre: function() {
                 // Clone and navigate to the default genre site
                 page.cmdp("siteClone", ["1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY"]);
-
-
             }
         }
     }

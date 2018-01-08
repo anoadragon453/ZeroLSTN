@@ -336,6 +336,8 @@ class ZeroApp extends ZeroFrame {
 				
 				// Sign and publish site
     		}).then((res) => {
+				// Return to uploads page while it publishes
+				if (f !== null && typeof f === "function") f(songID);
     			if (res === "ok") {
     				return self.cmdp("siteSign", { "inner_path": content_inner_path });
     			} else {
@@ -347,9 +349,6 @@ class ZeroApp extends ZeroFrame {
     			} else {
     				return self.cmdp("wrapperNotification", ["error", "Failed to sign user data."]);
 				}
-			}).then((res) => {
-				// Run callback function
-				if (f !== null && typeof f === "function") f(songID);
 			});
 	}
 
@@ -406,7 +405,7 @@ class ZeroApp extends ZeroFrame {
 			}).then(() => {
 				// Tell Vue objects that the song has been deleted (refreshes uploads page)
 				app.$emit("songDeleted");
-				
+
 				return this.cmdp("siteSign", { "inner_path": content_inner_path });
 			}).then((res) => {
 				if (res === "ok") {
