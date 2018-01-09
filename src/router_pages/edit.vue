@@ -18,7 +18,7 @@
         </div>
       </div>
       <div class="row">
-        <!-- Image Upload -->
+        <!-- Image Upload
         <div class="col s6">
           <div class="file-field input-field">
             <div class="btn waves-effect waves-light">
@@ -28,6 +28,7 @@
             </div>
           </div>
         </div>
+        -->
         <!-- TODO: Ability to switch genre? -->
       </div>
       <div class="row">

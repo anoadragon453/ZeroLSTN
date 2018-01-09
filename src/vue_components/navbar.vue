@@ -4,9 +4,8 @@
 			<div class="nav-container">
 				<a href="./?/" class="brand-logo" v-on:click.prevent="goto('')">{{ ZiteName }}</a>
 				<a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-				<!--<ul class="left">-->
-				<!--</ul>-->
 				<ul class="right hide-on-med-and-down">
+					<!--
                     <li>
                         <a @click.prevent="downloadedToggle()">
                         <div class="switch">
@@ -18,6 +17,7 @@
                         </div>
                         </a>
                     </li>
+					-->
 					<li>
 						<a @click.prevent="goto('uploads')">Uploads</a>
 					</li>
@@ -28,6 +28,7 @@
 					<li><a @click.prevent="goto('')">Home</a></li>
 					<li><a @click.prevent="goto('uploads')">Uploads</a></li>
 					<li><a @click.prevent="goto('playqueue')">Play Queue</a></li>
+					<!--
 					<li>
                         <a @click.prevent="downloadedToggle()">
                         <div class="switch">
@@ -39,6 +40,7 @@
                         </div>
                         </a>
                     </li>
+					-->
 					<li v-if="!isLoggedIn"><a @click.prevent="login()">Login</a></li>
 					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
@@ -78,6 +80,11 @@
 				// Hide sidebar by "clicking" the overlay
 				var sidenavOverlay = document.querySelector(".sidenav-overlay");
 				sidenavOverlay.click();
+
+				// If logo was clicked, tell home to go back to music page
+				if (to === '') {
+					page.goHome();
+				}
 
                 // Go to specified page
                 Router.navigate(to);

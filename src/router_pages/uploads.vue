@@ -13,6 +13,9 @@
                 <label for="autocomplete-input">Genre</label>
               </div>
             </div>
+            <div class="row">
+              Can't find your genre? <a href="#" @click.prevent="goto('/')">Add it!</a>
+            </div>
           </div>
           <div class="col s12 m6 l6">
             <!-- Upload button -->
@@ -40,7 +43,7 @@
         <ul v-if="songs && songs.length != 0" class="collection">
             <songitem  v-for="song in songs" :editable="true" :song="song"></songitem>
         </ul>
-        <p v-else>No uploads. Press the Add button to get started!</p>
+        <p v-else>No uploads. Press the New button to get started!</p>
       </div>
     </div>
   </div>
@@ -97,8 +100,13 @@
           // TODO: Have a genre image stored with each mergerZite?
           var genreTitles = {};
           for (var genre in genres) {
-            // Add genre title, null image
-            genreTitles[genre] = null;
+            // Don't show index and default genre sites
+            if (genres[genre] !== "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB" &&
+              genres[genre] !== "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY") {
+              // Add genre title, null image
+              genreTitles[genre] = null;
+            }
+            
           }
 
           // Initialize autcomplete in modal
@@ -177,7 +185,7 @@
           var file = this.files[0];
 
           // Check if the file is one of approved filetype
-          if (!file || typeof file !== "object" || !file.type.match("(audio)\/(mp3|flac|ogg|m4a|mp4)")) {
+          if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|m4a|mp4)")) {
             page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match mp3/flac/ogg/m4a/mp4."]);
             return
           }
@@ -200,6 +208,10 @@
             });
           });
         });
+      },
+      // TODO: Make go back to genre tab
+      goto: function(to) {
+        Router.navigate(to);
       }
     }
   }

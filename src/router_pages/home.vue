@@ -60,6 +60,20 @@
         this.addGenre = true;
         this.genreName = Router.currentParams["genreName"];
         this.genreAddress = Router.currentParams["genreAddress"];
+
+        // Catch genre index updates
+        var self = this;
+        this.$parent.$on("genreIndexUpdate", function() {
+          // Hide genre add screen once we have finished adding
+          self.addGenre = false;
+        });
+
+        // Catch home logo clicks
+        // TODO: Figure out why not catching
+        this.$parent.$on("goHome", function() {
+          console.log("Caught it!")
+          self.currentPage = "music";
+        });
       }
     },
     methods: {

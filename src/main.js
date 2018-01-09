@@ -88,12 +88,13 @@ class ZeroApp extends ZeroFrame {
 				page.cmdp("mergerSiteList", [true])
 					.then((mergerZites) => {
 						console.log("Got Merger Zites");
+						// If we aren't already connected to the index or genre, add them
 						if (!mergerZites[defaultGenreAddress] || !mergerZites[indexAddress]) {
-							page.addMerger(indexAddress);
-							page.addMerger(defaultGenreAddress)
+							page.addMerger(indexAddress)
 								.then(() => {
-									return self.cmdp("wrapperNotification", ["info", "You may need to refresh to see new music."]);
+									page.addMerger(defaultGenreAddress);
 								});
+							
 						} else {
 							app.mergerZites = mergerZites;
 							app.$emit('setMergerZites', mergerZites);
@@ -125,8 +126,9 @@ class ZeroApp extends ZeroFrame {
 					.then((mergerZites) => {
 						app.mergerZites = mergerZites;
 						app.$emit('setMergerZites', mergerZites);
+						app.$emit('genreIndexUpdate');
+						return self.cmdp("wrapperNotification", ["info", "You may need to refresh to see new music."]);
 						return mergerZites;
-						//self.cmdp("wrapperOpenWindow", [self.siteInfo.address]);
 					});
 			});
 	}
@@ -161,6 +163,11 @@ class ZeroApp extends ZeroFrame {
         return page.cmdp("wrapperNotification", ["info", "Unimplemented!"]);
 	}
 
+	// Triggered when logo is clicked
+	goHome() {
+		app.$emit("goHome");
+	}
+
 	// -------------------------------------------------- //
 	// ------ Uploading, Editing and Deleting Songs ----- //
 
@@ -185,7 +192,7 @@ class ZeroApp extends ZeroFrame {
 			}
 
 			// Allowed filetypes
-            var curoptional = ".+\\.(mp3|flac|ogg|mp4|webm)";
+            var curoptional = ".+\\.(mp3|flac|ogg|m4a|mp4|webm)";
             var changed = false;
             if (!data.hasOwnProperty("optional") || data.optional !== curoptional){
                 data.optional = curoptional
@@ -421,7 +428,7 @@ class ZeroApp extends ZeroFrame {
 	// ------------ Installing/Editing Genres ----------- //
 
 	// Adds a new genre to the index
-	installGenre(genreName, genreAddress, f=null) {
+	installGenre(genreName, genreAddress) {
 		console.log("Creating: " + genreAddress);
 		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
 		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
@@ -449,14 +456,13 @@ class ZeroApp extends ZeroFrame {
 			this.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
 				if (res === "ok") {
 					this.cmd("siteSign", { "inner_path": content_inner_path }, () => {
-						this.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false }, () => {
-							// Run callback function
-							if (f !== null && typeof f === "function") f();
+						this.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false }, (res) => {
+							// Tell genre index to update
+							app.$emit("genreIndexUpdate");
 						});
 					});
 				} else {
 					this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
-					if (f !== null && typeof f === "function") f();
 				}
 			});
 		});
@@ -506,7 +512,7 @@ class ZeroApp extends ZeroFrame {
 	// -------------------------------------------------- //
 	// ----- Retrieving Song/Album/Artist/Genre info ---- //
 
-	// Return list of genres from Genre Index
+	// Return list of genres from the Genre Index
 	getGenresFromIndex() {
 		var query = `
 		SELECT * FROM genres
@@ -517,12 +523,17 @@ class ZeroApp extends ZeroFrame {
 		return this.cmdp("dbQuery", [query]);
 	}
 
-	// Return list of our own genres from Genre Index
+	// Return list of our own genres from the Genre Index
 	getMyGenresFromIndex() {
+		return this.getUsersGenresFromIndex(app.siteInfo.auth_address);
+	}
+
+	// Return list of a specific user's genres from the Genre Index
+	getUsersGenresFromIndex(authAddress) {
 		var query = `
 		SELECT * FROM genres
 			LEFT JOIN json USING (json_id)
-			WHERE directory="data/users/${userAuthAddress}"
+			WHERE directory="data/users/${authAddress}"
 			ORDER BY date_added ASC
 		`;
 	

@@ -20,6 +20,13 @@
                 Router.navigate(to);
             },
             publishGenre: function() {
+                // Make sure they're signed in first
+                if(!page.isUserSignedIn()) {
+                    // Show sign in prompt
+                    page.selectUser();
+                    return;
+                }
+
                 // Ensure they're the owner of this address
                 // Try to sign address's content.json
                 content_inner_path = "merged-ZeroLSTN/" + this.genreAddress + "/content.json";
@@ -27,11 +34,7 @@
                     .then((res) => {
                         if (res == "ok") {
                             // Store genre and address in index
-                            page.installGenre(this.genreName, this.genreAddress, function() {
-                                // Redirect back to main home page once done
-                                // TODO: Ability to redirect directly to genre tab
-                                window.location = "/ZeroLSTN.bit";
-                            });
+                            page.installGenre(this.genreName, this.genreAddress);
                         } else {
                             return self.cmdp("wrapperNotification", ["error", "You are not the owner of this genre."]);
                         }

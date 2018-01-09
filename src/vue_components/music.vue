@@ -7,48 +7,51 @@
                         <a :href="'#' + tab.show">{{ tab.name }}</a>
                     </li>
                 </ul>
+                
             </div>
             <div id="artists" class="col s12">
-                <ul class="collection with-header">
+                <ul v-if="artists.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Artists</h4></li>
                     <li v-for="artist in artists" class="collection-item">
                         <a href="#!" @click.prevent="goToArtist(artist)">{{ artist }}</a>
                     </li>
                 </ul>
+                <p v-else class="center">No artists found. Try adding some genres!</p>
             </div>
             <div id="albums" class="col s12">
-                <ul class="collection with-header">
+                <ul v-if="albums.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Albums</h4></li>
                     <li v-for="album in albums" class="collection-item">
                         <a href="#!" @click.prevent="goToAlbum(album)">{{ album }}</a>
                     </li>
                 </ul>
+                <p v-else class="center">No albums found. Try adding some genres!</p>
             </div>
             <div id="songs" class="col s12">
-                <ul class="collection with-header">
+                <ul v-if="songs.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Songs</h4></li>
                     <songitem  v-for="song in songs" :editable="false" :song="song"></songitem>
                 </ul>
+                <p v-else class="center">No songs found. Try adding some genres!</p>
             </div>
             <div id="genres" class="col s12">
                 <div class="row"></div>
                 <div class="row">
                     <div class="col s12">
-                        <a @click.prevent="addNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
+                        <a @click.prevent="createNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
                     </div>
                 </div>
-                <ul class="collection with-header">
+                <ul v-if="genres.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Genres</h4></li>
-                    <li v-for="genre in connectedGenres" class="collection-item">
-                        {{ genre.name }}
-                    </li>
                     <li v-for="genre in genres" class="collection-item">
                         {{ genre.name }}
                         <a class="secondary-content">
-                            <a href="#" @click.prevent="addGenre(genre.address)"><i class="material-icons">add</i></a>
+                            <a href="#" v-if="!genre.connected" @click.prevent="addGenre(genre.address)"><i class="material-icons">add</i></a>
+                            <a href="#" v-if="genre.ours" @click.prevent="deleteGenre(genre.address)"><i class="material-icons">delete</i></a>
                         </a>
                     </li>
                 </ul>
+                <p v-else class="center">No genres found. Make sure you have the <a href="/1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB">index</a> downloaded!</p>
             </div>
             <!--
             <div id="playlists" class="col s12">
@@ -119,41 +122,8 @@
                     self.songs = songs;
                 });
 
-            // Get hardcoded genres/merger zites
-            page.getGenresFromIndex()
-                .then((genres) => {
-                    self.genres = genres;
-                });
-
-            // Get genres we've already added
-            // TODO: Make this more efficient
-            page.getConnectedGenres()
-                .then((connectedGenres) => {
-                    self.connectedGenres = connectedGenres;
-                    var newGenres = [];
-                    self.genres.forEach(genre => { // For each hardcoded genre
-                        // Check if we're already connected
-                        var shouldAdd = true;
-                        
-                        // If we are, delete it from the hardcoded list.
-                        // Any genre on the hardcoded list will show up with a '+' to add it
-                        // Afterwards, any genres in connectedGenres will be shown with no '+'
-                        for (var i = 0; i < connectedGenres.length; i++) {
-                            if (genre.address === connectedGenres[i].address) {
-                                shouldAdd = false;
-                            } else if (connectedGenres[i].address === "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY" ||
-                              connectedGenres[i].address === "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB") {
-                                // Remove default genre site and index from merger site results
-                                self.connectedGenres.splice(i, 1);
-                            }
-                            
-                        }
-                        if (shouldAdd) {
-                            newGenres.push(genre);
-                        }
-                    });            
-                    self.genres = newGenres;
-                });
+            // Query and display genres
+            this.getGenres();
         },
         mounted: function() {
             // Initialize tabs
@@ -164,6 +134,9 @@
             // TODO: Uncomment when playlists are live again
             //var collap = document.querySelector("ul.collapsible");
             //var collapInstance = new M.Collapsible(collap, {});
+
+            // Catch genre index updates
+			this.$parent.$parent.$on("genreIndexUpdate", this.getGenres);
         },
         data: () => {
             return {
@@ -177,13 +150,68 @@
                 artists: [],
                 albums: [],
                 genres: [],
-                connectedGenres: [],
                 songs: [],
                 playlists: [],
                 genreModal: null
             }
         },
         methods: {
+            getGenres: function() {
+                console.log("Getting genres...")
+                // Get genres/mergers listed in the index
+                var self = this;
+                page.getGenresFromIndex()
+                    .then((indexedGenres) => {
+                        self.genres = indexedGenres;
+
+                        // Get genres we've already added
+                        page.getConnectedGenres()
+                            .then((connectedGenres) => {
+                                connectedGenres.forEach(genre => {
+                                    // Ignore index and default genre sites
+                                    if (genre.address !== "1GenreVSsWvgZNnVvgf5nSFzxwNw6nECvR" &&
+                                        genre.address !== "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB") {
+                                        // Check if we've already seen this genre in the index. If so, set its
+                                        // "connected" attribute
+                                        var wasInThere = false;
+                                        for (var i = 0; i < self.genres.length; i++) {
+                                            if (genre.address === self.genres[i].address) {
+                                                self.genres[i].connected = true;
+                                                wasInThere = true;
+                                                break;
+                                            } 
+                                        }
+                                        if (!wasInThere) {
+                                            // Otherwise add it to the list
+                                            genre.connected = true;
+                                            self.genres.push(genre);
+                                        }
+                                    }
+                                });
+                                  
+                                // TODO: Fix race conditions
+                                //self.loadMyGenres();    
+                            });
+                    });
+            },
+            loadMyGenres: function() {
+                // Get the genres we've personally added
+                var self = this;
+                page.getMyGenresFromIndex()
+                .then((myGenres) => {
+                    // Set all of our genres with the 'ours' attribute
+                    myGenres.forEach(genre => {
+                        for (var i = 0; i < self.genres.length; i++) {
+                            self.genres[i].ours = false;
+                            if (genre.address === self.genres[i].address) {
+                                console.log("Ours " + genre.name)
+                                self.genres[i].ours = true;
+                                console.log(self.genres[i])
+                            }
+                        }
+                    });
+                });
+            },
             goToArtist: function(artist) {
                 // Tell the parent view to go to the specified artist's page
                 this.$parent.goToArtistPage(artist)
@@ -194,9 +222,18 @@
             },
             addGenre: function(address) {
                 // Add a genre by clicking the '+' on the genre page
+                console.log("Adding: " + address)
+                var self = this;
                 page.addMerger(address);
             },
-            addNewGenre: function() {
+            createNewGenre: function() {
+                // Make sure they're signed in first
+                if(!page.isUserSignedIn()) {
+                    // Show sign in prompt
+                    page.selectUser();
+                    return;
+                }
+
                 // Clone and navigate to the default genre site
                 page.cmdp("siteClone", ["1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY"]);
             }
