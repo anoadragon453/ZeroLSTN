@@ -3,14 +3,14 @@
         <div class="row">
             <div id="queue" class="col s12">
                 <ul class="collection with-header">
-                    <li class="collection-header"><h4>{{ artist }}</h4>Artist</li>
+                    <li class="collection-header" v-html="artist !== '' ? '<h4>' + artist + '</h4><p>Artist</p>' : '<h4><i>(Blank)</i></h4><p>Artist</p>'"></li>
                 </ul>
                 <ul class="collapsible popout" data-collapsible="accordion">
                     <li v-for="(album, index) in albums">
-                    <div class="collapsible-header"><b>{{ Object.keys(albums)[Object.values(albums).indexOf(album)] }}</b></div>
+                    <div class="collapsible-header" v-html="Object.keys(albums)[Object.values(albums).indexOf(album)] !== '' ? '<b>' + Object.keys(albums)[Object.values(albums).indexOf(album)] + '</b>' : '<b><i>(Blank)</i></b>'"></div>
                     <div class="collapsible-body">
                         <div class="collection">
-                            <li class="collection-item"><h4>{{ Object.keys(albums)[Object.values(albums).indexOf(album)] }}</h4></li>
+                            <li class="collection-item" v-html="Object.keys(albums)[Object.values(albums).indexOf(album)] !== '' ? '<h4>' + Object.keys(albums)[Object.values(albums).indexOf(album)] + '</h4>' : '<h4><i>(Blank)</i></h4>'"></li>
                             <songitem  v-for="song in album" :editable="false" :song="song"></songitem>
                         </div>
                     </div>

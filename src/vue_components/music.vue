@@ -13,7 +13,7 @@
                 <ul v-if="artists.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Artists</h4></li>
                     <li v-for="artist in artists" class="collection-item">
-                        <a href="#!" @click.prevent="goToArtist(artist)">{{ artist }}</a>
+                        <a href="#!" v-html="artist !== '' ? artist : '<i>(Blank)</i>'" @click.prevent="goToArtist(artist)"></a>
                     </li>
                 </ul>
                 <p v-else class="center">No artists found. Try adding some genres!</p>
@@ -22,7 +22,7 @@
                 <ul v-if="albums.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Albums</h4></li>
                     <li v-for="album in albums" class="collection-item">
-                        <a href="#!" @click.prevent="goToAlbum(album)">{{ album }}</a>
+                        <a href="#!" v-html="album !== '' ? album : '<i>(Blank)</i>'" @click.prevent="goToAlbum(album)"></a>
                     </li>
                 </ul>
                 <p v-else class="center">No albums found. Try adding some genres!</p>

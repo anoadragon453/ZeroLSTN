@@ -1,10 +1,10 @@
 <template>
     <li id="songitem" class="collection-item">
         <a href="#" v-if="editable" @click.prevent="songEditClicked(song)">
-            {{ song.title }}<span class="hide-on-med-and-down"> - {{ song.artist }}</span>
+            <span v-html="song.title !== '' ? song.title : '<i>(Blank)</i>'"></span><span class="hide-on-med-and-down" v-html="song.artist !== '' ? ' - ' + song.artist : ' - <i>(Blank)</i>'"></span>
         </a>
         <span v-else>
-            {{ song.title }}
+            {{ song.title !== "" ? song.title : "(Blank)" }}
         </span>
         <a class="secondary-content">
             <a href="#" @click.prevent="songPlayClicked(song)"><i class="material-icons">play_arrow</i></a>
