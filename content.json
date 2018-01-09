@@ -111,11 +111,11 @@
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1515486579,
+ "modified": 1515492038,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G0qERjlos9L/iNzBqpi+/h1EKkqTNB4aDDWiWBbdZXMtYnYubNiedVd/79Sjxlx/GQ4H1xfMNfZv1f5210uR0Vk="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "HImpPkAE4pR52BlVsMU7nxVKxerYT8qjLe2ZOA8lx/M0XCRN59joXyiAQW56FTL9AWjSbocIliWKbIgqk3/IAgs="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",

@@ -185,8 +185,8 @@
           var file = this.files[0];
 
           // Check if the file is one of approved filetype
-          if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|m4a|mp4)")) {
-            page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match mp3/flac/ogg/m4a/mp4."]);
+          if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|m4a|mpeg|mp4)")) {
+            page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match mp3/flac/ogg/m4a/mpeg/mp4."]);
             return
           }
           
