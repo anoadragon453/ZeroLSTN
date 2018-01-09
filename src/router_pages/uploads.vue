@@ -46,6 +46,10 @@
         <p v-else>No uploads. Press the New button to get started!</p>
       </div>
     </div>
+    <div class="row"></div>
+    <div class="row"></div>
+    <div class="row"></div>
+    <div class="row"></div>
   </div>
 </template>
 

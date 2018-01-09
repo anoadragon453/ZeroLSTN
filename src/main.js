@@ -89,16 +89,14 @@ class ZeroApp extends ZeroFrame {
 					.then((mergerZites) => {
 						console.log("Got Merger Zites");
 						// If we aren't already connected to the index or genre, add them
-						if (!mergerZites[defaultGenreAddress] || !mergerZites[indexAddress]) {
-							page.addMerger(indexAddress)
-								.then(() => {
-									page.addMerger(defaultGenreAddress);
-								});
-							
-						} else {
-							app.mergerZites = mergerZites;
-							app.$emit('setMergerZites', mergerZites);
+						if (!mergerZites[indexAddress]){
+							page.addMerger(indexAddress);
+						} 
+						if (!mergerZites[defaultGenreAddress]) {
+							page.addMerger(defaultGenreAddress);
 						}
+						app.mergerZites = mergerZites;
+						app.$emit('setMergerZites', mergerZites);
 					});
 			});
 		});
