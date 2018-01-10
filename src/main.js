@@ -532,7 +532,7 @@ class ZeroApp extends ZeroFrame {
 		SELECT * FROM genres
 			LEFT JOIN json USING (json_id)
 			WHERE directory="data/users/${authAddress}"
-			ORDER BY date_added ASC
+			ORDER BY name COLLATE NOCASE
 		`;
 	
 		return this.cmdp("dbQuery", [query]);
@@ -582,7 +582,7 @@ class ZeroApp extends ZeroFrame {
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
 			WHERE directory="data/users/${userAuthAddress}"
-			ORDER BY title ASC
+			ORDER BY title COLLATE NOCASE
 		`;
 		console.log(query)
 	
@@ -594,7 +594,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
-			ORDER BY title ASC
+			ORDER BY title COLLATE NOCASE
 		`;
 	
 		return this.cmdp("dbQuery", [query]);
@@ -607,7 +607,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT DISTINCT album FROM songs
 			LEFT JOIN json USING (json_id)
-			ORDER BY album ASC
+			ORDER BY album COLLATE NOCASE
 		`;
 	
 		return this.cmdp("dbQuery", [query])
@@ -624,7 +624,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT DISTINCT artist FROM songs
 			LEFT JOIN json USING (json_id)
-			ORDER BY artist ASC
+			ORDER BY artist COLLATE NOCASE
 		`;
 	
 		return this.cmdp("dbQuery", [query])
@@ -661,7 +661,7 @@ class ZeroApp extends ZeroFrame {
 		SELECT DISTINCT album FROM songs
 			LEFT JOIN json USING (json_id)
 			WHERE artist="${artistName}"
-			ORDER BY date_added ASC
+			ORDER BY album COLLATE NOCASE
 		`;
 	
 		return this.cmdp("dbQuery", [query])
@@ -682,6 +682,8 @@ class ZeroApp extends ZeroFrame {
 			WHERE artist="${artistName}"
 			ORDER BY date_added ASC
 		`;
+
+		// TODO: Sort by song number
 	
 		return this.cmdp("dbQuery", [query])
 			.then((songObjs) => {
@@ -720,6 +722,8 @@ class ZeroApp extends ZeroFrame {
 	
 		return this.cmdp("dbQuery", [query]);
 	}
+
+	// TODO: Sort by song number
 
 	// -------------------------------------------------- //
 	// ------------- Play Queue Operations -------------- //

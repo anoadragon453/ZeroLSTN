@@ -106,9 +106,9 @@
       imageClicked: function() {
         console.log("Upload image!");
 
-        // TODO: Grab image, convert to b64, store intelligently in db with reference.
-        // Store reference with user file
-        // Somehow deduplicate if already exists? Hash?
+        // TODO: User uploads image, copies it to data/users/.../images folder. Reference with hash is placed in data.json. 
+        // Later on when you upload again it checks to see if the hash of the image is already in there, 
+        // if so delete image and just use the previous one.
       },
       cancelClicked: function() {
         // Go back to the uploads back if they hit cancel
