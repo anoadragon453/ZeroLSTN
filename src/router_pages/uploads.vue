@@ -1,4 +1,4 @@
-<<template>
+<template>
   <div id="edit">
     <!-- Modal Structure -->
     <div class="modal">

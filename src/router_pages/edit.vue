@@ -1,4 +1,4 @@
-<<template>
+<template>
   <div class="container" id="edit">
     <form class="col s12">
       <div class="row">

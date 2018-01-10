@@ -582,7 +582,7 @@ class ZeroApp extends ZeroFrame {
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
 			WHERE directory="data/users/${userAuthAddress}"
-			ORDER BY date_added ASC
+			ORDER BY title ASC
 		`;
 		console.log(query)
 	
@@ -594,7 +594,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
-			ORDER BY date_added ASC
+			ORDER BY title ASC
 		`;
 	
 		return this.cmdp("dbQuery", [query]);
@@ -607,7 +607,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT DISTINCT album FROM songs
 			LEFT JOIN json USING (json_id)
-			ORDER BY date_added ASC
+			ORDER BY album ASC
 		`;
 	
 		return this.cmdp("dbQuery", [query])
@@ -624,7 +624,7 @@ class ZeroApp extends ZeroFrame {
 		var query = `
 		SELECT DISTINCT artist FROM songs
 			LEFT JOIN json USING (json_id)
-			ORDER BY date_added ASC
+			ORDER BY artist ASC
 		`;
 	
 		return this.cmdp("dbQuery", [query])

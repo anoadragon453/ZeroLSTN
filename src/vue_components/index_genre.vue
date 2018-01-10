@@ -1,7 +1,7 @@
 <template>
     <div id="indexGenre">
         <div class="row center">
-            <p>Your new Genre, {{ this.genreName }}, is all ready to go! Click the Publish button below to list it globally!</p>
+            <p>Your new Genre, {{ decodedGenreName }}, is all ready to go! Click the Publish button below to list it globally!</p>
         </div>
         <div class="row center">
             <a @click.prevent="publishGenre()" class="waves-effect waves-light btn"><i class="material-icons left">cloud_upload</i>Publish!</a>
@@ -14,6 +14,16 @@
     module.exports = {
         props: ["genreName", "genreAddress"],
         name: "indexGenre",
+        mounted: function() {
+            // HTML decode genre name
+            this.decodedGenreName = decodeURI(this.genreName);
+            console.log(decodeURIComponent(this.genreName));
+        },
+        data: () => {
+            return {
+                decodedGenreName: ""
+            }
+        },
         methods: {
             goto: function(to) {
                 // Go to specified page
@@ -34,7 +44,7 @@
                     .then((res) => {
                         if (res == "ok") {
                             // Store genre and address in index
-                            page.installGenre(this.genreName, this.genreAddress);
+                            page.installGenre(this.decodedGenreName, this.genreAddress);
                         } else {
                             return self.cmdp("wrapperNotification", ["error", "You are not the owner of this genre."]);
                         }
