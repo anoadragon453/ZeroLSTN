@@ -19,9 +19,6 @@
             // TODO: Image grows bigger than screen for some reason
             //var box = document.querySelector(".materialboxed");
             //var instance = new M.Materialbox(box, {});
-            
-            // Set default album art image
-            document.getElementById("album-art").src = "./logo.png";;
         }
     }
 </script>

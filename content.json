@@ -6,7 +6,7 @@
  "cloned_from": "1HeLLo4uzjaLetFx6NH3PMwFP3qbRbTf3D",
  "description": "Listen to music",
  "domain": "ZeroLSTN.bit",
- "favicon": "img/favicon.svg",
+ "favicon": "img/favicon.png",
  "files": {
   "README.md": {
    "sha512": "7601a3bb707137c50e0fe6001c55bdd955a4ca108620012ffdbf4c0a40d453d5",
@@ -88,6 +88,10 @@
    "sha512": "7fd27954bb65744da548d15c82ec3aa9af459504ab644663cebef35ba0db0985",
    "size": 1676
   },
+  "img/favicon.png": {
+   "sha512": "66806865bcfd61ba6c40696e5a10c789cafd89a02f90d3ec55c1a9222912b41c",
+   "size": 2511
+  },
   "img/favicon.svg": {
    "sha512": "2ae0beb2523a3e4c156f789173eec9065bb903cc2f73ec4e5bbcb130e050078e",
    "size": 2221
@@ -97,12 +101,12 @@
    "size": 723
   },
   "js/bundle.js": {
-   "sha512": "2de76a01cbd6d3632d6bc110ae0a1ab32c1824d9773070e74679c34565b4aeae",
-   "size": 1642578
+   "sha512": "3256ab95d40d987909038e30c258a3abde0416d4168e7b7d890fd66963fe8951",
+   "size": 1649419
   },
   "js/bundle.js.map": {
-   "sha512": "a1c2bde62633aba962152407af7b78876b91b09ae1fa5ba0a06ebe3e3c24b91f",
-   "size": 4426021
+   "sha512": "ea0d895582b883acb3574950c8ef582a61bc2b69c6f7334220d0a392d5a15c3c",
+   "size": 4443725
   },
   "logo.png": {
    "sha512": "a05f698dbe70e850afbe59ef5cf2e2c6cabea6f0d5e370afdb5381c1a81ca005",
@@ -111,11 +115,11 @@
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1515566787,
+ "modified": 1515627263,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G0Ibg1I5ll3QicYYfojSV9keaep/5+MMwdakzCtLHVKbcfbWti7jhXzfS1Yyi8lzXWIOY1kQLVxr9ce5bMZtWws="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G+vRv8GJmaxZscEWrrPOdSkdN0lzKp9j7yct0+2KIS9gUeU5tm1lmqR9Yx/MA+l98n9CKUA0Fa+41/jHkg/5ty8="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",

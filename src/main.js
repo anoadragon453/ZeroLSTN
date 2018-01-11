@@ -13,6 +13,7 @@ var ZeroFrame = require("./libs/ZeroFrame.js");
 var Router = require("./libs/router.js");
 var Vue = require("vue/dist/vue.js");
 var VueZeroFrameRouter = require("./libs/vue-zeroframe-router.js");
+var AsyncComputed = require('vue-async-computed');
 
 // Data types
 var Deque = require("double-ended-queue");
@@ -21,6 +22,7 @@ var { sanitizeStringForUrl, sanitizeStringForUrl_SQL, html_substr, sanitizeHtmlF
 
 // Initial Vue plugins
 Vue.use(VueZeroFrameRouter.VueZeroFrameRouter);
+Vue.use(AsyncComputed);
 
 // Vue components
 var NavBar = require("./vue_components/navbar.vue");
@@ -125,7 +127,7 @@ class ZeroApp extends ZeroFrame {
 						app.mergerZites = mergerZites;
 						app.$emit('setMergerZites', mergerZites);
 						app.$emit('genreIndexUpdate');
-						return self.cmdp("wrapperNotification", ["info", "You may need to refresh to see new music."]);
+						self.cmd("wrapperNotification", ["info", "You may need to refresh to see new music."]);
 						return mergerZites;
 					});
 			});
@@ -596,7 +598,8 @@ class ZeroApp extends ZeroFrame {
 			LEFT JOIN json USING (json_id)
 			ORDER BY title COLLATE NOCASE
 		`;
-	
+
+		// Execute query
 		return this.cmdp("dbQuery", [query]);
 	}
 

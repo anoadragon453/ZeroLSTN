@@ -45,6 +45,7 @@
     "sanitize-html": "^1.16.3",
     "vue": "^2.5.13",
     "vue-hot-reload-api": "^2.2.4",
+    "vue-async-computed": "^3.3.1",
     "vueify": "^9.4.1"
   },
   "browser": {

@@ -7,6 +7,7 @@
             {{ song.title !== "" ? song.title : "(Blank)" }}
         </span>
         <a class="secondary-content">
+            {{ songInfo ? "Seeds: " + songInfo.peer_seed : "Seeds: ?"}}
             <a href="#" @click.prevent="songPlayClicked(song)"><i class="material-icons">play_arrow</i></a>
             <a href="#" @click.prevent="songQueueClicked(song)"><i class="material-icons">add</i></a>
             <a href="#" v-if="editable" @click.prevent="deleteClicked(song)"><i class="material-icons">delete</i></a>
@@ -19,7 +20,25 @@
     
     module.exports = {
         props: ["editable", "song"],
-        name: "albumart",
+        name: "songitem",
+        asyncComputed: {
+            songInfo: {
+                get() {
+                    return page.cmdp("optionalFileInfo", ["merged-ZeroLSTN/" + this.song.site + "/" + this.song.directory + "/" + this.song.filename])
+                        .then((info) => {
+                            if (!info) {
+                                return null;
+                            }
+                            
+                            // Sometimes there is no "peer_seed" attribute. Set it to peers attribute instead.
+                            if (!info.peer_seed) {
+                                info.peer_seed = info.peer;
+                            }
+                            return info;
+                        });
+                }
+            },
+        },
         methods: {
             songEditClicked: function(song) {
                 // Navigate to edit page with correct data
