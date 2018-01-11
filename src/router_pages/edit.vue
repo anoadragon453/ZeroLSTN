@@ -48,7 +48,7 @@
   var Router = require("../libs/router.js");
 
   module.exports = {
-    props: ["mergerZites"],
+    props: [],
     name: "edit",
     data: () => {
       return {

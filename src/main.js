@@ -133,6 +133,26 @@ class ZeroApp extends ZeroFrame {
 			});
 	}
 
+	// Removes a merger site
+	removeMerger(ziteAddress) {
+		console.log("Removing", ziteAddress)
+		console.log(app.mergerZites)
+		var self = this;
+
+		return this.cmdp("mergerSiteDelete", [ziteAddress])
+			.then((res) => {
+				return self.cmdp("mergerSiteList", [true])
+					.then((mergerZites) => {
+						console.log(mergerZites)
+						app.mergerZites = mergerZites;
+						app.$emit('setMergerZites', mergerZites);
+						app.$emit('genreIndexUpdate');
+						self.cmd("wrapperNotification", ["info", "Genre removed. Refresh to see changes."]);
+						return mergerZites;
+					});
+			});
+	}
+
 	// Needed for ZeroRouter to work properly
 	onRequest(cmd, message) {
 		Router.listenForBack(cmd, message);
@@ -468,49 +488,134 @@ class ZeroApp extends ZeroFrame {
 		});
 	}
 
-	// Removes an existing genre from the index
-	removeGenre(genreName, genreAddress, f=null) {
-		console.log("Creating: " + genreAddress);
-		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-		this.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
-			// Return if there's no data file
-			if (!data) {
-				if (f !== null && typeof f === "function") f();
-				return;
-			} else {
-				data = JSON.parse(data);
-			}
-
-			// If there are no genres here, just return
-			if (!data.genres) {
-				if (f !== null && typeof f === "function") f();
-				return;
-			}
-
-			// Add genre name and address to the index
-			delete data.genres[genreAddress];	
-
-			// Write (and Sign and Publish)
-			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
-			this.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
-				if (res === "ok") {
-					this.cmd("siteSign", { "inner_path": content_inner_path }, () => {
-						this.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false }, () => {
-							// Run callback function
-							if (f !== null && typeof f === "function") f();
-						});
-					});
+	// Edits a genre in the index and changes content in the mergerZite
+	editGenre(genreName, genreAddress) {
+		console.log("editing: " + genreName + "/" + genreAddress)
+		var index_data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var index_content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var genre_content_path = "merged-ZeroLSTN/" + genreAddress + "/content.json";
+		console.log("[genre_path]", genre_content_path)
+		 
+		// Keep a reference to ourselves
+		var self = this;
+		return self.cmdp("fileGet", { "inner_path": genre_content_path, "required": false })
+			.then((content) => {
+				// Return if there's no content
+				console.log("[content]", content)
+				if (!content) {
+					return { then: function() {} };  // Break the promise chain
 				} else {
-					this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
-					if (f !== null && typeof f === "function") f();
+					content = JSON.parse(content);
 				}
+
+				// Set the new name of the genre
+				content.title = genreName;
+
+				// Write the new genre's content.json
+				var json_raw = unescape(encodeURIComponent(JSON.stringify(content, undefined, "\t")));
+				return self.cmdp("fileWrite", [genre_content_path, btoa(json_raw)])
+			.then((res) => {
+				if (res !== "ok") {
+					this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
+					return { then: function() {} };
+				}
+
+				// Write to the index
+				return self.cmdp("fileGet", { "inner_path": index_data_inner_path, "required": false })
+			.then((data) => {
+				// Return if there's no data file
+				if (!data) {
+					return { then: function() {} };
+				} else {
+					data = JSON.parse(data);
+				}
+
+				// Change the genre's attributes in the index
+				data.genres[genreAddress].name = genreName;
+
+				// Write back to the index
+				var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+				return self.cmdp("fileWrite", [index_data_inner_path, btoa(json_raw)]);
+			}).then((res) => {
+				if (res !== "ok") {
+					return { then: function() {} };
+				}
+
+				// Sign/Publish genre's content.json
+				return self.cmdp("siteSign", { privatekey: "stored", "inner_path": genre_content_path })
+					.then((res) => {
+						if (res !== "ok") {
+							return { then: function() {} };
+						}
+
+						return self.cmd("sitePublish", { "inner_path": genre_content_path, "sign": false })
+					}).then((res) => {
+						// Sign/Publish the index entry
+						return self.cmdp("siteSign", { "inner_path": index_content_inner_path })
+							.then((res) => {
+								if (res !== "ok") {
+									return { then: function() {} };
+								}
+								
+								return self.cmd("sitePublish", { "inner_path": index_content_inner_path, "sign": false });
+							})
+					});
+			});
 			});
 		});
 	}
 
+	// Removes an existing genre from the index
+	removeGenre(genreAddress) {
+		console.log("Removing: " + genreAddress);
+		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		console.log(data_inner_path)
+
+		// Keep a reference to ourselves
+		var self = this;
+		return self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+			.then((data) => {
+				// Return if there's no data file
+				if (!data) {
+					return { then: function() {} };  // Break the promise chain
+				} else {
+					data = JSON.parse(data);
+				}
+
+				console.log(data)
+
+				// If there are no genres here, just return
+				if (!data.genres) {
+					return { then: function() {} };
+				}
+
+				// Remove genre from the index
+				delete data.genres[genreAddress];
+				
+				console.log(data)
+
+				// Write (and Sign and Publish)
+				var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+				return self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)])
+			}).then((res) => {
+				return self.cmdp("siteSign", { "inner_path": content_inner_path })
+			}).then((res) => {
+				return self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false })
+			});
+	}
+
 	// -------------------------------------------------- //
 	// ----- Retrieving Song/Album/Artist/Genre info ---- //
+
+	// Convert genre array into genre[address] = {name}
+	convertArrayOfGenresToMap(genres) {
+		var genreMap = {};
+		genres.forEach(function(genre) {
+			genreMap[genre.address] = { name: genre.name };
+		});
+		return genreMap;
+	}
 
 	// Return list of genres from the Genre Index
 	getGenresFromIndex() {
@@ -520,24 +625,51 @@ class ZeroApp extends ZeroFrame {
 			ORDER BY date_added ASC
 		`;
 	
-		return this.cmdp("dbQuery", [query]);
-	}
-
-	// Return list of our own genres from the Genre Index
-	getMyGenresFromIndex() {
-		return this.getUsersGenresFromIndex(app.siteInfo.auth_address);
+		// Convert genre array to map
+		var self = this;
+		return this.cmdp("dbQuery", [query])
+			.then((genres) => {
+				return new Promise((resolve, reject) => {
+					resolve(self.convertArrayOfGenresToMap(genres));
+				});
+			});
 	}
 
 	// Return list of a specific user's genres from the Genre Index
-	getUsersGenresFromIndex(authAddress) {
+	getUserGenresFromIndex(authAddress) {
 		var query = `
 		SELECT * FROM genres
 			LEFT JOIN json USING (json_id)
-			WHERE directory="data/users/${authAddress}"
+			WHERE directory='data/users/${authAddress}'
 			ORDER BY name COLLATE NOCASE
 		`;
 	
-		return this.cmdp("dbQuery", [query]);
+		// Convert genre array to map
+		var self = this;
+		return this.cmdp("dbQuery", [query])
+			.then((genres) => {
+				return new Promise((resolve, reject) => {
+					resolve(self.convertArrayOfGenresToMap(genres));
+				});
+			});
+	}
+
+	// Returns an array of our connected genres
+	getConnectedGenres() {
+		// Get list of merger zites
+		return page.cmdp("mergerSiteList", [true])
+        	.then((mergerZites) => {
+				return new Promise((resolve, reject) => {
+					// Compute genres and store as a map
+					var genreMap = {};
+					console.log("MergerZites:")
+					console.log(mergerZites)
+					for (var ziteAddress in mergerZites) {
+						genreMap[ziteAddress] = { name: mergerZites[ziteAddress].content.title };
+					}
+					resolve(genreMap);
+				});
+		});
 	}
 
 	// Get song info from ID. Returns song object.
@@ -591,6 +723,20 @@ class ZeroApp extends ZeroFrame {
 		return this.cmdp("dbQuery", [query]);
 	}
 
+	// Returns number of songs in a given genre
+	countSongsInGenre(genreAddress) {
+		var query = `
+		SELECT COUNT (*) FROM songs
+		`;
+
+		var self = this;
+		return this.cmdp("dbQuery", [query])
+			.then((res) => {
+				// Unpack count into just a single integer
+				return self.newPromise(res[0]["COUNT (*)"]);
+			});
+	}
+
 	// Returns a list of all songs, with an optional max song amount and offset
 	getAllSongs(limit = 0, offset = 0) {
 		var query = `
@@ -637,25 +783,6 @@ class ZeroApp extends ZeroFrame {
 					resolve(artistObjs.map(function(a) {return a.artist;}));
 				});
 			});
-	}
-
-	// Returns an array of all genres and their addresses
-	// [{"name": "Vaporwave", "address": "1abcxyz"}]
-	getConnectedGenres() {
-		// Get list of merger zites
-		return page.cmdp("mergerSiteList", [true])
-        	.then((mergerZites) => {
-			// Compute genres from Merger Zites
-			var genres = [];
-			for (var ziteAddress in mergerZites) {
-				genres.push({"name": mergerZites[ziteAddress].content.title, "address": ziteAddress});
-			}
-			
-			// Return genres as a promise object
-			return new Promise((resolve, reject) => {
-				resolve(genres);
-			});
-		});
 	}
 
 	// Returns an array of album titles, made by the given artist
@@ -946,6 +1073,14 @@ class ZeroApp extends ZeroFrame {
 	}
 
 	// -------------------------------------------------- //
+	// ---------------- Helper Methods ------------------ //
+
+	// Creates a new promise with given data to be returned elsewhere
+	newPromise(data) {
+		return new Promise((resolve, reject) => {
+			resolve(data);
+		});
+	}
 }
 
 page = new ZeroApp();

@@ -1,5 +1,32 @@
 <template>
     <div id="Music">
+        <!-- Genre Edit Modal -->
+        <div class="modal">
+            <div class="modal-content">
+            <div class="row">
+                <h4>Edit Genre</h4>
+                <div class="row">
+                    <div class="input-field col">
+                        <input id="genreName" type="text" class="validate">
+                        <label id="genreName-label" for="genreName">Name</label>
+                    </div>
+                    <input id="genreAddress" type="hidden">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s6">
+                    <!-- Delete button -->
+                    <a id="deleteButton" @click="deleteGenreConfirm()" class="waves-effect waves-light btn red"><i class="material-icons left">delete</i>Delete</a>
+                </div>
+                <div class="col s6">
+                    <!-- Save button -->
+                    <a id="saveButton" @click="saveGenreModal()" class="right waves-effect waves-light btn">Save</a>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Tab content -->
         <div class="row">
             <div class="col s12">
                 <ul class="tabs tabs-fixed-width">
@@ -41,13 +68,14 @@
                         <a @click.prevent="createNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
                     </div>
                 </div>
-                <ul v-if="genres.length != 0" class="collection with-header">
+                <ul v-if="genres && genres.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Genres</h4></li>
                     <li v-for="genre in genres" class="collection-item">
                         {{ genre.name }}
                         <a class="secondary-content">
-                            <a href="#" v-if="!genre.connected" @click.prevent="addGenre(genre.address)"><i class="material-icons">add</i></a>
-                            <a href="#" v-if="genre.ours" @click.prevent="deleteGenre(genre.address)"><i class="material-icons">delete</i></a>
+                            <a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">edit</i></a>
+                            <a href="#" v-if="!genre.connected" @click.prevent="addGenre(Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">add_circle_outline</i></a>
+                            <a href="#" v-else @click.prevent="removeGenre(Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">clear</i></a>
                         </a>
                     </li>
                 </ul>
@@ -98,7 +126,7 @@
         components: {
             songitem: SongItem
         },
-        props: [],
+        props: ["siteInfo"],
         name: "Music",
         beforeMount: function() {
             // TODO: Paginate
@@ -121,14 +149,16 @@
                 .then((songs) => {
                     self.songs = songs;
                 });
-
-            // Query and display genres
-            this.getGenres();
         },
         mounted: function() {
             // Initialize tabs
             var tabs = document.querySelector("ul.tabs");
             var instance = new M.Tabs(tabs, {});
+
+            // Initialize modal view
+            var modal = document.querySelector(".modal");
+            var instance_modal = new M.Modal(modal, {});
+            this.editGenreModal = modal;
 
             // Initialize collapsible
             // TODO: Uncomment when playlists are live again
@@ -136,7 +166,7 @@
             //var collapInstance = new M.Collapsible(collap, {});
 
             // Catch genre index updates
-			this.$parent.$parent.$on("genreIndexUpdate", this.getGenres);
+			//this.$parent.$parent.$on("genreIndexUpdate", this.getGenres);
         },
         data: () => {
             return {
@@ -149,69 +179,71 @@
                 ],
                 artists: [],
                 albums: [],
-                genres: [],
                 songs: [],
                 playlists: [],
-                genreModal: null
+                editGenreModal: null
+            }
+        },
+        asyncComputed: { // TODO: Figure out how to update these values, or does it happen automatically?
+            genres: {
+                get: function() {
+                    console.log("Getting genres...")
+                    // Get genres/mergers listed in the index
+                    var self = this;
+                    let knownGenres, ourGenres;
+                    return page.getGenresFromIndex()
+                        .then((indexedGenres) => {
+                            knownGenres = indexedGenres;
+
+                            // Get our auth address
+                            return page.cmdp("siteInfo", {});
+                        }).then((siteInfo) => {
+                            // See which genres we can edit
+                            return page.getUserGenresFromIndex(siteInfo.auth_address);
+                        }).then((genres) => {
+                            ourGenres = genres;
+
+                            // Get genres we've already added
+                            return page.getConnectedGenres();
+                        }).then((connectedGenres) => {
+                            for (var genreAddress in connectedGenres) {
+                                // Ignore index and default genre sites
+                                if (genreAddress === "1GenreVSsWvgZNnVvgf5nSFzxwNw6nECvR" ||
+                                    genreAddress === "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB") {
+                                        continue;
+                                }
+
+                                // Check if we've already seen this genre in the index. If so, set its
+                                // "connected" attribute
+                                if (genreAddress in knownGenres) {
+                                    knownGenres[genreAddress].connected = true;
+
+                                    // If this is our genre, allow us to edit it by setting the 
+                                    // "our" attribute
+                                    if (genreAddress in ourGenres) {
+                                        knownGenres[genreAddress].ours = true;
+                                    }
+                                } else {
+                                    // Add this non-indexed genre to the list
+                                    knownGenres[genreAddress] = connectedGenres[genreAddress]
+                                }
+                            }
+                            
+                            // Get song count for each genre
+                            for (var genreAddress in knownGenres) {
+                                page.countSongsInGenre(genreAddress)
+                                    .then((count) => {
+                                        console.log(count);
+                                        knownGenres[genreAddress].songCount = count;
+                                    });
+                            }
+                            
+                            return knownGenres;
+                        });
+                }
             }
         },
         methods: {
-            getGenres: function() {
-                console.log("Getting genres...")
-                // Get genres/mergers listed in the index
-                var self = this;
-                page.getGenresFromIndex()
-                    .then((indexedGenres) => {
-                        self.genres = indexedGenres;
-
-                        // Get genres we've already added
-                        page.getConnectedGenres()
-                            .then((connectedGenres) => {
-                                connectedGenres.forEach(genre => {
-                                    // Ignore index and default genre sites
-                                    if (genre.address !== "1GenreVSsWvgZNnVvgf5nSFzxwNw6nECvR" &&
-                                        genre.address !== "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB") {
-                                        // Check if we've already seen this genre in the index. If so, set its
-                                        // "connected" attribute
-                                        var wasInThere = false;
-                                        for (var i = 0; i < self.genres.length; i++) {
-                                            if (genre.address === self.genres[i].address) {
-                                                self.genres[i].connected = true;
-                                                wasInThere = true;
-                                                break;
-                                            } 
-                                        }
-                                        if (!wasInThere) {
-                                            // Otherwise add it to the list
-                                            genre.connected = true;
-                                            self.genres.push(genre);
-                                        }
-                                    }
-                                });
-                                  
-                                // TODO: Fix race conditions
-                                //self.loadMyGenres();    
-                            });
-                    });
-            },
-            loadMyGenres: function() {
-                // Get the genres we've personally added
-                var self = this;
-                page.getMyGenresFromIndex()
-                .then((myGenres) => {
-                    // Set all of our genres with the 'ours' attribute
-                    myGenres.forEach(genre => {
-                        for (var i = 0; i < self.genres.length; i++) {
-                            self.genres[i].ours = false;
-                            if (genre.address === self.genres[i].address) {
-                                console.log("Ours " + genre.name)
-                                self.genres[i].ours = true;
-                                console.log(self.genres[i])
-                            }
-                        }
-                    });
-                });
-            },
             goToArtist: function(artist) {
                 // Tell the parent view to go to the specified artist's page
                 this.$parent.goToArtistPage(artist)
@@ -222,9 +254,58 @@
             },
             addGenre: function(address) {
                 // Add a genre by clicking the '+' on the genre page
-                console.log("Adding: " + address)
-                var self = this;
                 page.addMerger(address);
+            },
+            editGenre: function(name, address) {
+                // Store genre address and name in modal for later reference
+                document.getElementById("genreName").value = name;
+                document.getElementById("genreAddress").value = address;
+                
+                // Show genre edit modal
+                this.editGenreModal.M_Modal.open();
+            },
+            removeGenre: function(address) {
+                // Remove a genre from your local merger zites
+                page.removeMerger(address);
+            },
+            deleteGenreConfirm: function() {
+                // Confirm with an alert making sure they want to delete the genre
+                var self = this;
+                page.cmdp("wrapperConfirm", ["Are you sure? This will not delete any songs, just the genre listing on ZeroLSTN.", "Yes"])
+                    .then((clicked) => {
+                        if (clicked) {
+                            self.deleteGenre();
+                        }
+                    });
+            },
+            deleteGenre: function() {
+                // Delete a genre from the index
+                var address = document.getElementById("genreAddress").value;
+                var self = this;
+                console.log("I'm removing: " + address);
+                page.removeGenre(address)
+                    .then((res) => {
+                        // If successful, close the modal
+                        self.editGenreModal.M_Modal.close();
+                        page.cmd("wrapperNotification", ["done", "Genre removed from index. Reload to see changes."]);
+                    })
+            },
+            saveGenreModal: function() {
+                // Saves genre details
+                var nameField = document.getElementById("genreName");
+                var address = document.getElementById("genreAddress").value;
+                var name = nameField.value;
+
+                // Make sure fields are active
+                nameField.className += "active";
+
+                // Edit the genre
+                var self = this;
+                page.editGenre(name, address)
+                    .then((res) => {
+                        // If successful, close the modal
+                        self.editGenreModal.M_Modal.close();
+                    });
             },
             createNewGenre: function() {
                 // Make sure they're signed in first

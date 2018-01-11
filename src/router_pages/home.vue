@@ -80,6 +80,8 @@
       backPressed: function() {
         // Go back to the main music page
         this.currentPage = 'music';
+        console.log("siteInfo:")
+        console.log(this.siteInfo);
       },
       goToArtistPage: function(artist) {
         // Show the desired artist's page
