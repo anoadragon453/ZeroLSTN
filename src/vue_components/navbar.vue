@@ -19,15 +19,17 @@
                     </li>
 					-->
 					<li>
-						<a @click.prevent="goto('uploads')">Uploads</a>
+						<a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a>
 					</li>
-					<li v-if="!isLoggedIn"><a @click.prevent="login()">Login</a></li>
-					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
+					<li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons left">person</i>Login</a></li>
+					<li v-else><a @click.prevent="login()"><i class="material-icons left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
 				<ul id="mobile-nav" class="sidenav">
-					<li><a @click.prevent="goto('')">Home</a></li>
-					<li><a @click.prevent="goto('uploads')">Uploads</a></li>
-					<li><a @click.prevent="goto('playqueue')">Play Queue</a></li>
+					<li><h2 class="black-text center-align">{{ ZiteName }}</h2></li>
+					<li><h6 class="black-text center-align">{{ ziteVersion }}</h6></li>
+					<li><a @click.prevent="goto('')"><i class="material-icons left">home</i>Home</a></li>
+					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
+					<li><a @click.prevent="goto('playqueue')"><i class="material-icons left">playlist_play</i>Play Queue</a></li>
 					<!--
 					<li>
                         <a @click.prevent="downloadedToggle()">
@@ -41,8 +43,8 @@
                         </a>
                     </li>
 					-->
-					<li v-if="!isLoggedIn"><a @click.prevent="login()">Login</a></li>
-					<li v-else><a @click.prevent="login()">{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
+					<li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons left">person</i>Login</a></li>
+					<li v-else><a @click.prevent="login()"><i class="material-icons left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
 			</div>
 		</div>
@@ -59,7 +61,8 @@
 			return {
 				ZiteName: "ZeroLSTN",
 				downloadedOnly: false,
-				sidebar: null
+				sidebar: null,
+				ziteVersion: "1.0.2"
 			}
 		},
 		mounted: function() {
@@ -67,7 +70,7 @@
   			this.sidebar = new M.Sidenav(elem, {
   				edge: "left",
   				draggable: true
-              });
+			  });
 		},
 		computed: {
 			isLoggedIn: function() {

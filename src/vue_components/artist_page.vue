@@ -1,24 +1,26 @@
 <template>
     <div id="artistpage">
         <div class="row">
-            <div id="queue" class="col s12">
+            <div class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header">
-                        <i @click.prevent="downloadArtist()" class="material-icons right">cloud_download</i>
+                        <i v-if="downloaded" @click.prevent="removeAlbum()" class="material-icons right">cloud_done</i>
+                        <i v-else @click.prevent="downloadArtist()" class="material-icons right">cloud_download</i>
+                        <i @click.prevent="queueArtist()" class="material-icons right">playlist_add</i>
                         <h4 v-if="artist !== ''">{{ artist }}</h4>
                         <h4 v-else><i>(Blank)</i></h4>
                         <p>Artist</p>
                     </li>
                 </ul>
                 <ul class="collapsible popout" data-collapsible="accordion">
-                    <li v-for="(album, index) in albums">
-                    <div class="collapsible-header" v-html="Object.keys(albums)[Object.values(albums).indexOf(album)] !== '' ? '<b>' + Object.keys(albums)[Object.values(albums).indexOf(album)] + '</b>' : '<b><i>(Blank)</i></b>'"></div>
-                    <div class="collapsible-body">
-                        <div class="collection">
-                            <li class="collection-item" v-html="Object.keys(albums)[Object.values(albums).indexOf(album)] !== '' ? '<h4>' + Object.keys(albums)[Object.values(albums).indexOf(album)] + '</h4>' : '<h4><i>(Blank)</i></h4>'"></li>
-                            <songitem  v-for="song in album" :editable="false" :song="song"></songitem>
+                    <li v-for="album in albums">
+                        <div class="collapsible-header">
+                            <span v-if="album !== ''"><b>{{ album }}</b></span>
+                            <span v-else><b><i>(Blank)</i></b></span>
                         </div>
-                    </div>
+                        <div class="collapsible-body">
+                            <albumPage :album="album" :embedded="true"></albumPage>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -32,39 +34,86 @@
 <script>
     var Router = require("../libs/router.js");
     var SongItem = require("../vue_components/song_item.vue");
+    var AlbumPage = require("../vue_components/album_page.vue");
+
     module.exports = {
         components: {
-            songitem: SongItem
+            songitem: SongItem,
+            albumPage: AlbumPage
         },
         props: ["artist"],
         name: "artistpage",
-        data: () => {
-            return {
-                albums: []
-            }
-        },
         mounted: function() {
             // Initialize all collapsibles
             var collap = document.querySelector(".collapsible");
             var instance = new M.Collapsible(collap, {});
-
-            // Get all albums by this artist
-            var self = this;
-            page.getAlbumsWithSongsByArtist(this.artist)
-                .then((albums) => {
-                    // Albums are returned as an array with objects in the form of
-                    // {"albumName": [song1, song2...]}
-                    console.log("Got albums:")
-                    console.log(albums);
-                    console.log("Keys:")
-                    console.log(Object.keys(albums));
-                    self.albums = albums;
-                });
+        },
+        data: () => {
+            return {
+                downloaded: true
+            }
+        },
+        asyncComputed: {
+            albums: {
+                get() {
+                    // Get all albums by this artist
+                    var self = this;
+                    return page.getAlbumsByArtist(this.artist);
+                }
+            },
+            songs: {
+                get() {
+                    // Check if all songs on all albums of this artist are downloaded
+                    return page.getAlbumsByArtist(this.artist)
+                    .then((albums) => {
+                        var songs = [];
+                        albums.forEach((album) => {
+                            page.getSongsInAlbum(album)
+                                .then((albumSongs) => {
+                                    songs.concat(albumSongs);
+                                });
+                        });
+                        return songs;
+                    });
+                }
+            }
         },
         methods: {
             goto: function(to) {
                 // Go to specified page
                 Router.navigate(to);
+            },
+            queueArtist: function() {
+                // Queue every album by this artist
+                page.getAlbumsByArtist(this.artist)
+                    .then((albums) => {
+                        var songs = [];
+                        albums.forEach((album) => {
+                            page.getSongsInAlbum(album)
+                                .then((songs) => {
+                                    page.queueSongs(songs);
+                                });
+                        });
+                    });
+            },
+            downloadArtist: function() {
+                page.getAlbumsByArtist(this.artist)
+                    .then((albums) => {
+                        var songs = [];
+                        albums.forEach((album) => {
+                            page.getSongsInAlbum(album)
+                                .then((songs) => {
+                                    songs.forEach((song) => {
+                                        var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
+                                        page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
+                                    });
+                                });
+                        });
+                    });
+            },
+            notDownloaded: function() {
+                // Called by album's when they realize they're not completely downloaded.
+                this.downloaded = false;
             }
         }
     }

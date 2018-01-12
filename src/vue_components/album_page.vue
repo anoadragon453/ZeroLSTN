@@ -4,13 +4,9 @@
             <div class="col s12">
                 <ul class="collection with-header">
                     <li class="collection-header">
-                        <span v-if="currentlyDownloading">
-                            <spinner class="right" :size="small"></spinner>
-                        </span>
-                        <span v-else>
-                            <i v-if="downloaded" @click.prevent="removeAlbum()" class="material-icons right">cloud_done</i>
-                            <i v-else @click.prevent="downloadAlbum()" class="material-icons right">cloud_download</i>
-                        </span>
+                        <i v-if="downloaded" @click.prevent="removeAlbum()" class="material-icons right">cloud_done</i>
+                        <i v-else @click.prevent="downloadAlbum()" class="material-icons right">cloud_download</i>
+                        <i @click.prevent="queueAlbum()" class="material-icons right">playlist_add</i>
                         
                         <h4 v-if="album !== ''">{{ album }}</h4>
                         <h4 v-else><i>(Blank)</i></h4>
@@ -19,9 +15,11 @@
                     <songitem  v-for="song in songs" :editable="false" :song="song"></songitem>
                 </ul>
             </div>
-            <div class="row"></div>
-            <div class="row"></div>
-            <div class="row"></div>
+            <span v-if="!embedded">
+                <div class="row"></div>
+                <div class="row"></div>
+                <div class="row"></div>
+            </span>
         </div>
     </div>
 </template>
@@ -35,12 +33,14 @@
             songitem: SongItem,
             spinner: SpinnerColors
         },
-        props: ["album"],
+        props: ["album", "embedded"],
         name: "albumpage",
+        mounted: function() {
+            console.log("[album]", this.album);
+        },
         data: () => {
             return {
-                songs: [],
-                currentlyDownloading: false
+                songs: []
             }
         },
         asyncComputed: {
@@ -63,13 +63,24 @@
                         return false;
                     }
 
-                    return this.checkSongsFromOffset(this.songs, 0);
+                    var self = this;
+                    return this.checkSongsFromOffset(this.songs, 0)
+                        .then((downloaded) => {
+                            if (!downloaded) {
+                                // Tell artist page we may be embedded in that we're not completely downloaded
+                                self.$parent.notDownloaded();
+                            }
+                            return downloaded;
+                        });
+                    
                 }
             }
         },
         methods: {
+            queueAlbum() {
+                page.queueSongs(this.songs);
+            },
             downloadAlbum() {
-                this.currentlyDownloading = true;
                 this.downloadAlbumBySongOffset(this.songs, 0);
             },
             removeAlbum() {
@@ -90,7 +101,6 @@
                 // Keep going to the next offset
                 var self = this;
                 return songs[offset].info.then((info) => {
-                    console.log("[info]", songs[offset].info);
                     if (!info.is_downloaded) {
                         return false;
                     } else {
@@ -107,12 +117,14 @@
                     return;
                 }
 
+                console.log("Downloading at offset " + offset)
+
                 // TODO: Think this can just be simplified to a for loop...
 
                 // Don't try to redownload a song we already have
                 if (songs[offset].info && !songs[offset].info.is_downloaded) {
                     var filepath = "merged-ZeroLSTN/" + songs[offset].site + "/" + songs[offset].directory + "/" + songs[offset].filename + "|all";
-                    page.cmdp("fileNeed", { inner_path: filepath, timeout: 5 });   
+                    page.cmdp("fileNeed", { inner_path: filepath, timeout: 5 });
                 }
                 this.downloadAlbumBySongOffset(songs, ++offset);
             },

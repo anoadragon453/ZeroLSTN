@@ -1,4 +1,4 @@
-<<template>
+<template>
   <div id="mainapp">
     <div v-if="addGenre">
       <indexGenre :genre-name="genreName" :genre-address="genreAddress"></indexGenre>
@@ -8,13 +8,7 @@
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
       </div>
       <div class="col s12 m12 l8">
-        <span  v-if="currentPage != 'music'">
-          <div class="row"></div>
-          <a @click.prevent="backPressed()" class="waves-effect waves-light btn">Back</a>
-        </span>
-        <music v-if="currentPage == 'music'"></music>
-        <artistPage v-if="currentPage == 'artist'" :artist="artist"></artistPage>
-        <albumPage v-if="currentPage == 'album'" :album="album"></albumPage>
+        <music></music>
       </div>
     </div>
   </div>
@@ -27,26 +21,19 @@
   var Music = require("../vue_components/music.vue");
   var AlbumArt = require("../vue_components/album_art.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
-  var ArtistPage = require("../vue_components/artist_page.vue");
-  var AlbumPage = require("../vue_components/album_page.vue");
-  var IndexGenre = require("../vue_components/index_genre.vue");
+  var IndexGenre = require("../vue_components/index_genre.vue"); // TODO: Move this to it's own page
 
   module.exports = {
     components: {
       music: Music,
       albumArt: AlbumArt,
       playQueue: PlayQueue,
-      artistPage: ArtistPage,
-      albumPage: AlbumPage,
       indexGenre: IndexGenre
     },
     props: ["playQueueObj", "queueIndex"],
     name: "mainapp",
     data: () => {
       return {
-        currentPage: "music",
-        artist: "",
-        album: "",
         addGenre: false,
         genreName: "",
         genreAddress: ""
@@ -74,26 +61,6 @@
           console.log("Caught it!")
           self.currentPage = "music";
         });
-      }
-    },
-    methods: {
-      backPressed: function() {
-        // Go back to the main music page
-        this.currentPage = 'music';
-        console.log("siteInfo:")
-        console.log(this.siteInfo);
-      },
-      goToArtistPage: function(artist) {
-        // Show the desired artist's page
-        console.log("Going to artist: " + artist);
-        this.artist = artist;
-        this.currentPage = "artist";
-      },
-      goToAlbumPage: function(album) {
-        // Show the desired albums's page
-        console.log("Going to album: " + album);
-        this.album = album;
-        this.currentPage = "album";
       }
     }
   }

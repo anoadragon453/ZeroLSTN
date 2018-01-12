@@ -1,4 +1,3 @@
-version = "0.1"
 var indexAddress = "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB";
 var defaultGenreAddress = "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY";
 
@@ -816,6 +815,7 @@ class ZeroApp extends ZeroFrame {
 
 	// Return an array of objects with album titles and songs in the form of
 	// {"title": [song1, song2...]}
+	/*
 	getAlbumsWithSongsByArtist(artistName) {
 		var query = `
 		SELECT * FROM songs
@@ -850,7 +850,7 @@ class ZeroApp extends ZeroFrame {
 					resolve(albums);
 				});
 			});
-	}
+	}*/
 
 	// Get and attach file info to song object
 	getInfoForSongs(songs) {
@@ -950,10 +950,12 @@ class ZeroApp extends ZeroFrame {
 		// Set index to end of queue
 		app.queueIndex = app.playQueue.length - 1;
 
-		// Update Vue components that queue index changed
-		app.$emit("updatePlayQueueIndex", app.queueIndex);
-
 		this.playSongAtQueueIndex(app.queueIndex);
+	}
+
+	// Queue an array of songs
+	queueSongs(songs) {
+		app.playQueue.push(...songs);
 	}
 
 	// Add a song to the end of the play queue
@@ -967,7 +969,6 @@ class ZeroApp extends ZeroFrame {
 		console.log("Mainapp's queue:")
 		console.log(app.playQueue.toArray());
 		console.log("Current queue index: " + app.queueIndex);
-		app.$emit("updatePlayQueue", app.playQueue);
 	}
 
 	// Return the queue contents as an array of songs
@@ -1030,9 +1031,6 @@ class ZeroApp extends ZeroFrame {
 		// Set the queueIndex to the beginning
 		app.queueIndex = 0;
 
-		// Update Vue components that queue index changed
-		app.$emit("updatePlayQueueIndex", app.queueIndex);
-
 		// Tell Vue objects that the current song has been paused
 		app.$emit("songPlaying", false);
 
@@ -1056,9 +1054,6 @@ class ZeroApp extends ZeroFrame {
 			return;
 		}
 
-		// Update Vue components that queue index changed
-		app.$emit("updatePlayQueueIndex", app.queueIndex);
-
 		// Play whatever song is at that index
 		this.playSongAtQueueIndex(app.queueIndex);
 	}
@@ -1075,9 +1070,6 @@ class ZeroApp extends ZeroFrame {
 		if(app.queueIndex < 0) {
 			app.queueIndex = 0;
 		}
-
-		// Update Vue components that queue index changed
-		//app.$emit("updatePlayQueueIndex", app.queueIndex);
 
 		// Play whatever song is at that index
 		this.playSongAtQueueIndex(app.queueIndex);
@@ -1117,11 +1109,15 @@ var Uploads = require("./router_pages/uploads.vue");
 var Edit = require("./router_pages/edit.vue");
 var PlayQueue = require("./router_pages/playqueue.vue");
 var Home = require("./router_pages/home.vue");
+var Artist = require("./router_pages/artist.vue");
+var Album = require("./router_pages/album.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
-	{ route: "edit/:genre/:songID", component: Edit },
 	{ route: "playqueue", component: PlayQueue },
+	{ route: "edit/:genre/:songID", component: Edit },
 	{ route: "addGenre/:genreName/:genreAddress", component: Home },
+	{ route: "artist/:artist", component: Artist },
+	{ route: "album/:album", component: Album },
 	{ route: "", component: Home }
 ]);

@@ -175,7 +175,7 @@
                     { name: "Albums", icon: "album", active: false, show: "albums" },
                     { name: "Songs", icon: "music_note", active: true, show: "songs" },
                     { name: "Genres", icon: "library_music", active: false, show: "genres" }
-                    //{ name: "Playlists", icon: "playlist_play", active: false, show: "playlists" }
+                    //{ name: "Playlists", icon: "playlist_add", active: false, show: "playlists" }
                 ],
                 artists: [],
                 albums: [],
@@ -245,12 +245,20 @@
         },
         methods: {
             goToArtist: function(artist) {
-                // Tell the parent view to go to the specified artist's page
-                this.$parent.goToArtistPage(artist)
+                // Go to the specified artist page
+                if (artist === "") {
+                    Router.navigate('/artist/(Blank)' + artist);
+                    return;
+                }
+                Router.navigate('/artist/' + artist);
             },
             goToAlbum: function(album) {
-                // Tell the parent view to go to the specified album's page
-                this.$parent.goToAlbumPage(album)
+                // Go to the specified album page
+                if (album === "") {
+                    Router.navigate('/album/(Blank)' + album);
+                    return;
+                }
+                Router.navigate('/album/' + album);
             },
             addGenre: function(address) {
                 // Add a genre by clicking the '+' on the genre page

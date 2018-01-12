@@ -5,7 +5,7 @@
                 <ul class="collection with-header">
                     <li class="collection-header"><h4>Play Queue</h4></li>
                     <li class="collection-item" v-if="!playQueueObj || playQueueObj.length == 0">No songs in queue.</li>
-                    <!-- TODO: Add play (to skip to) and remove-from-queue buttons -->
+                    <!-- TODO: Add remove-from-queue buttons and swipe to delete on mobile -->
                     <a href="#" @click.prevent="playSongAtIndex(index)" class="collection-item" v-else v-for="(song, index) in playQueueObj.toArray()">
                         <span v-if="index == queueIndex"><b>{{ song.title }}</b></span>
                         <span v-else>{{ song.title }}</span>
@@ -24,8 +24,6 @@
     module.exports = {
         props: ["playQueueObj", "queueIndex"],
         name: "playqueuecomponent",
-        mounted: function() {
-        },
         methods: {
             goto: function(to) {
                 // Go to specified page
