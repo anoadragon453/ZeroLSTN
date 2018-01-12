@@ -3,7 +3,10 @@
         <div class="row">
             <div id="queue" class="col s12">
                 <ul class="collection with-header">
-                    <li class="collection-header"><h4>Play Queue</h4></li>
+                    <li class="collection-header">
+                        <i @click.prevent="clearPlayQueue()" class="material-icons right black-text">clear_all</i>
+                        <h4>Play Queue</h4>
+                    </li>
                     <li class="collection-item" v-if="!playQueueObj || playQueueObj.length == 0">No songs in queue.</li>
                     <!-- TODO: Add remove-from-queue buttons and swipe to delete on mobile -->
                     <a href="#" @click.prevent="playSongAtIndex(index)" class="collection-item" v-else v-for="(song, index) in playQueueObj.toArray()">
@@ -32,6 +35,10 @@
             playSongAtIndex: function(index) {
                 // Skip to clicked play queue song index
                 page.playSongAtQueueIndex(index);
+            },
+            clearPlayQueue: function() {
+                // Remove all the songs in the play queue
+                page.clearPlayQueue();
             }
         }
     }

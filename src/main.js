@@ -981,6 +981,12 @@ class ZeroApp extends ZeroFrame {
 		return app.queueIndex;
 	}
 
+	// Remove all the songs in the play queue and set index to 0
+	clearPlayQueue() {
+		app.playQueue.clear();
+		app.queueIndex = 0;
+	}
+
 	// Return the current audio object
 	getAudioObject() {
 		return app.audioObject;

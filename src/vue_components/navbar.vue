@@ -62,7 +62,7 @@
 				ZiteName: "ZeroLSTN",
 				downloadedOnly: false,
 				sidebar: null,
-				ziteVersion: "1.0.2"
+				ziteVersion: "1.0.3"
 			}
 		},
 		mounted: function() {
