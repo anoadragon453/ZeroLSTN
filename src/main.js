@@ -635,6 +635,17 @@ class ZeroApp extends ZeroFrame {
 			});
 	}
 
+	// Get name of a genre from its address
+	getGenreNameFromAddress(address) {
+		var query = `
+		SELECT name FROM genres
+			WHERE address='${address}'
+			LIMIT 1
+		`
+
+		return this.cmdp("dbQuery", [query])
+	}
+
 	// Return list of a specific user's genres from the Genre Index
 	getUserGenresFromIndex(authAddress) {
 		var query = `
@@ -1019,6 +1030,10 @@ class ZeroApp extends ZeroFrame {
 	// Skip to the next song
 	nextSong() {
 		console.log("Going to next song. Index: " + app.queueIndex);
+
+		// TODO: Check if song isn't downloaded and has no seeders,
+		// if so, just skip over it. Prefetch next song to actually
+		// check seeder number and to speed up playback.
 
 		// Move the index forward
 		app.queueIndex++;

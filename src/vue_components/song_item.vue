@@ -1,16 +1,13 @@
 <template>
-    <li id="songitem" class="collection-item">
-        <a href="#" v-if="editable" @click.prevent="songEditClicked(song)">
-            <span v-html="song.title !== '' ? song.title : '<i>(Blank)</i>'"></span><span class="hide-on-med-and-down" v-html="song.artist !== '' ? ' - ' + song.artist : ' - <i>(Blank)</i>'"></span>
-        </a>
-        <span v-else>
-            {{ song.title !== "" ? song.title : "(Blank)" }}
-        </span>
-        <a class="secondary-content">
-            {{ songInfo ? "Seeds: " + songInfo.peer_seed : "Seeds: ?"}}
-            <a href="#" @click.prevent="songPlayClicked(song)"><i class="material-icons">play_arrow</i></a>
-            <a href="#" @click.prevent="songQueueClicked(song)"><i class="material-icons">add</i></a>
-            <a href="#" v-if="editable" @click.prevent="deleteClicked(song)"><i class="material-icons">delete</i></a>
+    <li class="collection-item avatar" :class="{ 'teal accent-4' : downloaded }">
+        <i @click.prevent="songPlayClicked(song)" class="material-icons circle red">play_arrow</i>
+        <span class="title">{{ song.title }}</span>
+        <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}<br>
+            Genre: {{ genre }}
+        </p>
+        <a href="#" class="secondary-content s2">
+            <a @click.prevent="songQueueClicked(song)"><i class="material-icons black-text">playlist_add</i></a>
+            <a v-if="editable" @click.prevent="deleteClicked(song)"><i class="material-icons black-text">delete</i></a>
         </a>
     </li>
 </template>
@@ -38,6 +35,19 @@
                         });
                 }
             },
+            downloaded: {
+                get() {
+                    return this.songInfo && this.songInfo.is_downloaded;
+                }
+            },
+            genre: {
+                get() {
+                    return page.getGenreNameFromAddress(this.song.site)
+                        .then((name) => {
+                            return name[0].name;
+                        });
+                }
+            }
         },
         methods: {
             songEditClicked: function(song) {
@@ -46,6 +56,7 @@
             },
             songPlayClicked: function(song) {
                 // Immediately play song
+                console.log(song)
                 page.playSongImmediately(song);
             },
             songQueueClicked: function(song) {
