@@ -177,7 +177,7 @@ class ZeroApp extends ZeroFrame {
 
     signout() {
     	return this.cmdp("certSelect", { accepted_domains: [""] });
-    }
+	}
 
     unimplemented() {
         return page.cmdp("wrapperNotification", ["info", "Unimplemented!"]);
@@ -852,6 +852,19 @@ class ZeroApp extends ZeroFrame {
 			});
 	}
 
+	// Get and attach file info to song object
+	getInfoForSongs(songs) {
+		return new Promise((resolve, reject) => {
+			songs.forEach(function(song) {
+				// Get the info for each song
+				song.info = page.cmdp("optionalFileInfo", ["merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename]);
+			});
+			
+			// Return the list of songs
+			resolve(songs);
+		});
+	}
+
 	// Returns all songs in a given album
 	getSongsInAlbum(albumName) {
 		var query = `
@@ -861,7 +874,11 @@ class ZeroApp extends ZeroFrame {
 			ORDER BY date_added ASC
 		`;
 	
-		return this.cmdp("dbQuery", [query]);
+		var self = this;
+		return this.cmdp("dbQuery", [query])
+			.then((songs) => {
+				return self.getInfoForSongs(songs);
+			})
 	}
 
 	// TODO: Sort by song number
@@ -998,10 +1015,6 @@ class ZeroApp extends ZeroFrame {
 	// Pause the current running audio
 	pauseCurrentSong() {
 		// If there isn't any audio available yet, do nothing
-		if (!app.audioObject) {
-			console.log("Necessary? pause");
-			return;
-		}
 		app.audioObject.pause();
 
 		// Tell Vue objects that the current song has been paused

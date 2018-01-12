@@ -3,7 +3,12 @@
         <div class="row">
             <div id="queue" class="col s12">
                 <ul class="collection with-header">
-                    <li class="collection-header" v-html="artist !== '' ? '<h4>' + artist + '</h4><p>Artist</p>' : '<h4><i>(Blank)</i></h4><p>Artist</p>'"></li>
+                    <li class="collection-header">
+                        <i @click.prevent="downloadArtist()" class="material-icons right">cloud_download</i>
+                        <h4 v-if="artist !== ''">{{ artist }}</h4>
+                        <h4 v-else><i>(Blank)</i></h4>
+                        <p>Artist</p>
+                    </li>
                 </ul>
                 <ul class="collapsible popout" data-collapsible="accordion">
                     <li v-for="(album, index) in albums">
