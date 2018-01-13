@@ -316,8 +316,6 @@
                     });
             },
             createNewGenre: function() {
-                console.log(Object.keys(this.genres))
-                return
                 // Make sure they're signed in first
                 if(!page.isUserSignedIn()) {
                     // Show sign in prompt

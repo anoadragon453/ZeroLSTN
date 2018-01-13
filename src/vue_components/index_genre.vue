@@ -4,7 +4,7 @@
             <p>Your new Genre, {{ decodedGenreName }}, is all ready to go! Click the Publish button below to list it globally!</p>
         </div>
         <div class="row center">
-            <a @click.prevent="publishGenre()" class="waves-effect waves-light btn"><i class="material-icons left">cloud_upload</i>Publish!</a>
+            <a id="uploadButton" @click.prevent="publishGenre()" class="waves-effect waves-light btn"><i class="material-icons left">cloud_upload</i>Publish!</a>
         </div>
     </div>
 </template>
@@ -36,6 +36,11 @@
                     page.selectUser();
                     return;
                 }
+
+                // Disable upload button while it publishes
+                var uploadButton = document.getElementById("uploadButton");
+                uploadButton.classList += ' disabled';
+                uploadButton.innerHTML = '<i class="material-icons left">cloud_upload</i>Publishing...';
 
                 // Ensure they're the owner of this address
                 // Try to sign address's content.json

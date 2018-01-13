@@ -1,5 +1,5 @@
 <template>
-    <li class="collection-item avatar" :class="{ 'teal accent-4' : downloaded }">
+    <li class="collection-item avatar">
         <i @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
         <span class="title">{{ song.title }}</span>
         <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
