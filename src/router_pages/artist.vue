@@ -10,6 +10,9 @@
                 <artistPage :artist="artist"></artistPage>
             </div>
         </div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
     </div>
 </template>
 

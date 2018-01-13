@@ -9,10 +9,13 @@
                     </li>
                     <li class="collection-item" v-if="!playQueueObj || playQueueObj.length == 0">No songs in queue.</li>
                     <!-- TODO: Add remove-from-queue buttons and swipe to delete on mobile -->
-                    <a href="#" @click.prevent="playSongAtIndex(index)" class="collection-item" v-else v-for="(song, index) in playQueueObj.toArray()">
-                        <span v-if="index == queueIndex"><b>{{ song.title }}</b></span>
-                        <span v-else>{{ song.title }}</span>
-                    </a>
+                    <li class="collection-item" v-else v-for="(song, index) in playQueueObj">
+                        <a href="#" @click.prevent="playSongAtIndex(index)">
+                            <span v-if="index == queueIndex"><b>{{ song.title }}</b></span>
+                            <span v-else>{{ song.title }}</span>
+                        </a>
+                        <i @click.prevent="removeFromQueue(song)" class="material-icons right">close</i>
+                    </li>
                 </ul>
             </div>
             <div class="row"></div>
@@ -35,6 +38,10 @@
             playSongAtIndex: function(index) {
                 // Skip to clicked play queue song index
                 page.playSongAtQueueIndex(index);
+            },
+            removeFromQueue: function(song) {
+                // Remove a single song from the PlayQueue
+                page.removeSongFromQueue(song);
             },
             clearPlayQueue: function() {
                 // Remove all the songs in the play queue

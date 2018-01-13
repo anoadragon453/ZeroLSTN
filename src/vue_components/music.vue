@@ -70,8 +70,8 @@
                 </div>
                 <ul v-if="genres && genres.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Genres</h4></li>
-                    <li v-for="genre in genres" class="collection-item">
-                        {{ genre.name }}
+                    <li v-for="(genre, index) in genres" class="collection-item">
+                        <a @click.prevent="goToGenre(index)">{{ genre.name }}</a>
                         <a class="secondary-content">
                             <a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">edit</i></a>
                             <a href="#" v-if="!genre.connected" @click.prevent="addGenre(Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">add_circle_outline</i></a>
@@ -316,6 +316,8 @@
                     });
             },
             createNewGenre: function() {
+                console.log(Object.keys(this.genres))
+                return
                 // Make sure they're signed in first
                 if(!page.isUserSignedIn()) {
                     // Show sign in prompt
@@ -325,6 +327,11 @@
 
                 // Clone and navigate to the default genre site
                 page.cmdp("siteClone", ["1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY"]);
+            },
+            goToGenre: function(address) {
+                // Navigate to the genre's ZeroNet page. Necessary to do this due to iframes
+                page.cmd("wrapperOpenWindow", ['/' + address, "_blank", ""]);
+                return false;
             }
         }
     }

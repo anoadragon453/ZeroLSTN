@@ -44,7 +44,7 @@ var app = new Vue({
 		userInfo: null,					// ZeroFrame userInfo object
 		siteInfo: null,					// ZeroFrame siteInfo object
 		mergerZites: null,				// List of all merger Zites (genres) we know of
-		playQueue: new Deque(),			// Play Queue itself
+		playQueue: [],					// Play Queue itself
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
 		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
@@ -945,7 +945,7 @@ class ZeroApp extends ZeroFrame {
 	// Place a song at end of play queue and skip to it.
 	playSongImmediately(song) {
 		// Add song to the queue
-		app.playQueue.insertBack(song);
+		app.playQueue.push(song);
 
 		// Set index to end of queue
 		app.queueIndex = app.playQueue.length - 1;
@@ -961,19 +961,31 @@ class ZeroApp extends ZeroFrame {
 	// Add a song to the end of the play queue
 	queueSong(song) {
 		console.log("Queueing " + song.title + " by " + song.artist);
-		app.playQueue.insertBack(song);
+		app.playQueue.push(song);
 
 		// Make sure our queueIndex exists
 		// Update Vue components that play queue changed
 		console.log("Emitting update!")
 		console.log("Mainapp's queue:")
-		console.log(app.playQueue.toArray());
+		console.log(app.playQueue);
 		console.log("Current queue index: " + app.queueIndex);
+	}
+
+	// Removes a single song from the play queue
+	removeSongFromQueue(song) {
+		var index = app.playQueue.indexOf(song);
+		if (index != -1) {
+			app.playQueue.splice(index, 1);
+			if (index < app.queueIndex) {
+				app.queueIndex--;
+				if (app.queueIndex < 0) { app.queueIndex = 0; }
+			}
+		}
 	}
 
 	// Return the queue contents as an array of songs
 	getPlayQueue() {
-		return app.playQueue.toArray();
+		return app.playQueue;
 	}
 
 	// Return the current queue index
@@ -983,7 +995,7 @@ class ZeroApp extends ZeroFrame {
 
 	// Remove all the songs in the play queue and set index to 0
 	clearPlayQueue() {
-		app.playQueue.clear();
+		app.playQueue = [];
 		app.queueIndex = 0;
 	}
 
@@ -997,7 +1009,7 @@ class ZeroApp extends ZeroFrame {
 		// Update the queue index
 		app.queueIndex = index;
 
-		this.playSong(app.playQueue.get(index));
+		this.playSong(app.playQueue[index]);
 	}
 
 	// Play the current running audio
@@ -1005,7 +1017,7 @@ class ZeroApp extends ZeroFrame {
 		// If there isn't any audio available yet, play first song in queue
 		console.log("Playing current song")
 		if (!app.audioObject) {
-			if(app.playQueue && app.playQueue.length > 0) {
+			if(app.playQueue.length > 0) {
 				this.playSongAtQueueIndex(0);
 			} else {
 				// If we've got no queue, don't play anything
@@ -1066,11 +1078,6 @@ class ZeroApp extends ZeroFrame {
 
 	// Go back to the previous song
 	prevSong() {
-		// Check if queue exists, if not create it
-		if (!app.playQueue) {
-			app.playQueue = new Deque();
-		}
-
 		// Move the index back
 		app.queueIndex--;
 		if(app.queueIndex < 0) {
