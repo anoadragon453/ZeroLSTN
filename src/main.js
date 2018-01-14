@@ -1,3 +1,4 @@
+version = "1.0.3";
 var indexAddress = "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB";
 var defaultGenreAddress = "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY";
 
@@ -13,9 +14,6 @@ var Router = require("./libs/router.js");
 var Vue = require("vue/dist/vue.js");
 var VueZeroFrameRouter = require("./libs/vue-zeroframe-router.js");
 var AsyncComputed = require('vue-async-computed');
-
-// Data types
-var Deque = require("double-ended-queue");
 
 var { sanitizeStringForUrl, sanitizeStringForUrl_SQL, html_substr, sanitizeHtmlForDb } = require("./util.js");
 
@@ -35,11 +33,12 @@ var app = new Vue({
 	el: "#app",
 	template: `
 		<div>
-			<navbar ref="navbar" :user-info="userInfo"></navbar>
+			<navbar ref="navbar" :zite-version="ziteVersion" :user-info="userInfo"></navbar>
 			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
 			<footerBar ref="footerBar"></footerBar>
 		</div>`,
 	data: {
+		ziteVersion: version,			// ZeroLSTN version number
 		currentView: null,				// Current View - Vue component (dynamic)
 		userInfo: null,					// ZeroFrame userInfo object
 		siteInfo: null,					// ZeroFrame siteInfo object
@@ -764,17 +763,16 @@ class ZeroApp extends ZeroFrame {
 	// Somehow send information back with both artist and album...
 	getAllAlbums(limit = 0, offset = 0) {
 		var query = `
-		SELECT DISTINCT album FROM songs
+		SELECT DISTINCT album, artist FROM songs
 			LEFT JOIN json USING (json_id)
 			ORDER BY album COLLATE NOCASE
 		`;
 	
+		// Execute query
 		return this.cmdp("dbQuery", [query])
-			.then((albumsObjs) => {
-				// Unpack "artist" string attribute into its own array of strings
-				return new Promise((resolve, reject) => {
-					resolve(albumsObjs.map(function(a) {return a.album;}));
-				});
+			.then((albumObjs) => {
+				// Return array of { "album": "abc", "artist": "xyz"} objects
+				return albumObjs;
 			});
 	}
 
@@ -865,12 +863,13 @@ class ZeroApp extends ZeroFrame {
 		});
 	}
 
-	// Returns all songs in a given album
-	getSongsInAlbum(albumName) {
+	// Returns all songs in a given artist's album
+	getSongsInAlbum(albumName, artistName) {
 		var query = `
 		SELECT * FROM songs
 			LEFT JOIN json USING (json_id)
 			WHERE album="${albumName}"
+			AND artist="${artistName}"
 			ORDER BY date_added ASC
 		`;
 	
@@ -1131,6 +1130,6 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "edit/:genre/:songID", component: Edit },
 	{ route: "addGenre/:genreName/:genreAddress", component: Home },
 	{ route: "artist/:artist", component: Artist },
-	{ route: "album/:album", component: Album },
+	{ route: "album/:artist/:album", component: Album },
 	{ route: "", component: Home }
 ]);

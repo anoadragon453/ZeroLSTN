@@ -10,7 +10,7 @@
                         
                         <h4 v-if="album !== ''">{{ album }}</h4>
                         <h4 v-else><i>(Blank)</i></h4>
-                        <p>Album</p>
+                        <p>{{ artist }}</p>
                     </li>
                     <songitem  v-for="song in songs" :editable="false" :song="song"></songitem>
                 </ul>
@@ -33,10 +33,10 @@
             songitem: SongItem,
             spinner: SpinnerColors
         },
-        props: ["album", "embedded"],
+        props: ["album", "artist", "embedded"],
         name: "albumpage",
         mounted: function() {
-            console.log("[album]", this.album);
+            console.log("[album]", this.album, "[artist]", this.artist);
         },
         data: () => {
             return {
@@ -47,10 +47,9 @@
             songInfo: {
                 get() {
                     var self = this;
-                    return page.getSongsInAlbum(this.album)
+                    return page.getSongsInAlbum(self.album, self.artist)
                         .then((songs) => {
                         self.songs = songs;
-                        console.log(songs[0].info)
                         return true;
                     });
                 }
@@ -68,7 +67,9 @@
                         .then((downloaded) => {
                             if (!downloaded) {
                                 // Tell artist page we may be embedded in that we're not completely downloaded
-                                self.$parent.notDownloaded();
+                                if (self.$parent.notDownloaded) {
+                                    self.$parent.notDownloaded();
+                                }
                             }
                             return downloaded;
                         });

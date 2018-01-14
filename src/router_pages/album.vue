@@ -7,7 +7,7 @@
             <div class="col s12 m12 l8">
                 <div class="row"></div>
                 <a @click.prevent="goto('')" class="waves-effect waves-light btn">Back</a>
-                <albumPage :album="album"></albumPage>
+                <albumPage :album="album" :artist="artist"></albumPage>
             </div>
         </div>
     </div>
@@ -27,13 +27,18 @@
         name: "album",
         data: () => {
             return {
-                album: ""
+                album: "",
+                artist: ""
             }
         },
         mounted: function() {
-            // Get album from URL
+            // Get album/artist from URL
+            this.artist = decodeURI(Router.currentParams["artist"]);
             this.album = decodeURI(Router.currentParams["album"]);
-            if (this.album === "(Blank)") { this.album = "" }; // Account for blank albums
+
+            // Account for blank titles
+            if (this.artist === "(Blank)") { this.artist = "" };
+            if (this.album === "(Blank)") { this.album = "" };
         },
         methods: {
             goto: function(to) {

@@ -13,13 +13,13 @@
                     </li>
                 </ul>
                 <ul class="collapsible popout" data-collapsible="accordion">
-                    <li v-for="album in albums">
+                    <li v-for="(album, index) in albums">
                         <div class="collapsible-header">
                             <span v-if="album !== ''"><b>{{ album }}</b></span>
                             <span v-else><b><i>(Blank)</i></b></span>
                         </div>
                         <div class="collapsible-body">
-                            <albumPage :album="album" :embedded="true"></albumPage>
+                            <albumPage :album="album" :artist="artist" :embedded="true"></albumPage>
                         </div>
                     </li>
                 </ul>
@@ -61,11 +61,12 @@
             songs: {
                 get() {
                     // Check if all songs on all albums of this artist are downloaded
+                    var self = this;
                     return page.getAlbumsByArtist(this.artist)
                     .then((albums) => {
                         var songs = [];
                         albums.forEach((album) => {
-                            page.getSongsInAlbum(album)
+                            page.getSongsInAlbum(album, self.artist)
                                 .then((albumSongs) => {
                                     songs.concat(albumSongs);
                                 });
@@ -82,11 +83,12 @@
             },
             queueArtist: function() {
                 // Queue every album by this artist
+                var self = this;
                 page.getAlbumsByArtist(this.artist)
                     .then((albums) => {
                         var songs = [];
                         albums.forEach((album) => {
-                            page.getSongsInAlbum(album)
+                            page.getSongsInAlbum(album, self.artist)
                                 .then((songs) => {
                                     page.queueSongs(songs);
                                 });
@@ -94,11 +96,12 @@
                     });
             },
             downloadArtist: function() {
+                var self = this;
                 page.getAlbumsByArtist(this.artist)
                     .then((albums) => {
                         var songs = [];
                         albums.forEach((album) => {
-                            page.getSongsInAlbum(album)
+                            page.getSongsInAlbum(album, self.artist)
                                 .then((songs) => {
                                     songs.forEach((song) => {
                                         var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename + "|all";

@@ -55,14 +55,13 @@
     var Router = require("../libs/router.js");
 
 	module.exports = {
-		props: ["userInfo"],
+		props: ["userInfo", "ziteVersion"],
 		name: "navbar",
 		data: () => {
 			return {
 				ZiteName: "ZeroLSTN",
 				downloadedOnly: false,
-				sidebar: null,
-				ziteVersion: "1.0.3"
+				sidebar: null
 			}
 		},
 		mounted: function() {

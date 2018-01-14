@@ -49,7 +49,7 @@
                 <ul v-if="albums.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Albums</h4></li>
                     <li v-for="album in albums" class="collection-item">
-                        <a href="#!" v-html="album !== '' ? album : '<i>(Blank)</i>'" @click.prevent="goToAlbum(album)"></a>
+                        <a href="#!" v-html="album.album !== '' ? album.album : '<i>(Blank)</i>'" @click.prevent="goToAlbum(album)"></a>
                     </li>
                 </ul>
                 <p v-else class="center">No albums found. Try adding some genres!</p>
@@ -68,18 +68,28 @@
                         <a @click.prevent="createNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
                     </div>
                 </div>
-                <ul v-if="genres && genres.length != 0" class="collection with-header">
-                    <li class="collection-header"><h4>Genres</h4></li>
-                    <li v-for="(genre, index) in genres" class="collection-item">
-                        <a @click.prevent="goToGenre(index)">{{ genre.name }}</a>
+                <ul v-if="recommendedGenres" class="collection with-header">
+                    <li class="collection-header"><h4>Recommended Genres</h4></li>
+                    <li v-for="(genre, address) in recommendedGenres" class="collection-item">
+                        <a @click.prevent="goToGenre(address)">{{ genre.name }}</a>
                         <a class="secondary-content">
-                            <a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">edit</i></a>
-                            <a href="#" v-if="!genre.connected" @click.prevent="addGenre(Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">add_circle_outline</i></a>
-                            <a href="#" v-else @click.prevent="removeGenre(Object.keys(genres)[Object.values(genres).indexOf(genre)])"><i class="material-icons">clear</i></a>
+                            <!--<a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, address)"><i class="material-icons">edit</i></a>-->
+                            <a href="#" v-if="genre.connected" @click.prevent="addGenre(address)"><i class="material-icons">clear</i></a>
+                            <a href="#" v-else @click.prevent="removeGenre(address)"><i class="material-icons">add_circle_outline</i></a>
                         </a>
                     </li>
                 </ul>
-                <p v-else class="center">No genres found. Make sure you have the <a href="/1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB">index</a> downloaded!</p>
+                <ul v-if="genres && genres.length != 0" class="collection with-header">
+                    <li class="collection-header"><h4>Community Genres</h4></li>
+                    <li v-for="(genre, address) in genres" class="collection-item">
+                        <a @click.prevent="goToGenre(address)">{{ genre.name }}</a>
+                        <a class="secondary-content">
+                            <a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, address)"><i class="material-icons">edit</i></a>
+                            <a href="#" v-if="genre.connected" @click.prevent="addGenre(address)"><i class="material-icons">clear</i></a>
+                            <a href="#" v-else @click.prevent="removeGenre(address)"><i class="material-icons">add_circle_outline</i></a>
+                        </a>
+                    </li>
+                </ul>
             </div>
             <!--
             <div id="playlists" class="col s12">
@@ -184,10 +194,14 @@
                 editGenreModal: null
             }
         },
-        asyncComputed: { // TODO: Figure out how to update these values, or does it happen automatically?
+        asyncComputed: {
             genres: {
                 get: function() {
                     console.log("Getting genres...")
+                    if (!this.recommendedGenres) {
+                        return;
+                    }
+
                     // Get genres/mergers listed in the index
                     var self = this;
                     let knownGenres, ourGenres;
@@ -229,8 +243,16 @@
                                 }
                             }
                             
-                            // Get song count for each genre
+                            // Iterate through all known genres
                             for (var genreAddress in knownGenres) {
+                                // Remove recommended genres from this list
+                                if (genreAddress in this.recommendedGenres) {
+                                    console.log("It was")
+                                    delete knownGenres[genreAddress];
+                                    continue;
+                                }
+
+                                // Get song count
                                 page.countSongsInGenre(genreAddress)
                                     .then((count) => {
                                         console.log(count);
@@ -239,6 +261,33 @@
                             }
                             
                             return knownGenres;
+                        });
+                }
+            },
+            recommendedGenres: {
+                get() {
+                    // Pull the recommended genres from a local file
+                    return page.cmdp("fileGet", { inner_path: "./recommended.json" })
+                        .then((recommendedGenres) => {
+                            // If the file doesn't exist, we won't show the listing
+                            if (recommendedGenres) {
+                                recommendedGenres = JSON.parse(recommendedGenres);
+                            }
+
+                            // Check if we're already connected
+                            // Get genres we've already added
+                            return page.getConnectedGenres()
+                                .then((connectedGenres) => {
+                                    for (var genreAddress in recommendedGenres) {
+                                        Object.keys(connectedGenres).forEach((address) => {
+                                            if (genreAddress === address) {
+                                                recommendedGenres[genreAddress].connected = true;
+                                            }
+                                        });
+                                    }
+
+                                    return recommendedGenres;
+                                });
                         });
                 }
             }
@@ -254,11 +303,7 @@
             },
             goToAlbum: function(album) {
                 // Go to the specified album page
-                if (album === "") {
-                    Router.navigate('/album/(Blank)' + album);
-                    return;
-                }
-                Router.navigate('/album/' + album);
+                Router.navigate('/album/' + (album.artist !== '' ? album.artist : '(Blank)') + '/' + (album.album !== '' ? album.album : '(Blank)'));
             },
             addGenre: function(address) {
                 // Add a genre by clicking the '+' on the genre page
