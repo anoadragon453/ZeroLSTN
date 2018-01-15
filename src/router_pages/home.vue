@@ -19,14 +19,12 @@
 
   // All the Vue components that make up the homepage
   var Music = require("../vue_components/music.vue");
-  var AlbumArt = require("../vue_components/album_art.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
   var IndexGenre = require("../vue_components/index_genre.vue"); // TODO: Move this to it's own page
 
   module.exports = {
     components: {
       music: Music,
-      albumArt: AlbumArt,
       playQueue: PlayQueue,
       indexGenre: IndexGenre
     },

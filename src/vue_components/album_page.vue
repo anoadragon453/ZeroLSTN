@@ -7,6 +7,7 @@
                         <i v-if="downloaded" @click.prevent="removeAlbum()" class="material-icons right">cloud_done</i>
                         <i v-else @click.prevent="downloadAlbum()" class="material-icons right">cloud_download</i>
                         <i @click.prevent="queueAlbum()" class="material-icons right">playlist_add</i>
+                        <i @click.prevent="playAlbum()" class="material-icons right">play_arrow</i>
                         
                         <h4 v-if="album !== ''">{{ album }}</h4>
                         <h4 v-else><i>(Blank)</i></h4>
@@ -78,13 +79,28 @@
             }
         },
         methods: {
-            queueAlbum() {
+            playAlbum: function() {
+                // Queue songs and play the first one of the album
+                var queueLength = page.getQueueLength();
+                var queueIndex = page.getQueueIndex();
+
+                page.queueSongs(this.songs);
+
+                // Figure out where in the play queue to jump to
+                if (queueLength == 0) {
+                    page.playSongAtQueueIndex(queueIndex);
+                } else {
+                    page.playSongAtQueueIndex(queueLength);
+                }
+            },
+            queueAlbum: function() {
+                // Queue songs
                 page.queueSongs(this.songs);
             },
-            downloadAlbum() {
+            downloadAlbum: function() {
                 this.downloadAlbumBySongOffset(this.songs, 0);
             },
-            removeAlbum() {
+            removeAlbum: function() {
                 page.cmdp("wrapperConfirm", ["Remove this album?", "Delete"])
                     .then((confirmed) => {
                         if (confirmed) {

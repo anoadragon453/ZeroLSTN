@@ -47,6 +47,7 @@ var app = new Vue({
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
 		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
+		queueJustCleared: false,		// Skip to first song in queue if it was just cleared
 		playlists: []					// User's playlists, pulled from data.json on reload
 		// TODO: Sharing playlists?
 	},
@@ -811,45 +812,6 @@ class ZeroApp extends ZeroFrame {
 			});
 	}
 
-	// Return an array of objects with album titles and songs in the form of
-	// {"title": [song1, song2...]}
-	/*
-	getAlbumsWithSongsByArtist(artistName) {
-		var query = `
-		SELECT * FROM songs
-			LEFT JOIN json USING (json_id)
-			WHERE artist="${artistName}"
-			ORDER BY date_added ASC
-		`;
-
-		// TODO: Sort by song number
-	
-		return this.cmdp("dbQuery", [query])
-			.then((songObjs) => {
-				// Unpack "albums" string attribute into its own array of strings
-				console.log(songObjs);
-				return new Promise((resolve, reject) => {
-					var albums = {};
-
-					// Iterate over songObjs
-					songObjs.forEach(function(song) {
-						// Check to see if we've seen this album yet
-						var albumTitle = song.album;
-						if (!albums.hasOwnProperty(albumTitle)) {
-							// If not, create a new array for its song to live in
-							console.log("Creating new album: " + song.album)
-							albums[albumTitle] = [];
-						}
-
-						// Add the song to this album's array
-						albums[albumTitle].push(song);
-					});
-					// Create a new promise to return to whoever called getAlbumsWithSongsByArtist
-					resolve(albums);
-				});
-			});
-	}*/
-
 	// Get and attach file info to song object
 	getInfoForSongs(songs) {
 		return new Promise((resolve, reject) => {
@@ -980,6 +942,13 @@ class ZeroApp extends ZeroFrame {
 				if (app.queueIndex < 0) { app.queueIndex = 0; }
 			}
 		}
+
+		// If the current song was removed, try to play the next song
+		if (app.playQueue.length == 0) {
+			this.stopPlaying();
+		} else {
+			this.playSongAtQueueIndex(app.queueIndex);
+		}
 	}
 
 	// Return the queue contents as an array of songs
@@ -992,10 +961,16 @@ class ZeroApp extends ZeroFrame {
 		return app.queueIndex;
 	}
 
+	getQueueLength() {
+		return app.playQueue.length;
+	}
+
 	// Remove all the songs in the play queue and set index to 0
 	clearPlayQueue() {
 		app.playQueue = [];
 		app.queueIndex = 0;
+
+		this.stopPlaying();
 	}
 
 	// Return the current audio object
@@ -1123,6 +1098,7 @@ var PlayQueue = require("./router_pages/playqueue.vue");
 var Home = require("./router_pages/home.vue");
 var Artist = require("./router_pages/artist.vue");
 var Album = require("./router_pages/album.vue");
+var NowPlaying = require("./router_pages/now_playing.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
@@ -1131,5 +1107,6 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "addGenre/:genreName/:genreAddress", component: Home },
 	{ route: "artist/:artist", component: Artist },
 	{ route: "album/:artist/:album", component: Album },
+	{ route: "nowplaying", component: NowPlaying },
 	{ route: "", component: Home }
 ]);

@@ -7,6 +7,8 @@
                         <i v-if="downloaded" @click.prevent="removeAlbum()" class="material-icons right">cloud_done</i>
                         <i v-else @click.prevent="downloadArtist()" class="material-icons right">cloud_download</i>
                         <i @click.prevent="queueArtist()" class="material-icons right">playlist_add</i>
+                        <i @click.prevent="playArtist()" class="material-icons right">play_arrow</i>
+
                         <h4 v-if="artist !== ''">{{ artist }}</h4>
                         <h4 v-else><i>(Blank)</i></h4>
                         <p>Artist</p>
@@ -57,29 +59,39 @@
                     var self = this;
                     return page.getAlbumsByArtist(this.artist);
                 }
-            },
-            songs: {
-                get() {
-                    // Check if all songs on all albums of this artist are downloaded
-                    var self = this;
-                    return page.getAlbumsByArtist(this.artist)
-                    .then((albums) => {
-                        var songs = [];
-                        albums.forEach((album) => {
-                            page.getSongsInAlbum(album, self.artist)
-                                .then((albumSongs) => {
-                                    songs.concat(albumSongs);
-                                });
-                        });
-                        return songs;
-                    });
-                }
             }
         },
         methods: {
             goto: function(to) {
                 // Go to specified page
                 Router.navigate(to);
+            },
+            playArtist: function() {
+                // Queue songs and play the first one of the album
+                var queueLength = page.getQueueLength();
+                var queueIndex = page.getQueueIndex();
+
+                // Get all songs by this artist
+                var self = this;
+                page.getAlbumsByArtist(this.artist)
+                    .then((albums) => {
+                        var songs = [];
+                        albums.forEach((album) => {
+                            page.getSongsInAlbum(album, self.artist)
+                                .then((songs) => {
+                                    // Queue songs
+                                    console.log("[queuing]", songs)
+                                    page.queueSongs(songs);
+
+                                    // Figure out where in the play queue to jump to
+                                    if (queueLength == 0) {
+                                        page.playSongAtQueueIndex(queueIndex);
+                                    } else {
+                                        page.playSongAtQueueIndex(queueLength);
+                                    }
+                                });
+                        });
+                    });
             },
             queueArtist: function() {
                 // Queue every album by this artist
