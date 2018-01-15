@@ -34,12 +34,13 @@ var app = new Vue({
 	template: `
 		<div>
 			<navbar ref="navbar" :zite-version="ziteVersion" :user-info="userInfo"></navbar>
-			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :merger-zites="mergerZites"></component>
-			<footerBar ref="footerBar"></footerBar>
+			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :current-song="currentSong" :merger-zites="mergerZites"></component>
+			<footerBar ref="footerBar" :current-song="currentSong"></footerBar>
 		</div>`,
 	data: {
 		ziteVersion: version,			// ZeroLSTN version number
 		currentView: null,				// Current View - Vue component (dynamic)
+		currentSong: null,				// The currently playing song
 		userInfo: null,					// ZeroFrame userInfo object
 		siteInfo: null,					// ZeroFrame siteInfo object
 		mergerZites: null,				// List of all merger Zites (genres) we know of
@@ -873,7 +874,7 @@ class ZeroApp extends ZeroFrame {
 		this.playSongFile(filepath);
 
 		// Allow Vue components to access the current playing song
-		app.$emit("newSong", song);
+		app.currentSong = song;
 
 		// Update footer with new song duration once metadata has been loaded
 		app.audioObject.addEventListener('loadedmetadata', function() {
@@ -961,6 +962,7 @@ class ZeroApp extends ZeroFrame {
 		return app.queueIndex;
 	}
 
+	// Return the current queue length
 	getQueueLength() {
 		return app.playQueue.length;
 	}

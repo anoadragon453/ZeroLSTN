@@ -1,18 +1,18 @@
 <template>
     <div id="mainapp">
         <div class="row">
-            <div class="col s12 m4 l4">
+            <div class="col s12 m4 l3">
                 <div class="row">
                     <albumArt></albumArt>
                 </div>
                 <div class="row">
-                    <songDetails></songDetails>
+                    <songDetails :current-song="currentSong"></songDetails>
                 </div>
                 <div class="row"></div>
                 <div class="row"></div>
                 <div class="row"></div>
             </div>
-            <div class="col hide-on-small-only m8 l8">
+            <div class="col hide-on-small-only m8 l9">
                 <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
             </div>
         </div>
@@ -33,15 +33,7 @@
             playQueue: PlayQueue,
             songDetails: SongDetails
         },
-        props: ["playQueueObj", "queueIndex"],
-        name: "mainapp",
-        data: () => {
-            return {
-                
-            }
-        },
-        mounted: function() {
-
-        }
+        props: ["playQueueObj", "queueIndex", "currentSong"],
+        name: "mainapp"
     }
 </script>
