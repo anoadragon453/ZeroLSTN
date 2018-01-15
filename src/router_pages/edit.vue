@@ -29,7 +29,7 @@
           </div>
         </div>
         -->
-        <!-- TODO: Ability to switch genre? -->
+        <!-- TODO: Ability to switch genre? Have to have the other one downloaded. Delete from this genre and insert into other one, easy -->
       </div>
       <div class="row">
         <div class="col s12">
@@ -106,6 +106,7 @@
       imageClicked: function() {
         console.log("Upload image!");
 
+        // TODO: Store album art on the song file, 
         // TODO: User uploads image, copies it to data/users/.../images folder. Reference with hash is placed in data.json. 
         // Later on when you upload again it checks to see if the hash of the image is already in there, 
         // if so delete image and just use the previous one.
