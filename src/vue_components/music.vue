@@ -1,7 +1,7 @@
 <template>
     <div id="Music">
         <!-- Genre Edit Modal -->
-        <div class="modal">
+        <div id="edit-modal" class="modal">
             <div class="modal-content">
             <div class="row">
                 <h4>Edit Genre</h4>
@@ -26,10 +26,30 @@
             </div>
         </div>
 
+        <!-- Genre Add Modal -->
+        <div id="add-modal" class="modal">
+            <div class="modal-content">
+            <div class="row">
+                <h4 id="addGenreTitle">Add Genre</h4>
+                <p>Click Download below to be taken to the new genre page. When you add a genre you will get access to all songs available under it.</p>
+                <p>Songs will only be available if the genre page downloads successfully. Once the page loads, you can close the tab and refresh this page to see new content.</p>
+                <div class="row">
+                    <input id="genreAddress" type="hidden">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <!-- Save button -->
+                    <a id="addGenreButton" @click="goToModalGenre()" class="right waves-effect waves-light btn"><i class="material-icons left">add</i>Download Genre</a>
+                </div>
+            </div>
+            </div>
+        </div>
+
         <!-- Tab content -->
         <div class="row">
             <div class="col s12">
-                <ul class="tabs tabs-fixed-width">
+                <ul class="tabs z-depth-1 tabs-fixed-width">
                     <li v-for="tab in tabs" class="tab col s3">
                         <a :href="'#' + tab.show">{{ tab.name }}</a>
                     </li>
@@ -65,28 +85,28 @@
                 <div class="row"></div>
                 <div class="row">
                     <div class="col s12">
-                        <a @click.prevent="createNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Add Genre</a>
+                        <a @click.prevent="createNewGenre()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>Create Genre</a>
                     </div>
                 </div>
                 <ul v-if="recommendedGenres" class="collection with-header">
                     <li class="collection-header"><h4>Recommended Genres</h4></li>
                     <li v-for="(genre, address) in recommendedGenres" class="collection-item">
-                        <a @click.prevent="goToGenre(address)">{{ genre.name }}</a>
+                        {{ genre.name }}
                         <a class="secondary-content">
                             <!--<a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, address)"><i class="material-icons">edit</i></a>-->
-                            <a href="#" v-if="genre.connected" @click.prevent="addGenre(address)"><i class="material-icons">clear</i></a>
-                            <a href="#" v-else @click.prevent="removeGenre(address)"><i class="material-icons">add_circle_outline</i></a>
+                            <!-- TODO: Uncomment when we can delete <a href="#" v-if="genre.connected" @click.prevent="removeGenre(address)"><i class="material-icons">clear</i></a> -->
+                            <a href="#" v-if="!genre.connected" @click.prevent="addGenre(genre.name, address)"><i class="material-icons">add_circle_outline</i></a>
                         </a>
                     </li>
                 </ul>
                 <ul v-if="genres && genres.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Community Genres</h4></li>
                     <li v-for="(genre, address) in genres" class="collection-item">
-                        <a @click.prevent="goToGenre(address)">{{ genre.name }}</a>
+                        {{ genre.name }}
                         <a class="secondary-content">
                             <a href="#" v-if="genre.ours" @click.prevent="editGenre(genre.name, address)"><i class="material-icons">edit</i></a>
-                            <a href="#" v-if="genre.connected" @click.prevent="addGenre(address)"><i class="material-icons">clear</i></a>
-                            <a href="#" v-else @click.prevent="removeGenre(address)"><i class="material-icons">add_circle_outline</i></a>
+                            <!-- TODO: Uncomment when we can delete <a href="#" v-if="genre.connected" @click.prevent="removeGenre(address)"><i class="material-icons">clear</i></a> -->
+                            <a href="#" v-if="!genre.connected" @click.prevent="addGenre(genre.name, address)"><i class="material-icons">add_circle_outline</i></a>
                         </a>
                     </li>
                 </ul>
@@ -165,10 +185,15 @@
             var tabs = document.querySelector("ul.tabs");
             var instance = new M.Tabs(tabs, {});
 
-            // Initialize modal view
-            var modal = document.querySelector(".modal");
-            var instance_modal = new M.Modal(modal, {});
-            this.editGenreModal = modal;
+            // Initialize edit modal
+            var editModal = document.getElementById("edit-modal");
+            var instanceEditModal = new M.Modal(editModal, {});
+            this.editGenreModal = editModal;
+
+            // Initialize add modal
+            var addModal = document.getElementById("add-modal");
+            var instanceAddModal = new M.Modal(addModal, {});
+            this.addGenreModal = addModal;
 
             // Initialize collapsible
             // TODO: Uncomment when playlists are live again
@@ -191,7 +216,8 @@
                 albums: [],
                 songs: [],
                 playlists: [],
-                editGenreModal: null
+                editGenreModal: null,
+                addGenreModal: null
             }
         },
         asyncComputed: {
@@ -305,9 +331,15 @@
                 // Go to the specified album page
                 Router.navigate('/album/' + (album.artist !== '' ? album.artist : '(Blank)') + '/' + (album.album !== '' ? album.album : '(Blank)'));
             },
-            addGenre: function(address) {
+            addGenre: function(name, address) {
                 // Add a genre by clicking the '+' on the genre page
-                page.addMerger(address);
+                // Store genre address and name in modal for later reference
+                document.getElementById("addGenreTitle").innerHTML = "Add " + name;
+                document.getElementById("genreName").value = name;
+                document.getElementById("genreAddress").value = address;
+
+                // Show genre edit modal
+                this.addGenreModal.M_Modal.open();
             },
             editGenre: function(name, address) {
                 // Store genre address and name in modal for later reference
@@ -371,10 +403,13 @@
                 // Clone and navigate to the default genre site
                 page.cmdp("siteClone", ["1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY"]);
             },
-            goToGenre: function(address) {
+            goToModalGenre: function() {
                 // Navigate to the genre's ZeroNet page. Necessary to do this due to iframes
+                var address = document.getElementById("genreAddress").value;
                 page.cmd("wrapperOpenWindow", ['/' + address, "_blank", ""]);
-                return false;
+
+                // Hide genre add modal
+                this.addGenreModal.M_Modal.close();
             }
         }
     }
