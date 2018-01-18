@@ -32,8 +32,8 @@
 					<li><h6 class="black-text center-align">{{ ziteVersion }}</h6></li>
 					<li><a @click.prevent="goto('')"><i class="material-icons left">home</i>Home</a></li>
 					<li><a @click.prevent="goto('nowplaying')"><i class="material-icons left">music_note</i>Now Playing</a></li>
-					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
 					<li><a @click.prevent="goto('playqueue')"><i class="material-icons left">playlist_play</i>Play Queue</a></li>
+					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
 					<!--
 					<li>
                         <a @click.prevent="downloadedToggle()">

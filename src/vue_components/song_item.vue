@@ -1,6 +1,8 @@
 <template>
     <li class="collection-item avatar">
-        <i @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
+        <i v-if="audioPlaying && currentSong && (currentSong.filename === song.filename)" 
+            @click.prevent="pauseSong(song)" class="material-icons circle blue darken-1">pause</i>
+        <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
         <span class="title">{{ song.title }}</span>
         <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
             - {{ song.artist }} - {{ song.album }}
@@ -11,7 +13,7 @@
             <a @click.prevent="queueSong(song)"><i class="material-icons black-text">playlist_add</i></a>
             <a v-if="editable" @click.prevent="editSong(song)"><i class="material-icons black-text">edit</i></a>
             <a v-if="!downloaded" @click.prevent="downloadSong(song)"><i class="material-icons black-text">cloud_download</i></a>
-            <a v-else @click.prevent="downloadSong(song)"><i class="material-icons black-text">cloud_done</i></a>
+            <a v-else><i class="material-icons black-text">cloud_done</i></a>
             <a v-if="editable" @click.prevent="deleteSong(song)"><i class="material-icons black-text">delete</i></a>
         </a>
     </li>
@@ -21,7 +23,7 @@
     var Router = require("../libs/router.js");
     
     module.exports = {
-        props: ["editable", "song"],
+        props: ["editable", "song", "currentSong", "audioPlaying"],
         name: "songitem",
         asyncComputed: {
             songInfo: {
@@ -61,8 +63,13 @@
             },
             playSong: function(song) {
                 // Immediately play song
-                console.log(song)
+                console.log(this.audioPlaying)
                 page.playSongImmediately(song);
+            },
+            pauseSong: function(song) {
+                // Pause this song
+                console.log(this.audioPlaying)
+                page.pauseCurrentSong(song);
             },
             queueSong: function(song) {
                 // Add song to the play queue

@@ -10,10 +10,10 @@
                         <i @click.prevent="playAlbum()" class="material-icons right">play_arrow</i>
                         
                         <h4 v-if="album !== ''">{{ album }}</h4>
-                        <h4 v-else><i>(Blank)</i></h4>
+                        <h4 v-else><i>Blank</i></h4>
                         <p>{{ artist }}</p>
                     </li>
-                    <songitem  v-for="song in songs" :editable="false" :song="song"></songitem>
+                    <songitem  v-for="song in songs" :editable="false" :song="song" :current-song="currentSong" :audio-playing="audioPlaying"></songitem>
                 </ul>
             </div>
             <span v-if="!embedded">
@@ -34,11 +34,8 @@
             songitem: SongItem,
             spinner: SpinnerColors
         },
-        props: ["album", "artist", "embedded"],
+        props: ["album", "artist", "currentSong", "audioPlaying", "embedded"],
         name: "albumpage",
-        mounted: function() {
-            console.log("[album]", this.album, "[artist]", this.artist);
-        },
         data: () => {
             return {
                 songs: []
@@ -140,6 +137,7 @@
 
                 // Don't try to redownload a song we already have
                 if (songs[offset].info && !songs[offset].info.is_downloaded) {
+                    // Do donwload if we don't have it already
                     var filepath = "merged-ZeroLSTN/" + songs[offset].site + "/" + songs[offset].directory + "/" + songs[offset].filename + "|all";
                     page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
                 }

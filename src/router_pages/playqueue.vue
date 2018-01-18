@@ -17,9 +17,6 @@
       playQueue: PlayQueue
     },
     props: ["playQueueObj", "queueIndex"],
-    name: "playQueuePage",
-    data: () => {
-      return {};
-    }
+    name: "playQueuePage"
   }
 </script>

@@ -7,7 +7,7 @@
             <div class="col s12 m12 l8">
                 <div class="row"></div>
                 <a @click.prevent="goto('')" class="waves-effect waves-light btn">Back</a>
-                <albumPage :album="album" :artist="artist"></albumPage>
+                <albumPage :album="album" :artist="artist" :current-song="currentSong" :audio-playing="audioPlaying"></albumPage>
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
             albumPage: AlbumPage,
             playQueue: PlayQueue
         },
-        props: ["playQueueObj", "queueIndex"],
+        props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
         name: "album",
         data: () => {
             return {
@@ -37,8 +37,8 @@
             this.album = decodeURI(Router.currentParams["album"]);
 
             // Account for blank titles
-            if (this.artist === "(Blank)") { this.artist = "" };
-            if (this.album === "(Blank)") { this.album = "" };
+            if (this.artist === "Blank") { this.artist = "" };
+            if (this.album === "Blank") { this.album = "" };
         },
         methods: {
             goto: function(to) {

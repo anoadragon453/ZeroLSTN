@@ -9,7 +9,8 @@
 		},
 		".+/data/users/.+/data.json": {
 			"to_table": [
-				{"table": "songs", "node": "songs", "key_col": "id"}
+				{"table": "songs", "node": "songs", "key_col": "id"},
+				{"table": "artwork", "node": "artwork", "key_col": "hash"}
 			]
 		},
 		"1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB/data/users/.+/data.json": {
@@ -37,11 +38,12 @@
 			    ["title", "TEXT"],
 				["artist", "TEXT"],
 				["album", "TEXT"],
+				["art", "TEXT"],
 			    ["date_added", "INTEGER"],
 			    ["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
 			"indexes": ["CREATE UNIQUE INDEX song_id ON songs(json_id, id)"],
-			"schema_changed": 3
+			"schema_changed": 4
 		},
 		"genres": {
 			"cols": [
@@ -52,6 +54,16 @@
 			],
 			"indexes": ["CREATE UNIQUE INDEX genres_address ON genres(json_id, address)"],
 			"schema_changed": 2
+		},
+		"artwork": {
+			"cols": [
+				["hash", "TEXT"],
+				["image_path", "TEXT"],
+				["date_added", "INTEGER"],
+				["json_id", "INTEGER REFERENCES json (json_id)"]
+			],
+			"indexes": ["CREATE UNIQUE INDEX artwork_hash ON artwork(json_id, hash)"],
+			"schema_changed": 1
 		}
 	}
 }

@@ -6,6 +6,9 @@ var defaultGenreAddress = "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY";
 var anime = require("animejs");
 window.anime = anime;
 
+// Hashing
+var sha512 = require("js-sha512").sha512;
+
 // Material CSS
 var Materialize = require("materialize-css/dist/js/materialize.min.js");
 
@@ -34,8 +37,8 @@ var app = new Vue({
 	template: `
 		<div>
 			<navbar ref="navbar" :zite-version="ziteVersion" :user-info="userInfo"></navbar>
-			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :current-song="currentSong" :merger-zites="mergerZites"></component>
-			<footerBar ref="footerBar" :current-song="currentSong"></footerBar>
+			<component ref="view" :is="currentView" :play-queue-obj="playQueue" :queue-index="queueIndex" :audio-playing="audioPlaying" :current-song="currentSong" :merger-zites="mergerZites"></component>
+			<footerBar ref="footerBar" :current-song="currentSong" :audio-playing="audioPlaying"></footerBar>
 		</div>`,
 	data: {
 		ziteVersion: version,			// ZeroLSTN version number
@@ -48,6 +51,7 @@ var app = new Vue({
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
 		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
+		audioPlaying: false,				// Track whether audio is currently playing
 		queueJustCleared: false,		// Skip to first song in queue if it was just cleared
 		playlists: []					// User's playlists, pulled from data.json on reload
 		// TODO: Sharing playlists?
@@ -162,7 +166,7 @@ class ZeroApp extends ZeroFrame {
 			app.getUserInfo();
 		}
 
-		if (message.params.event[0] === "file_done") {
+		if (message.params.event && message.params.event[0] === "file_done") {
 			app.$emit("update");
 		}
 	}
@@ -172,7 +176,7 @@ class ZeroApp extends ZeroFrame {
 	}
 
 	selectUser() {
-		return this.cmdp("certSelect", { accepted_domains: ["zeroid.bit", "kaffie.bit", "cryptoid.bit", "peak.id"] });
+		return this.cmdp("certSelect", { accepted_domains: ["zeroid.bit", "kaffie.bit", "cryptoid.bit"] });
     }
 
     signout() {
@@ -184,6 +188,7 @@ class ZeroApp extends ZeroFrame {
 	}
 
 	// Triggered when logo is clicked
+	// TODO: Shouldn't be necessary after moving index_genre to its own page1
 	goHome() {
 		app.$emit("goHome");
 	}
@@ -270,6 +275,158 @@ class ZeroApp extends ZeroFrame {
         });
 	}
 
+	// Store uploaded album art on a genre
+	uploadImage(file, file_data, genreAddress, existingImageToDelete=null, doSignAndPublish=false) {
+        var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		
+		// Calculate hash of image file. Save only first 64 chars
+		var hash = sha512(file_data).substring(0,64);
+
+		// Check if image already exists, if so then return filepath to it
+		var query = `
+		SELECT image_path FROM artwork
+			WHERE hash="${hash}"
+		`;
+	
+		// Execute query
+		var self = this;
+		return page.cmdp("dbQuery", [query])
+			.then((result) => {
+				if (result[0]) {
+					// Return existing image path if there is one
+					console.log("Image exists. Returning existing hash.")
+					return self.newPromise(result[0].image_path)
+				}
+				
+				// Open data file and write details about album art
+				return page.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+					.then((data) => {
+					if (!data) {
+						console.log("Unable to read", data_inner_path)
+						return;
+					}
+
+					// Parse the existing information
+					data = JSON.parse(data);
+
+					// Create artwork object if it doesn't exist already
+					if (!data["artwork"]) {
+						data["artwork"] = {};
+					}
+
+					// TODO: Delete existing artwork if there is any
+
+					// Get current time, accounts for artwork with same file name
+					var date_added = Date.now();
+
+					// .replace(/[^\x00-\x7F]/g, "") removes non-ascii characters
+					// Ascii is defined as being between 0 and 127 (x7F is 127 in hex)
+					// [^] matches anything that is NOT within the brackets, therefore
+					// [^\x00-\x7F] will match anything that is NOT ascii
+					var orig_filename_list = file.name.split(".");
+					var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
+
+					// Get inner path of image file
+					var filepath = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + filename;
+
+					data["artwork"][hash] = {
+						"image_path": filepath,
+						"date_added": date_added
+					};
+
+					var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+
+					// Write image to inner data path
+					return page.cmdp("fileWrite", [filepath, file_data])
+						.then((res) => {
+						if (res === "ok") {
+							// Pin file so it is excluded from the automated optional file cleanup
+							page.cmdp("optionalFilePin", { "inner_path": filepath });
+
+							// Add file to data.json
+							return page.cmdp("fileWrite", [data_inner_path, btoa(json_raw)])
+								.then((res) => {
+								if (res === "ok") {
+									// Return the resulting image URL as a promise
+									return self.newPromise(filepath);
+								} else {
+									page.cmdp("wrapperNotification", ["error", "Unable to write artwork metadata: " + JSON.stringify(res)]);
+								}
+							});
+						} else {
+							page.cmdp("wrapperNotification", ["error", "Unable to save artwork: " + JSON.stringify(res)]);
+						}
+					});
+				});
+			});
+	}
+
+	// Remove an image
+	deleteImage(genreAddress, filepath) {
+		var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		console.log("Deleting", filepath)
+
+		// Only delete image if no other song is using it
+		// Check if any other songs are using this artwork. If count is greater than one, don't delete
+		var query = `
+		SELECT COUNT(art) FROM songs
+			WHERE art="${filepath}"
+		`;
+	
+		// Execute query
+		var self = this;
+		return page.cmdp("dbQuery", [query])
+			.then((result) => {
+			if (result[0]["COUNT(art)"] > 1) {
+				// Return if other songs are using this artwork
+				return self.newPromise(null);
+			}
+
+			// Remove existing has metadata from user's data.json
+			return page.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+				.then((data) => {
+				if (!data) {
+					console.log("No data available", data_inner_path)
+					return;
+				}
+
+				// Parse the existing information
+				data = JSON.parse(data);
+
+				// Return if artwork doesn't exist already
+				if (!data["artwork"]) {
+					return;
+				}
+
+				// Delete the artwork information
+				delete data["artwork"][hash];
+
+				// Convert object to JSON
+				var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+
+				// Write image to inner data path
+				return page.cmdp("fileWrite", [filepath, file_data])
+					.then((res) => {
+						if (res === "ok") {
+							// Delete the image file itself
+							return page.cmdp("fileDelete", [filepath])
+							.then((res) => {
+								if (res !== "ok") {
+									// Show an error if deletion was unsuccessful
+									return page.cmdp("wrapperNotification", ["error", "Unable to delete artwork: " + JSON.stringify(res)]);
+								}
+
+								// Just return an empty promise (heh)
+								return self.newPromise(null);
+							});
+						}
+
+						return page.cmdp("wrapperNotification", ["error", "Unable to write data.json: " + JSON.stringify(res)]);
+				});
+			});
+		});
+	}
+
 	// Add new song info to user's data.json. Returns new song ID.
 	uploadSong(genreAddress, filename, title, album, artist, f = null) {
 		// Check user is logged in (assume they are, but just in case...)
@@ -322,7 +479,7 @@ class ZeroApp extends ZeroFrame {
 	}
 
 	// Edit existing song stored in user's data.json. Returns songID.
-	editSong(genreAddress, songID, title, album, artist, f = null) {
+	editSong(genreAddress, songID, title, album, artist, art, f = null) {
 		// Check user is logged in (assume they are, but just in case...)
 		if (!app.siteInfo.cert_user_id) {
     		return this.cmdp("wrapperNotification", ["error", "You must be logged in to post a song."]);
@@ -355,6 +512,7 @@ class ZeroApp extends ZeroFrame {
 				data["songs"][songID].title = title;
 				data["songs"][songID].album = album;
 				data["songs"][songID].artist = artist;
+				data["songs"][songID].art = art;
 
 				// Write values back to JSON string and the data.json
     			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
@@ -729,7 +887,6 @@ class ZeroApp extends ZeroFrame {
 			WHERE directory="data/users/${userAuthAddress}"
 			ORDER BY title COLLATE NOCASE
 		`;
-		console.log(query)
 	
 		return this.cmdp("dbQuery", [query]);
 	}
@@ -860,10 +1017,34 @@ class ZeroApp extends ZeroFrame {
 
 		// Set the audio source's volume
 		app.audioObject.volume = app.audioVolume / 100;
-		app.audioObject.play();
+		this.playCurrentSong();
+	}
 
-		// Tell Vue objects that the current song is being played
-		app.$emit("songPlaying", true);
+	// Play the current running audio
+	playCurrentSong() {
+		// If there isn't any audio available yet, play first song in queue
+		console.log("Playing current song")
+		if (!app.audioObject) {
+			if(app.playQueue.length > 0) {
+				this.playSongAtQueueIndex(0);
+			} else {
+				// If we've got no queue, don't play anything
+				return;
+			}
+		} else {
+			app.audioObject.play();
+
+			// Note down when audio is playing
+			app.audioPlaying = true;
+		}
+	}
+
+	// Pause the current running audio
+	pauseCurrentSong() {
+		app.audioObject.pause();
+
+		// Note down when audio is playing
+		app.audioPlaying = false;
 	}
 
 	// Play a given song object
@@ -895,8 +1076,6 @@ class ZeroApp extends ZeroFrame {
 		console.log("Song ended. Current index: " + app.queueIndex);
 		// Check if this is the same song in the queue
 		if (app.queueIndex == app.playQueue.length - 1){
-			// Tell Vue components song has stopped playing
-			app.$emit("songPlaying", false);
 			return;
 		}
 
@@ -906,6 +1085,12 @@ class ZeroApp extends ZeroFrame {
 
 	// Place a song at end of play queue and skip to it.
 	playSongImmediately(song) {
+		// If this song is currently playing, just unpause
+		if (app.currentSong && song.filename == app.currentSong.filename) {
+			this.playCurrentSong();
+			return;
+		}
+
 		// Add song to the queue
 		app.playQueue.push(song);
 
@@ -941,14 +1126,15 @@ class ZeroApp extends ZeroFrame {
 			if (index < app.queueIndex) {
 				app.queueIndex--;
 				if (app.queueIndex < 0) { app.queueIndex = 0; }
+			} else if (index == app.queueIndex) {
+				// If the current song was removed, try to play the next song
+				this.playSongAtQueueIndex(app.queueIndex)
 			}
 		}
 
-		// If the current song was removed, try to play the next song
+		// Stop playing if there's no queue left
 		if (app.playQueue.length == 0) {
 			this.stopPlaying();
-		} else {
-			this.playSongAtQueueIndex(app.queueIndex);
 		}
 	}
 
@@ -988,45 +1174,23 @@ class ZeroApp extends ZeroFrame {
 		this.playSong(app.playQueue[index]);
 	}
 
-	// Play the current running audio
-	playCurrentSong() {
-		// If there isn't any audio available yet, play first song in queue
-		console.log("Playing current song")
-		if (!app.audioObject) {
-			if(app.playQueue.length > 0) {
-				this.playSongAtQueueIndex(0);
-			} else {
-				// If we've got no queue, don't play anything
-				return;
-			}
+	// Toggle playback
+	togglePlayback() {
+		if (app.audioObject.paused) {
+			this.playCurrentSong();
 		} else {
-			app.audioObject.play();
+			this.pauseCurrentSong();
 		}
-
-		// Tell Vue objects that the current song is being played
-		app.$emit("songPlaying", true);
-	}
-
-	// Pause the current running audio
-	pauseCurrentSong() {
-		// If there isn't any audio available yet, do nothing
-		app.audioObject.pause();
-
-		// Tell Vue objects that the current song has been paused
-		app.$emit("songPlaying", false);
 	}
 
 	stopPlaying() {
 		console.log("Stopping playback.");
 		// Stop playing all songs
 		app.audioObject.currentTime = 0;
-		app.audioObject.pause();
+		this.pauseCurrentSong();
 
 		// Set the queueIndex to the beginning
 		app.queueIndex = 0;
-
-		// Tell Vue objects that the current song has been paused
-		app.$emit("songPlaying", false);
 
 		// Update footer with no song duration
 		app.$emit("updateSongDuration", 0);

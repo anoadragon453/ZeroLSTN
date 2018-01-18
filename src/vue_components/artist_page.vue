@@ -10,7 +10,7 @@
                         <i @click.prevent="playArtist()" class="material-icons right">play_arrow</i>
 
                         <h4 v-if="artist !== ''">{{ artist }}</h4>
-                        <h4 v-else><i>(Blank)</i></h4>
+                        <h4 v-else><i>Blank</i></h4>
                         <p>Artist</p>
                     </li>
                 </ul>
@@ -18,10 +18,10 @@
                     <li v-for="(album, index) in albums">
                         <div class="collapsible-header">
                             <span v-if="album !== ''"><b>{{ album }}</b></span>
-                            <span v-else><b><i>(Blank)</i></b></span>
+                            <span v-else><b><i>Blank</i></b></span>
                         </div>
                         <div class="collapsible-body">
-                            <albumPage :album="album" :artist="artist" :embedded="true"></albumPage>
+                            <albumPage :current-song="currentSong" :audio-playing="audioPlaying" :album="album" :artist="artist" :embedded="true"></albumPage>
                         </div>
                     </li>
                 </ul>
@@ -40,7 +40,7 @@
             songitem: SongItem,
             albumPage: AlbumPage
         },
-        props: ["artist"],
+        props: ["artist", "currentSong", "audioPlaying"],
         name: "artistpage",
         mounted: function() {
             // Initialize all collapsibles

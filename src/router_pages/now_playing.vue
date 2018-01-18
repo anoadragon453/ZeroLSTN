@@ -1,9 +1,9 @@
 <template>
-    <div id="mainapp">
+    <div id="nowplaying">
         <div class="row">
             <div class="col s12 m4 l3">
                 <div class="row">
-                    <albumArt></albumArt>
+                    <albumArt :current-song="currentSong" ></albumArt>
                 </div>
                 <div class="row">
                     <songDetails :current-song="currentSong"></songDetails>
@@ -34,6 +34,6 @@
             songDetails: SongDetails
         },
         props: ["playQueueObj", "queueIndex", "currentSong"],
-        name: "mainapp"
+        name: "nowplaying"
     }
 </script>

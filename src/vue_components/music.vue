@@ -60,7 +60,7 @@
                 <ul v-if="artists.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Artists</h4></li>
                     <li v-for="artist in artists" class="collection-item">
-                        <a href="#!" v-html="artist !== '' ? artist : '<i>(Blank)</i>'" @click.prevent="goToArtist(artist)"></a>
+                        <a href="#!" v-html="artist !== '' ? artist : '<i>Blank</i>'" @click.prevent="goToArtist(artist)"></a>
                     </li>
                 </ul>
                 <p v-else class="center">No artists found. Try adding some genres!</p>
@@ -69,7 +69,7 @@
                 <ul v-if="albums.length != 0" class="collection with-header">
                     <li class="collection-header"><h4>Albums</h4></li>
                     <li v-for="album in albums" class="collection-item">
-                        <a href="#!" v-html="album.album !== '' ? album.album : '<i>(Blank)</i>'" @click.prevent="goToAlbum(album)"></a>
+                        <a href="#!" v-html="album.album !== '' ? album.album : '<i>Blank</i>'" @click.prevent="goToAlbum(album)"></a>
                     </li>
                 </ul>
                 <p v-else class="center">No albums found. Try adding some genres!</p>
@@ -322,14 +322,14 @@
             goToArtist: function(artist) {
                 // Go to the specified artist page
                 if (artist === "") {
-                    Router.navigate('/artist/(Blank)' + artist);
+                    Router.navigate('/artist/Blank' + artist);
                     return;
                 }
                 Router.navigate('/artist/' + artist);
             },
             goToAlbum: function(album) {
                 // Go to the specified album page
-                Router.navigate('/album/' + (album.artist !== '' ? album.artist : '(Blank)') + '/' + (album.album !== '' ? album.album : '(Blank)'));
+                Router.navigate('/album/' + (album.artist !== '' ? album.artist : 'Blank') + '/' + (album.album !== '' ? album.album : 'Blank'));
             },
             addGenre: function(name, address) {
                 // Add a genre by clicking the '+' on the genre page
@@ -364,6 +364,7 @@
                     });
             },
             deleteGenre: function() {
+                // TODO: Re-enable when this works again
                 // Delete a genre from the index
                 var address = document.getElementById("genreAddress").value;
                 var self = this;

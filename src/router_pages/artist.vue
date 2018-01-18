@@ -7,7 +7,7 @@
             <div class="col s12 m12 l8">
                 <div class="row"></div>
                 <a @click.prevent="goto('')" class="waves-effect waves-light btn">Back</a>
-                <artistPage :artist="artist"></artistPage>
+                <artistPage :artist="artist" :current-song="currentSong" :audio-playing="audioPlaying"></artistPage>
             </div>
         </div>
         <div class="row"></div>
@@ -26,7 +26,7 @@
             artistPage: ArtistPage,
             playQueue: PlayQueue
         },
-        props: ["playQueueObj", "queueIndex"],
+        props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
         name: "artist",
         data: () => {
             return {
@@ -36,7 +36,7 @@
         mounted: function() {
             // Get artist from URL
             this.artist = decodeURI(Router.currentParams["artist"]);
-            if (this.artist === "(Blank)") { this.artist = "" }; // Account for blank artists
+            if (this.artist === "Blank") { this.artist = "" }; // Account for blank artists
         },
         methods: {
             goto: function(to) {

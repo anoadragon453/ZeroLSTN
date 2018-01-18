@@ -15,7 +15,7 @@
 			</div>
 			<div class="col s10 m4 l2 center">
 				<a @click="prev()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_rewind</i></a>
-				<a @click="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ playing ? "pause" : "play_arrow" }}</i></a>
+				<a @click="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ audioPlaying ? "pause" : "play_arrow" }}</i></a>
 				<a @click="next()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_forward</i></a>
 			</div>
 			<div class="col hide-on-small-only m2 l2">
@@ -34,7 +34,7 @@
 	var Router = require("../libs/router.js");
 
 	module.exports = {
-		props: ["currentSong"],
+		props: ["currentSong", "audioPlaying"],
 		name: "BottomBar",
 		data: () => {
 			return {
@@ -59,8 +59,22 @@
 			// Catch song duration updates
 			this.$parent.$on("updateSongDuration", this.updateSongDuration);
 
-			// Catch song play/pause updates
-			this.$parent.$on("songPlaying", this.updatePlayPauseButton);
+			// Listen for keyboard presses
+			document.addEventListener("keydown", function(ev) {
+				// Prevent blocking of input fields
+				if (ev.target != document.body) {
+					return true;
+				}
+
+				if (ev.key == " ") {
+					page.togglePlayback();
+					ev.preventDefault(); // Prevent space-to-scroll
+				} else if (ev.key == "n") {
+					page.nextSong();
+				} else if (ev.key == "b") {
+					page.prevSong();
+				}
+			});
 
 			// Update current song progress every second
 			setInterval(this.updateSongProgress, 1000);
@@ -69,8 +83,7 @@
 			playPause: function() {
 				console.log("[footer]", this.currentSong);
 				// Toggle playing music
-				//this.playing = !this.playing;
-				if(this.playing) {
+				if(this.audioPlaying) {
 					this.pauseSong();
 				} else {
 					this.playSong();
@@ -92,20 +105,17 @@
 				var volume = document.getElementById("volume-slider").value;
 				page.setVolume(volume);
 			},
-			updatePlayPauseButton: function(playing) {
-				this.playing = playing;
-			},
 			// Runs every second, updating song progress
 			updateSongProgress: function() {
 				// Don't update progress if music is paused. It's weird.
-				if (!this.playing) {
+				if (!this.audioPlaying) {
 					return;
 				}
 
 				// Get current progress from page
 				var audioObject = page.getAudioObject();
 				
-				// If nothing's playing, just show "00:00"
+				// If audio doesn't exist yet, just show "00:00"
 				if (!audioObject){
 					this.songProgressLeft = "00:00";
 					return;
