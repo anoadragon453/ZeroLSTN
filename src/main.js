@@ -282,20 +282,24 @@ class ZeroApp extends ZeroFrame {
 		// Calculate hash of image file. Save only first 64 chars
 		var hash = sha512(file_data).substring(0,64);
 
-		// Check if image already exists, if so then return filepath to it
+		// Check if image already exists in this genre
+		// If so return filepath to it
 		var query = `
-		SELECT image_path FROM artwork
-			WHERE hash="${hash}"
+			SELECT image_path FROM artwork as art
+			LEFT JOIN json as js
+				USING (json_id)
+			WHERE art.hash="${hash}" AND js.site="${genreAddress}"
 		`;
 	
 		// Execute query
 		var self = this;
 		return page.cmdp("dbQuery", [query])
-			.then((result) => {
-				if (result[0]) {
-					// Return existing image path if there is one
-					console.log("Image exists. Returning existing hash.")
-					return self.newPromise(result[0].image_path)
+			.then((art) => {
+				console.log(art);
+				if (art.length > 0) {
+					// Return existing image in this genre
+					console.log("Returning existing artwork path");
+					return self.newPromise(art[0].image_path)
 				}
 				
 				// Open data file and write details about album art
@@ -334,8 +338,6 @@ class ZeroApp extends ZeroFrame {
 						"date_added": date_added
 					};
 
-					var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
-
 					// Write image to inner data path
 					return page.cmdp("fileWrite", [filepath, file_data])
 						.then((res) => {
@@ -344,6 +346,7 @@ class ZeroApp extends ZeroFrame {
 							page.cmdp("optionalFilePin", { "inner_path": filepath });
 
 							// Add file to data.json
+							var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
 							return page.cmdp("fileWrite", [data_inner_path, btoa(json_raw)])
 								.then((res) => {
 								if (res === "ok") {
@@ -369,59 +372,77 @@ class ZeroApp extends ZeroFrame {
 		// Only delete image if no other song is using it
 		// Check if any other songs are using this artwork. If count is greater than one, don't delete
 		var query = `
-		SELECT COUNT(art) FROM songs
-			WHERE art="${filepath}"
+			SELECT COUNT(art) FROM songs as song
+			LEFT JOIN json as js
+				USING (json_id)
+			WHERE song.art="${filepath}" AND js.site="${genreAddress}"
 		`;
 	
 		// Execute query
 		var self = this;
 		return page.cmdp("dbQuery", [query])
-			.then((result) => {
-			if (result[0]["COUNT(art)"] > 1) {
-				// Return if other songs are using this artwork
+			.then((songCount) => {
+			// Return if other songs are using this artwork
+			if (songCount > 1) {
 				return self.newPromise(null);
 			}
 
-			// Remove existing has metadata from user's data.json
-			return page.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
-				.then((data) => {
-				if (!data) {
-					console.log("No data available", data_inner_path)
-					return;
+			// Get the image hash from the database
+			var query = `
+				SELECT hash FROM artwork
+				WHERE image_path="${filepath}"
+			`;
+
+			return page.cmdp("dbQuery", [query])
+				.then((hashes) => {
+				if (hashes.length == 0) {
+					// Couldn't find the file hash
+					console.log("Unable to find file hash for", filepath);
+					return self.newPromise(null);
 				}
+				var hash = hashes[0].hash;
 
-				// Parse the existing information
-				data = JSON.parse(data);
+				// Remove existing has metadata from user's data.json
+				return page.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
+					.then((data) => {
+					if (!data) {
+						console.log("No data available", data_inner_path)
+						return;
+					}
 
-				// Return if artwork doesn't exist already
-				if (!data["artwork"]) {
-					return;
-				}
+					// Parse the existing information
+					data = JSON.parse(data);
 
-				// Delete the artwork information
-				delete data["artwork"][hash];
+					// Return if artwork doesn't exist already
+					if (!data["artwork"]) {
+						return;
+					}
 
-				// Convert object to JSON
-				var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+					// Delete the artwork information
+					delete data["artwork"][hash];
 
-				// Write image to inner data path
-				return page.cmdp("fileWrite", [filepath, file_data])
-					.then((res) => {
-						if (res === "ok") {
-							// Delete the image file itself
-							return page.cmdp("fileDelete", [filepath])
-							.then((res) => {
-								if (res !== "ok") {
-									// Show an error if deletion was unsuccessful
-									return page.cmdp("wrapperNotification", ["error", "Unable to delete artwork: " + JSON.stringify(res)]);
-								}
+					// Convert object to JSON
+					var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
 
-								// Just return an empty promise (heh)
-								return self.newPromise(null);
-							});
-						}
+					// Write image to inner data path
+					return page.cmdp("fileWrite", [data_inner_path, btoa(json_raw)])
+						.then((res) => {
+							if (res === "ok") {
+								// Delete the image file itself
+								return page.cmdp("fileDelete", [filepath])
+								.then((res) => {
+									if (res !== "ok") {
+										// Show an error if deletion was unsuccessful
+										return page.cmdp("wrapperNotification", ["error", "Unable to delete artwork: " + JSON.stringify(res)]);
+									}
 
-						return page.cmdp("wrapperNotification", ["error", "Unable to write data.json: " + JSON.stringify(res)]);
+									// Just return an empty promise (heh)
+									return self.newPromise(null);
+								});
+							}
+
+							return page.cmdp("wrapperNotification", ["error", "Unable to write data.json: " + JSON.stringify(res)]);
+					});
 				});
 			});
 		});
@@ -544,6 +565,8 @@ class ZeroApp extends ZeroFrame {
 		var songFilepath = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/" + song.filename;
 		var pieceMapFilepath = songFilepath + ".piecemap.msgpack";
 
+		console.log("Deleting song:", song.title)
+
 		return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
 			.then((data) => {
 				// Get user's existing data
@@ -571,14 +594,22 @@ class ZeroApp extends ZeroFrame {
 				return this.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]);
 			}).then((res) => {
 				// Delete file and piecemap
+				console.log("Deleting MP3", songFilepath)
 				return this.cmdp("fileDelete", { "inner_path": songFilepath})
+			}).catch((e) => {
+				console.log("Proxy issue. See HelloZeroNet/ZeroNet#1140")
+				return "ok";
 			}).then((res) => {
 				// If delete was not successful, show the error in a notification
 				if (res != "ok") {
 					return this.cmdp("wrapperNotification", ["error", res]);	
 				}
 
+				console.log("Deleting pieceMap", pieceMapFilepath)
 				return this.cmdp("fileDelete", { "inner_path": pieceMapFilepath})
+			}).catch((e) => {
+				console.log("Proxy issue. See HelloZeroNet/ZeroNet#1140")
+				return "ok";
 			}).then((res) => {
 				// If delete was not successful, show the error in a notification
 				if (res != "ok") {
