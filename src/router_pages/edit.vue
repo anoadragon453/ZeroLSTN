@@ -113,7 +113,7 @@
         });
       },
       cancelClicked: function() {
-        // Go back to the uploads back if they hit cancel
+        // Go back to the uploads page if they hit cancel
         Router.navigate('uploads');
       },
       deleteImage: function() {

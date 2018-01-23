@@ -31,7 +31,7 @@
             <div class="modal-content">
             <div class="row">
                 <h4 id="addGenreTitle">Add Genre</h4>
-                <p>Click Download below to be taken to the new genre page. When you add a genre you will get access to all songs available under it.</p>
+                <p>Click <b>Download</b> below to be taken to the new genre page. When you add a genre you will get access to all songs available under it.</p>
                 <p>Songs will only be available if the genre page downloads successfully. Once the page loads, you can close the tab and refresh this page to see new content.</p>
                 <div class="row">
                     <input id="genreAddress" type="hidden">
@@ -73,13 +73,6 @@
                     </li>
                 </ul>
                 <p v-else class="center">No albums found. Try adding some genres!</p>
-            </div>
-            <div id="songs" class="col s12">
-                <ul v-if="songs.length != 0" class="collection with-header">
-                    <li class="collection-header"><h4>Songs</h4></li>
-                    <songitem  v-for="song in songs" :editable="false" :song="song"></songitem>
-                </ul>
-                <p v-else class="center">No songs found. Try adding some genres!</p>
             </div>
             <div id="genres" class="col s12">
                 <div class="row"></div>
@@ -173,12 +166,6 @@
                 .then((albums) => {
                     self.albums = albums;
                 });
-
-            // Get all known songs
-            page.getAllSongs(limit=20, offset=0)
-                .then((songs) => {
-                    self.songs = songs;
-                });
         },
         mounted: function() {
             // Initialize tabs
@@ -208,13 +195,11 @@
                 tabs: [
                     { name: "Artists", icon: "people", active: false, show: "artists" },
                     { name: "Albums", icon: "album", active: false, show: "albums" },
-                    { name: "Songs", icon: "music_note", active: true, show: "songs" },
                     { name: "Genres", icon: "library_music", active: false, show: "genres" }
                     //{ name: "Playlists", icon: "playlist_add", active: false, show: "playlists" }
                 ],
                 artists: [],
                 albums: [],
-                songs: [],
                 playlists: [],
                 editGenreModal: null,
                 addGenreModal: null

@@ -1,5 +1,5 @@
 <template>
-  <div id="mainapp">
+  <div id="home">
     <div v-if="addGenre">
       <indexGenre :genre-name="genreName" :genre-address="genreAddress"></indexGenre>
     </div>
@@ -29,7 +29,7 @@
       indexGenre: IndexGenre
     },
     props: ["playQueueObj", "queueIndex"],
-    name: "mainapp",
+    name: "home",
     data: () => {
       return {
         addGenre: false,

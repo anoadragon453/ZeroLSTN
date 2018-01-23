@@ -10,11 +10,11 @@
             Genre: {{ genre }}
         </p>
         <a href="#" class="secondary-content s2">
-            <a @click.prevent="queueSong(song)"><i class="material-icons black-text">playlist_add</i></a>
-            <a v-if="editable" @click.prevent="editSong(song)"><i class="material-icons black-text">edit</i></a>
-            <a v-if="!downloaded" @click.prevent="downloadSong(song)"><i class="material-icons black-text">cloud_download</i></a>
-            <a v-else><i class="material-icons black-text">cloud_done</i></a>
-            <a v-if="editable" @click.prevent="deleteSong(song)"><i class="material-icons black-text">delete</i></a>
+            <a @click.prevent="queueSong(song)" class="tooltipped" data-position="top" data-tooltip="Queue Song" data-delay="200"><i class="material-icons black-text">playlist_add</i></a>
+            <a v-if="editable" @click.prevent="editSong(song)" class="tooltipped" data-position="top" data-tooltip="Edit Song" data-delay="200"><i class="material-icons black-text">edit</i></a>
+            <a v-if="!downloaded" @click.prevent="downloadSong(song)" class="tooltipped" data-position="top" data-tooltip="Download Song" data-delay="200"><i class="material-icons black-text">cloud_download</i></a>
+            <a v-else class="tooltipped" data-position="top" data-tooltip="Remove Download"><i class="material-icons black-text" data-delay="200">cloud_done</i></a>
+            <a v-if="editable" @click.prevent="deleteSong(song)" class="tooltipped" data-position="top" data-tooltip="Delete Song" data-delay="200"><i class="material-icons black-text">delete</i></a>
         </a>
     </li>
 </template>
@@ -25,6 +25,19 @@
     module.exports = {
         props: ["editable", "song", "currentSong", "audioPlaying"],
         name: "songitem",
+        mounted: function() {
+            // Initialize JS for tooltips
+            var tips = document.querySelectorAll(".tooltipped");
+            tips.forEach((tip) => {
+                // Initialize and add to array to destroy when page is later unloaded
+                this.tooltips.push(new M.Tooltip(tip, {}));
+            });
+        },
+        data: () => {
+            return {
+                tooltips: []
+            }
+        },
         asyncComputed: {
             songInfo: {
                 get() {
@@ -63,12 +76,10 @@
             },
             playSong: function(song) {
                 // Immediately play song
-                console.log(this.audioPlaying)
                 page.playSongImmediately(song);
             },
             pauseSong: function(song) {
                 // Pause this song
-                console.log(this.audioPlaying)
                 page.pauseCurrentSong(song);
             },
             queueSong: function(song) {
@@ -82,6 +93,13 @@
                 var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
                 page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
             }
+        },
+        beforeDestroy: function() {
+            // Remove all tooltips that we created in mounted()
+            this.tooltips.forEach((tip) => {
+                console.log('Removing...')
+                console.log(tip)
+            });
         }
     }
 </script>

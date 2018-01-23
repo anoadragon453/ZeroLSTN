@@ -1,5 +1,5 @@
 <template>
-  <div id="edit">
+  <div id="uploads">
     <!-- Modal Structure -->
     <div class="modal">
       <div class="modal-content">
