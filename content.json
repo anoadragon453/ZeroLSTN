@@ -101,12 +101,12 @@
    "size": 711
   },
   "js/bundle.js": {
-   "sha512": "24b6daff6b784de1ba386590cc2e53aa6a0233b2d4c4d1b4d49bbc81aa45a0f1",
-   "size": 1722584
+   "sha512": "8b6311f9e5741a68e58f566653d57b2c60f288ad79643c38761123c8d2764e7b",
+   "size": 1722927
   },
   "js/bundle.js.map": {
-   "sha512": "02fdf918831891db4c637bd07ced51a8d6a4a79585e95df1ac98740924262542",
-   "size": 4625326
+   "sha512": "327f79fc8a8f22543790b8b48efac44b7bb16e5d62ef03f5d4b1c38777f77c5a",
+   "size": 4626375
   },
   "logo.png": {
    "sha512": "a05f698dbe70e850afbe59ef5cf2e2c6cabea6f0d5e370afdb5381c1a81ca005",
@@ -119,11 +119,11 @@
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1516699822,
+ "modified": 1516785134,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G88TFOgNDG7wQ0gu8ztqBk31RuDcP3dw96P40AwqMjnPV85JrPRK6JLtpdm9pQvH8l08UfmRnbGV6HU9JtCmNJQ="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "HOr6KCvJQsCzN868Q9t2Tmx5xs3JPqvMYt7gTfY++f4jT+1CficPJY+o6QQmu8hnECPU4f2QZeg8u2YQW8bc0iY="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",

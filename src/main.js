@@ -51,8 +51,9 @@ var app = new Vue({
 		queueIndex: 0,					// Current index in the play queue of song we're playing
 		audioVolume: 80,				// Current audio volume
 		audioObject: null, 				// Object housing JS audio object (play, pause, etc)
-		audioPlaying: false,				// Track whether audio is currently playing
+		audioPlaying: false,			// Track whether audio is currently playing
 		queueJustCleared: false,		// Skip to first song in queue if it was just cleared
+		goingToNextSong: false,			// Prevent race condition between on song end
 		playlists: []					// User's playlists, pulled from data.json on reload
 		// TODO: Sharing playlists?
 	},
@@ -597,7 +598,7 @@ class ZeroApp extends ZeroFrame {
 				console.log("Deleting MP3", songFilepath)
 				return this.cmdp("fileDelete", { "inner_path": songFilepath})
 			}).catch((e) => {
-				console.log("Proxy issue. See HelloZeroNet/ZeroNet#1140")
+				console.log("Proxy issue. See HelloZeroNet/ZeroNet#1140");
 				return "ok";
 			}).then((res) => {
 				// If delete was not successful, show the error in a notification
@@ -1098,6 +1099,16 @@ class ZeroApp extends ZeroFrame {
 		// or stop the playback if it's the last song in the queue
 		var self = this;
 		app.audioObject.addEventListener('ended', function() {
+			// Don't fire this event if we're currently going to the next song
+			// due to a previous song ending.
+			if (app.goingToNextSong) { 
+				return;
+			} else {
+				app.goingToNextSong = true;
+				setTimeout(() => {
+					app.goingToNextSong = false;
+				}, 1000);
+			}
 			self.songEnded();
 		});
 	}

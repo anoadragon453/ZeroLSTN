@@ -1,6 +1,6 @@
 # ZeroLSTN
 
-ZeroNet Music Streaming Site
+ZeroNet Music Streaming Site - http://127.0.0.1:43110/ZeroLSTN.bit
 
 ## Setting up
 
