@@ -4,7 +4,9 @@
 			<div class="nav-container">
 				<a href="./?/" class="brand-logo" v-on:click.prevent="goto('')">{{ ZiteName }}</a>
 				<a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+				<a @click.prevent="goto('search')" data-target="mobile-nav" class="right hide-on-small-only"><i class="material-icons left">search</i></a>
 				<ul class="right hide-on-med-and-down">
+					<li><a @click.prevent="goto('search')"><i class="material-icons left">search</i>Search</a></li>
 					<!--
                     <li>
                         <a @click.prevent="downloadedToggle()">
@@ -18,12 +20,8 @@
                         </a>
                     </li>
 					-->
-					<li>
-						<a @click.prevent="goto('nowplaying')"><i class="material-icons left">music_note</i>Now Playing</a>
-					</li>
-					<li>
-						<a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a>
-					</li>
+					<li><a @click.prevent="goto('nowplaying')"><i class="material-icons left">music_note</i>Now Playing</a></li>
+					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
 					<li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons left">person</i>Login</a></li>
 					<li v-else><a @click.prevent="login()"><i class="material-icons left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
 				</ul>
@@ -31,6 +29,7 @@
 					<li><h2 class="black-text center-align">{{ ZiteName }}</h2></li>
 					<li><h6 class="black-text center-align">{{ ziteVersion }}</h6></li>
 					<li><a @click.prevent="goto('')"><i class="material-icons left">home</i>Home</a></li>
+					<li><a @click.prevent="goto('search')"><i class="material-icons left">search</i>Search</a></li>
 					<li><a @click.prevent="goto('nowplaying')"><i class="material-icons left">music_note</i>Now Playing</a></li>
 					<li><a @click.prevent="goto('playqueue')"><i class="material-icons left">playlist_play</i>Play Queue</a></li>
 					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>

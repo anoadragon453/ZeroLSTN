@@ -96,10 +96,6 @@
         },
         beforeDestroy: function() {
             // Remove all tooltips that we created in mounted()
-            this.tooltips.forEach((tip) => {
-                console.log('Removing...')
-                console.log(tip)
-            });
         }
     }
 </script>

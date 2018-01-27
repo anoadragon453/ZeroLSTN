@@ -49,7 +49,7 @@
         <!-- Tab content -->
         <div class="row">
             <div class="col s12">
-                <ul class="tabs z-depth-1 tabs-fixed-width">
+                <ul class="tabs z-depth-1">
                     <li v-for="tab in tabs" class="tab col s3">
                         <a :href="'#' + tab.show">{{ tab.name }}</a>
                     </li>

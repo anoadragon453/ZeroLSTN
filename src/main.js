@@ -1307,6 +1307,7 @@ var Home = require("./router_pages/home.vue");
 var Artist = require("./router_pages/artist.vue");
 var Album = require("./router_pages/album.vue");
 var NowPlaying = require("./router_pages/now_playing.vue");
+var Search = require("./router_pages/search.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
@@ -1316,5 +1317,6 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "artist/:artist", component: Artist },
 	{ route: "album/:artist/:album", component: Album },
 	{ route: "nowplaying", component: NowPlaying },
+	{ route: "search", component: Search },
 	{ route: "", component: Home }
 ]);

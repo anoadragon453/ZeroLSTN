@@ -38,7 +38,7 @@
     "animejs": "^2.2.0",
     "js-sha512": "^0.7.1",
     "markdown-it": "^8.4.0",
-    "materialize-css": "^1.0.0-alpha.2",
+    "materialize-css": "^1.0.0-alpha.3",
     "medium-editor": "^5.23.3",
     "moment": "^2.20.1",
     "node-sass": "^4.7.2",
