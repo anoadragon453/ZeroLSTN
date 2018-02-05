@@ -16,12 +16,12 @@
 
 <script>
   var Router = require("../libs/router.js");
-
+  
   // All the Vue components that make up the homepage
   var Music = require("../vue_components/music.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
   var IndexGenre = require("../vue_components/index_genre.vue"); // TODO: Move this to it's own page
-
+  
   module.exports = {
     components: {
       music: Music,
@@ -45,14 +45,14 @@
         this.addGenre = true;
         this.genreName = Router.currentParams["genreName"];
         this.genreAddress = Router.currentParams["genreAddress"];
-
+        
         // Catch genre index updates
         var self = this;
         this.$parent.$on("genreIndexUpdate", function() {
           // Hide genre add screen once we have finished adding
           self.addGenre = false;
         });
-
+        
         // Catch home logo clicks
         // TODO: Figure out why not catching
         this.$parent.$on("goHome", function() {

@@ -4,21 +4,21 @@
 			<div class="nav-container">
 				<a href="./?/" class="brand-logo" v-on:click.prevent="goto('')">{{ ZiteName }}</a>
 				<a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-				<a @click.prevent="goto('search')" data-target="mobile-nav" class="right hide-on-small-only"><i class="material-icons left">search</i></a>
+				<a @click.prevent="goto('search')" data-target="mobile-nav" class="right hide-on-small-only hide-on-large-only"><i class="material-icons left">search</i></a>
 				<ul class="right hide-on-med-and-down">
 					<li><a @click.prevent="goto('search')"><i class="material-icons left">search</i>Search</a></li>
 					<!--
-                    <li>
-                        <a @click.prevent="downloadedToggle()">
-                        <div class="switch">
-                            Downloaded
-                            <label>
-                            <input v-model="downloadedOnly" type="checkbox">
-                            <span class="lever"></span>
-                            </label>
-                        </div>
-                        </a>
-                    </li>
+            <li>
+              <a @click.prevent="downloadedToggle()">
+                <div class="switch">
+                  Downloaded
+                  <label>
+                    <input v-model="downloadedOnly" type="checkbox">
+                    <span class="lever"></span>
+                  </label>
+                </div>
+              </a>
+            </li>
 					-->
 					<li><a @click.prevent="goto('nowplaying')"><i class="material-icons left">music_note</i>Now Playing</a></li>
 					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
@@ -34,17 +34,17 @@
 					<li><a @click.prevent="goto('playqueue')"><i class="material-icons left">playlist_play</i>Play Queue</a></li>
 					<li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
 					<!--
-					<li>
-                        <a @click.prevent="downloadedToggle()">
-                        <div class="switch">
-                            Downloaded
-                            <label>
-                            <input v-model="downloadedOnly" type="checkbox">
-                            <span class="lever"></span>
-                            </label>
-                        </div>
-                        </a>
-                    </li>
+            <li>
+              <a @click.prevent="downloadedToggle()">
+                <div class="switch">
+                  Downloaded
+                  <label>
+                    <input v-model="downloadedOnly" type="checkbox">
+                    <span class="lever"></span>
+                  </label>
+                </div>
+              </a>
+            </li>
 					-->
 					<li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons left">person</i>Login</a></li>
 					<li v-else><a @click.prevent="login()"><i class="material-icons left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
@@ -55,8 +55,8 @@
 </template>
 
 <script>
-    var Router = require("../libs/router.js");
-
+  var Router = require("../libs/router.js");
+  
 	module.exports = {
 		props: ["userInfo", "ziteVersion"],
 		name: "navbar",
@@ -69,10 +69,10 @@
 		},
 		mounted: function() {
 			var elem = document.querySelector('.sidenav');
-  			this.sidebar = new M.Sidenav(elem, {
-  				edge: "left",
-  				draggable: true
-			  });
+      this.sidebar = new M.Sidenav(elem, {
+        edge: "left",
+        draggable: true
+      });
 		},
 		computed: {
 			isLoggedIn: function() {
@@ -85,25 +85,25 @@
 				// Hide sidebar by "clicking" the overlay
 				var sidenavOverlay = document.querySelector(".sidenav-overlay");
 				sidenavOverlay.click();
-
+        
 				// If logo was clicked, tell home to go back to music page
 				if (to === '') {
 					page.goHome();
 				}
-
-                // Go to specified page
-                Router.navigate(to);
-            },
+        
+        // Go to specified page
+        Router.navigate(to);
+      },
 			login: function() {
 				page.selectUser();
 				return false;
-            },
-            downloadedToggle: function() {
-                // Toggle the downloaded switch
-                // TODO: Place a rule in localstorage to remember this
-                this.downloadedOnly = !this.downloadedOnly;
-                console.log(this.downloadedOnly);
-            }
+      },
+      downloadedToggle: function() {
+        // Toggle the downloaded switch
+        // TODO: Place a rule in localstorage to remember this
+        this.downloadedOnly = !this.downloadedOnly;
+        console.log(this.downloadedOnly);
+      }
 		}
 	}
 </script>

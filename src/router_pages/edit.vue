@@ -25,23 +25,23 @@
     <div class="row">
       <!-- Image Upload -->
       <div class="col s12 m7 l7">
-          <a @click="uploadAlbumArt()" class="btn waves-effect waves-light">
-            <i class="material-icons left">image</i>
-            <span id="uploadImageText">Upload Art</span>
-            <div class="file-field"><input id="artUpload" type="file" accept="image/x-png,image/jpeg"></div>
-          </a>
-
-          <!-- Delete Image Button -->
-          <a v-if="existingAlbumArt" @click="deleteImage()" class="btn-flat">Delete</a>
+        <a @click="uploadAlbumArt()" class="btn waves-effect waves-light">
+          <i class="material-icons left">image</i>
+          <span id="uploadImageText">Upload Art</span>
+          <div class="file-field"><input id="artUpload" type="file" accept="image/x-png,image/jpeg"></div>
+        </a>
+        
+        <!-- Delete Image Button -->
+        <a v-if="existingAlbumArt" @click="deleteImage()" class="btn-flat">Delete</a>
       </div>
       <div class="col s12 m5 l5">
         <!-- Save Button -->
         <a @click="saveClicked()" class="right waves-effect waves-light btn">Save</a>
-  
+        
         <!-- Cancel Button -->
         <a @click="cancelClicked()" class="right btn-flat">Cancel</a>
       </div>
-    <!-- TODO: Ability to switch genre? Have to have the other one downloaded. Delete from this genre and insert into other one, easy -->
+      <!-- TODO: Ability to switch genre? Have to have the other one downloaded. Delete from this genre and insert into other one, easy -->
     </div>
     <div class="row"></div>
     <div class="row"></div>
@@ -53,7 +53,7 @@
 
 <script>
   var Router = require("../libs/router.js");
-
+  
   module.exports = {
     props: [],
     name: "edit",
@@ -76,7 +76,7 @@
           if(!song) {
             return page.cmdp("wrapperNotification", ["error", "Unable to retreive song information."]);
           }
-
+          
           self.id = song.id;
           self.title = song.title;
           self.album = song.album;
@@ -86,7 +86,7 @@
             document.getElementById("albumArtRow").style.display = "";
             self.existingAlbumArt = song.art;
           }
-
+          
           // Make titles active so they don't cover the text.
           if (song.title != "") {
             document.getElementById("title").classList.add('valid');
@@ -107,7 +107,7 @@
       saveClicked: function() {
         // Save file along with details
         page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], this.title, 
-          this.album, this.artist, this.existingAlbumArt, function() {
+        this.album, this.artist, this.existingAlbumArt, function() {
           // Head back to uploads page
           Router.navigate('uploads');
         });
@@ -119,7 +119,7 @@
       deleteImage: function() {
         // Delete the image from the filesystem
         page.deleteImage(Router.currentParams["genre"], this.existingAlbumArt);
-
+        
         // Hide the image view
         document.getElementById("albumArtRow").style.display = "none";
         this.existingAlbumArt = null;
@@ -129,7 +129,7 @@
         // Open file upload window
         var fileUploadButton = document.getElementById('artUpload');
         fileUploadButton.click();
-
+        
         // Listen for when a file has been uploaded
         var self = this;
         fileUploadButton.addEventListener('change', function() {
@@ -138,50 +138,50 @@
             return;
           }
           self.uploadingFile = true;
-
+          
           // Return if no files were uploaded
           if (!this.files || !this.files[0]) {
             this.uploadingFile = false;
             return;
           }
-
+          
           // Get selected user file
           var file = this.files[0];
-
+          
           // Check if the file is one of approved filetype
           if (!file || typeof file !== "object" || !file.type.match("(image)\/.*(jpeg|png)")) {
             page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match jpeg/jpg/png."]);
             return;
           }
-
+          
           console.log("Uploading " + file.name);
           console.log(file);
-
+          
           // "Upload" the file to the user's 'artwork' folder
-
+          
           // Create an object to read the file's data
           let reader = new FileReader();
-
+          
           // Set what happens once file reading is complete
           reader.onload = function(event) {
             var filedata = btoa(event.target.result);
             var genreAddress = Router.currentParams["genre"];
-
+            
             // Copy and set image as optional file
             page.uploadImage(file, filedata, genreAddress)
-              .then((uploadURL) => {
-                console.log("[URL]", uploadURL)
-                // Display it on the page
-                document.getElementById("albumArtRow").style.display = "";
-
-                // Attach to song later
-                self.existingAlbumArt = uploadURL;
-
-                // Allow uploading further files
-                self.uploadingFile = false;
-              });
+            .then((uploadURL) => {
+              console.log("[URL]", uploadURL)
+              // Display it on the page
+              document.getElementById("albumArtRow").style.display = "";
+              
+              // Attach to song later
+              self.existingAlbumArt = uploadURL;
+              
+              // Allow uploading further files
+              self.uploadingFile = false;
+            });
           }
-
+          
           // Read the file's data
           reader.readAsBinaryString(file);
         });

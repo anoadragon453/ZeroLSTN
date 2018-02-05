@@ -27,7 +27,7 @@
         </div>
       </div>
     </div>
-
+    
     <!-- Show uploads if there are any -->
     <div class="container">
       <div class="row"></div>
@@ -41,7 +41,7 @@
       </div>
       <div class="row">
         <ul v-if="songs && songs.length != 0" class="collection">
-            <songitem  v-for="song in songs" :editable="true" :song="song"></songitem>
+          <songitem v-for="song in songs" :editable="true" :song="song"></songitem>
         </ul>
         <p v-else>No uploads. Press the New button to get started!</p>
       </div>
@@ -56,7 +56,7 @@
 <script>
   var Router = require("../libs/router.js");
   var SongItem = require("../vue_components/song_item.vue");
-
+  
   module.exports = {
     components: {
       songitem: SongItem
@@ -80,66 +80,66 @@
       var modal = document.querySelector(".modal");
       var instance_modal = new M.Modal(modal, {});
       this.uploadModal = modal;
-
+      
       // Catch song duration updates
 			this.$parent.$on("songDeleted", this.getSongs);
-
+      
       // Keep a reference to ourself
       var self = this;
-
+      
       // Get list of merger zites
       page.cmdp("mergerSiteList", [true])
-        .then((mergerZites) => {
-          // Compute genres from Merger Zites
-          var genres = {};
-          for (var ziteAddress in mergerZites) {
-            // Each item: genres['rock'] = 1abcxyz
-            genres[mergerZites[ziteAddress].content.title] = ziteAddress;
+      .then((mergerZites) => {
+        // Compute genres from Merger Zites
+        var genres = {};
+        for (var ziteAddress in mergerZites) {
+          // Each item: genres['rock'] = 1abcxyz
+          genres[mergerZites[ziteAddress].content.title] = ziteAddress;
+        }
+        
+        // Store these genres
+        self.genres = genres;
+        
+        // Generate map of genre titles
+        // TODO: Have a genre image stored with each mergerZite?
+        var genreTitles = {};
+        for (var genre in genres) {
+          // Don't show index and default genre sites
+          if (genres[genre] !== "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB" &&
+          genres[genre] !== "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY") {
+            // Add genre title, null image
+            genreTitles[genre] = null;
           }
           
-          // Store these genres
-          self.genres = genres;
-
-          // Generate map of genre titles
-          // TODO: Have a genre image stored with each mergerZite?
-          var genreTitles = {};
-          for (var genre in genres) {
-            // Don't show index and default genre sites
-            if (genres[genre] !== "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB" &&
-              genres[genre] !== "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY") {
-              // Add genre title, null image
-              genreTitles[genre] = null;
-            }
-            
-          }
-
-          // Initialize autcomplete in modal
-          var autocomplete = document.querySelector(".autocomplete");
-          var instance = new M.Autocomplete(autocomplete, {
-            data: genreTitles,
-            limit: 5, // Max amount of results shown at once
-            onAutocomplete: self.autocompleteChanged,
-            minLength: 1
-          });
-          
-          // Add event listener for whenever autocomplete field is edited
-          autocomplete.addEventListener('keyup', self.autocompleteChanged);
-
-          this.getSongs();
+        }
+        
+        // Initialize autcomplete in modal
+        var autocomplete = document.querySelector(".autocomplete");
+        var instance = new M.Autocomplete(autocomplete, {
+          data: genreTitles,
+          limit: 5, // Max amount of results shown at once
+          onAutocomplete: self.autocompleteChanged,
+          minLength: 1
         });
+        
+        // Add event listener for whenever autocomplete field is edited
+        autocomplete.addEventListener('keyup', self.autocompleteChanged);
+        
+        this.getSongs();
+      });
     },
     methods: {
       getSongs: function() {
         // Get and show list of uploads
         page.cmdp("siteInfo", {})
-          .then(siteInfo => {
-            page.getSongsByUser(siteInfo.auth_address)
-              .then((songs) => {
-                console.log(songs);
-                // Store and later list songs on page
-                this.songs = songs;
-              });
+        .then(siteInfo => {
+          page.getSongsByUser(siteInfo.auth_address)
+          .then((songs) => {
+            console.log(songs);
+            // Store and later list songs on page
+            this.songs = songs;
           });
+        });
       },
       showModal: function() {
         // Make sure user is signed in first
@@ -148,7 +148,7 @@
           page.selectUser();
           return;
         }
-
+        
         // Reveal the upload modal
         this.uploadModal.M_Modal.open()
       },
@@ -173,10 +173,10 @@
         // Open file upload window
         var fileUploadButton = document.querySelector('input[type=file]');
         fileUploadButton.click();
-
+        
         // Keep a reference to ourselves
         var self = this;
-
+        
         // Listen for when a file has been uploaded
         fileUploadButton.addEventListener('change', function() {
           // Prevent this method from running twice on a single file upload
@@ -184,10 +184,10 @@
             return;
           }
           this.uploadingFile = true;
-
+          
           // Get selected user file
           var file = this.files[0];
-
+          
           // Check if the file is one of approved filetype
           if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|m4a|mpeg|mp4)")) {
             page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match mp3/flac/ogg/m4a/mpeg/mp4."]);
@@ -195,12 +195,12 @@
           }
           
           console.log("Uploading " + file.name);
-
+          
           // Get the current genre and its address
           var genre = document.getElementById("autocomplete-input").value;
           console.log(genre);
           var genreAddress = self.genres[genre];
-
+          
           // "Upload" the file
           page.uploadBigFile(genreAddress, file, function(fileNameWithDate) {
             // Add default song information to data.json

@@ -32,7 +32,7 @@
 
 <script>
 	var Router = require("../libs/router.js");
-
+  
 	module.exports = {
 		props: ["currentSong", "audioPlaying"],
 		name: "BottomBar",
@@ -49,23 +49,23 @@
 		},
 		mounted: function() {
 			// Initialize slider
-            var volumeSlider = document.getElementById("volume-slider");
+      var volumeSlider = document.getElementById("volume-slider");
 			//var instance = new M.Slider(slider, {});
-
+      
 			// Listen for user input
 			// TODO: @input.prevent on object instead?
 			volumeSlider.addEventListener("input", this.volumeChanged);
-
+      
 			// Catch song duration updates
 			this.$parent.$on("updateSongDuration", this.updateSongDuration);
-
+      
 			// Listen for keyboard presses
 			document.addEventListener("keydown", function(ev) {
 				// Prevent blocking of input fields
 				if (ev.target != document.body) {
 					return true;
 				}
-
+        
 				if (ev.key == " ") {
 					page.togglePlayback();
 					ev.preventDefault(); // Prevent space-to-scroll
@@ -75,7 +75,7 @@
 					page.prevSong();
 				}
 			});
-
+      
 			// Update current song progress every second
 			setInterval(this.updateSongProgress, 1000);
 		},
@@ -111,7 +111,7 @@
 				if (!this.audioPlaying) {
 					return;
 				}
-
+        
 				// Get current progress from page
 				var audioObject = page.getAudioObject();
 				
@@ -120,7 +120,7 @@
 					this.songProgressLeft = "00:00";
 					return;
 				}
-
+        
 				// Update slider bar with song % complete
 				// Prevent slider from slipping away from user while they're moving it
 				if (!this.progressCurrentlyChanging) {
@@ -132,7 +132,7 @@
 			alterShownProgress: function(currentTime) {
 				// Get current song progress in mm:ss and update view
 				this.songProgressLeft = this.secondsToMinutesSeconds(currentTime);
-
+        
 				// Get remaining song progress in -mm:ss and update view
 				this.songProgressRight = "-" + this.secondsToMinutesSeconds(this.songTotalDuration - currentTime);
 			},
@@ -140,10 +140,10 @@
 			changeSongProgress: function() {
 				// Get desired track progress
 				var desiredProgress = document.getElementById("track-progress").value / 100;
-
+        
 				// Convert to second using track duration
 				page.setTime(desiredProgress * this.songTotalDuration);
-
+        
 				this.progressCurrentlyChanging = false;
 			},
 			// Show time progress changing even though the song is still playing
@@ -165,11 +165,11 @@
 				// Convert duration in seconds to mm:ss
 				var minutes = Math.floor(seconds / 60);
 				var seconds = Math.floor(seconds % 60);
-
+        
 				// Convert to string and put a "0" in front if it's < 10
 				minutes = (minutes < 10) ? '0' + minutes : '' + minutes;
 				seconds = (seconds < 10) ? '0' + seconds : '' + seconds;
-
+        
 				// Format as "mm:ss"
 				return minutes + ":" + seconds;
 			}
