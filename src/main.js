@@ -1,4 +1,4 @@
-version = "1.0.8";
+version = "1.1.0";
 var indexAddress = "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB";
 var defaultGenreAddress = "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY";
 
