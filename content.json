@@ -97,36 +97,36 @@
    "size": 2221
   },
   "index.html": {
-   "sha512": "c144de6702d71e70b449b8efc9e20d01350d5e1db104efc17924bed994707f52",
-   "size": 711
+   "sha512": "e7c7396782e52053c6a21bb5c17415a40389e428b663fb224c1dc117db976c7a",
+   "size": 713
   },
   "js/bundle.js": {
-   "sha512": "e7226c920d099d16888dd7fe898cc3735db6aca2a82e74e2fb4e5faa64404098",
-   "size": 1726101
+   "sha512": "bac57e03af9b17354235b0086664d06ea2a5bb4ee6b1df026328ea787968ec7c",
+   "size": 1729079
   },
   "js/bundle.js.map": {
-   "sha512": "1ef1ac3a6bc3b718ab1ae413080c2b70675bf6f37dadf34997dc6092c4c44d47",
-   "size": 4630266
+   "sha512": "203aebee651d7954bf5e392fe05c08187651308a09e637deb13b7b73798613db",
+   "size": 4633942
   },
   "logo.png": {
    "sha512": "a05f698dbe70e850afbe59ef5cf2e2c6cabea6f0d5e370afdb5381c1a81ca005",
    "size": 82247
   },
   "recommended.json": {
-   "sha512": "d0c48c8c56957f4a18c806b2afeffe27e2fbc5c9cb702fc3d6b189986b1e7d52",
-   "size": 1613
+   "sha512": "6bfa996416c1e3b6de1c4c59fc7aafc9d6895674447a33a13d549ea0d1275efd",
+   "size": 1516
   }
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1516961728,
+ "modified": 1517878840,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G+uwKZCM6Rny46hvZt6gCpGSmxjQwDAkDrjeQppBGLbROMmY6TOACo3QOAE75WDC8VuqkzW5ZHMQnQttUgHut4s="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "HGuEnWOD/m8rkAuETDcyTWdxhCaV6fGq6jeKmSfXyVrde+SXfMhkUS15C0eXQ2ornmdFibJhpF4jGzSMcGU7ngU="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",
  "translate": ["js/all.js"],
- "zeronet_version": "0.6.0"
+ "zeronet_version": "0.6.1"
 }

@@ -5,12 +5,13 @@
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
       </div>
       <div class="col s12 m12 l8">
-        <div class="input-field col s12 center">
+        <div class="col s12 center">
           <div class="card">
             <div class="card-content">
-              <i class="material-icons prefix black-text">search</i>
-              <input placeholder="Search Artists, Albums, Songs..." id="searchField" type="text" class="">
-              <label for="search_field black-text">Search</label>
+              <div class="input-field">
+                <i class="material-icons prefix black-text">search</i>
+                <input placeholder="Search Artists, Albums, Songs..." id="searchField" type="text" class="">
+              </div>
             </div>
             <div class="card-tabs">
               <ul class="tabs tabs-fixed-width">
