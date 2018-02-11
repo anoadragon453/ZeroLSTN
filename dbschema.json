@@ -21,36 +21,37 @@
 	},
 	"tables": {
 		"json": {
-		    "cols": [
-		        ["json_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
-		        ["site", "TEXT"],
-		        ["directory", "TEXT"],
-		        ["file_name", "TEXT"],
-		        ["cert_user_id", "TEXT"]
-		    ],
-		    "indexes": ["CREATE UNIQUE INDEX path ON json(directory, site, file_name)"],
-		    "schema_changed": 3
+      "cols": [
+        ["json_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
+        ["site", "TEXT"],
+        ["directory", "TEXT"],
+        ["file_name", "TEXT"],
+        ["cert_user_id", "TEXT"]
+      ],
+      "indexes": ["CREATE UNIQUE INDEX path ON json(directory, site, file_name)"],
+      "schema_changed": 3
 		},
 		"songs": {
 			"cols": [
-				["id", "TEXT"],
+        ["id", "TEXT"],
+        ["tracknumber", "INTEGER"],
 				["filename", "TEXT"],
-			    ["title", "TEXT"],
+        ["title", "TEXT"],
 				["artist", "TEXT"],
 				["album", "TEXT"],
 				["art", "TEXT"],
-			    ["date_added", "INTEGER"],
-			    ["json_id", "INTEGER REFERENCES json (json_id)"]
+        ["date_added", "INTEGER"],
+        ["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
 			"indexes": ["CREATE UNIQUE INDEX song_id ON songs(json_id, id)"],
-			"schema_changed": 4
+			"schema_changed": 5
 		},
 		"genres": {
 			"cols": [
 				["address", "TEXT"],
 				["name", "TEXT"],
-			    ["date_added", "INTEGER"],
-			    ["json_id", "INTEGER REFERENCES json (json_id)"]
+        ["date_added", "INTEGER"],
+        ["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
 			"indexes": ["CREATE UNIQUE INDEX genres_address ON genres(json_id, address)"],
 			"schema_changed": 2

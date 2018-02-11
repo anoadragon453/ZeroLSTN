@@ -1,7 +1,14 @@
 <template>
   <div class="container" id="edit">
     <div class="row">
-      <div class="input-field col s12">
+      <div class="input-field col s2">
+        <input pattern="\d+" id="tracknumber" type="number" min="1"
+          onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
+          class="validate" v-model="tracknumber">
+        <label id="tracknumber-label" for="tracknumber">Track #</label>
+        <span class="helper-text" data-error="Must be > 0" data-success=""></span>
+      </div>
+      <div class="input-field col s10">
         <input id="title" type="text" class="validate" v-model="title">
         <label id="title-label" for="title">Title</label>
       </div>
@@ -60,6 +67,7 @@
     data: () => {
       return {
         id: "",
+        tracknumber: "",
         title: "",
         artist: "",
         album: "",
@@ -77,6 +85,7 @@
             return page.cmdp("wrapperNotification", ["error", "Unable to retreive song information."]);
           }
           
+          self.tracknumber = song.tracknumber;
           self.id = song.id;
           self.title = song.title;
           self.album = song.album;
@@ -87,7 +96,11 @@
             self.existingAlbumArt = song.art;
           }
           
-          // Make titles active so they don't cover the text.
+          // Make labels active so they don't cover the text.
+          if (song.tracknumber != "") {
+            document.getElementById("tracknumber").classList.add('valid');
+            document.getElementById("tracknumber-label").classList.add('active');
+          }
           if (song.title != "") {
             document.getElementById("title").classList.add('valid');
             document.getElementById("title-label").classList.add('active');
@@ -106,8 +119,8 @@
     methods: {
       saveClicked: function() {
         // Save file along with details
-        page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], this.title, 
-        this.album, this.artist, this.existingAlbumArt, function() {
+        page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], this.tracknumber,
+        this.title, this.album, this.artist, this.existingAlbumArt, function() {
           // Head back to uploads page
           Router.navigate('uploads');
         });

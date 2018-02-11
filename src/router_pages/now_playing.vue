@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col s12 m4 l3">
         <div class="row">
-          <albumArt :current-song="currentSong" ></albumArt>
+          <albumArt :current-song="currentSong"></albumArt>
         </div>
         <div class="row">
           <songDetails :current-song="currentSong"></songDetails>

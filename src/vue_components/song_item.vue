@@ -3,7 +3,7 @@
     <i v-if="audioPlaying && currentSong && (currentSong.filename === song.filename)" 
     @click.prevent="pauseSong(song)" class="material-icons circle blue darken-1">pause</i>
     <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
-    <span class="title">{{ song.title }}</span>
+    <span class="title">{{ song.tracknumber ? song.tracknumber + '.' : '' }} {{ song.title }}</span>
     <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
       - {{ song.artist }} - {{ song.album }}
       <br>

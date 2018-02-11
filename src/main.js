@@ -501,7 +501,7 @@ class ZeroApp extends ZeroFrame {
 	}
 	
 	// Edit existing song stored in user's data.json. Returns songID.
-	editSong(genreAddress, songID, title, album, artist, art, f = null) {
+	editSong(genreAddress, songID, tracknumber, title, album, artist, art, f = null) {
 		// Check user is logged in (assume they are, but just in case...)
 		if (!app.siteInfo.cert_user_id) {
 			return this.cmdp("wrapperNotification", ["error", "You must be logged in to post a song."]);
@@ -530,7 +530,8 @@ class ZeroApp extends ZeroFrame {
 				return;
 			}
 			
-			// Update with new values
+      // Update with new values
+      data["songs"][songID].tracknumber = tracknumber;
 			data["songs"][songID].title = title;
 			data["songs"][songID].album = album;
 			data["songs"][songID].artist = artist;

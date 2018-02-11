@@ -254,7 +254,6 @@
             for (var genreAddress in knownGenres) {
               // Remove recommended genres from this list
               if (genreAddress in this.recommendedGenres) {
-                console.log("It was")
                 delete knownGenres[genreAddress];
                 continue;
               }
