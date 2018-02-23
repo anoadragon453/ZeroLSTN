@@ -1326,17 +1326,21 @@ page = new ZeroApp();
 const store = new Vuex.Store({
   state: {
     count: 0,
-    songEdited: null                        // Used to temporarily store songs that haven't been stored yet
+    newSongs: []                        // Used to temporarily store songs that haven't been published yet
   },
   mutations: {
-    increment (state) {
-      state.count++
+    addNewSongs (state, newSongs) {
+      // Add list of songs to state.newSongs
+      state.newSongs.push.apply(state.newSongs, newSongs);
     },
-    saveEditedSong (song) {
-      state.songEdited = song;
+    removeNewSong (state, songToRemove) {
+      // Remove a song from newSongs
+      state.newSongs.remove(songToRemove);
     },
-    retrieveEditedSong () {
-      return state;
+    clearNewSongs (state) {
+      // Clear all new songs
+      // Done after uploading complete
+      state.newSongs = [];
     }
   }
 })
@@ -1355,7 +1359,8 @@ var Search = require("./router_pages/search.vue");
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
 	{ route: "playqueue", component: PlayQueue },
-	{ route: "edit/:mergerAddress/:songID", component: Edit },
+  { route: "edit/:mergerAddress/:songID", component: Edit },
+  { route: "edit/store/:index", component: Edit },
 	{ route: "addGenre/:mergerName/:mergerAddress", component: Home },
 	{ route: "artist/:artist", component: Artist },
 	{ route: "album/:artist/:album", component: Album },

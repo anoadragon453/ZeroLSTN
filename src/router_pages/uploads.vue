@@ -39,10 +39,10 @@
       <div v-if="newSongs && newSongs.length != 0" class="row">
         <h5>Ready to Upload</h5>
         <ul class="collection">
-          <a href="#!" v-for="songObject in newSongs" class="collection-item">{{ songObject.song.title }}</a>
+          <a href="#!" v-for="(songObject, index) in newSongs" @click.prevent="editNewSong(index)" class="collection-item">{{ songObject.song.title }}</a>
         </ul>
       </div>
-      <div class="row">
+      <div v-if="!newSongs" class="row">
         <ul v-if="songs && songs.length != 0" class="collection">
           <songitem v-for="song in songs" :song="song"></songitem>
         </ul>
@@ -75,6 +75,12 @@
         songs: null,
         newSongs: null,
         uploadingFile: false
+      }
+    },
+    beforeMount: function() {
+      // Show "Ready to Upload" songs if they are available in the store
+      if (page.store.state.newSongs.length != 0) {
+        this.newSongs = page.store.state.newSongs;
       }
     },
     mounted: function() {
@@ -130,14 +136,13 @@
           self.uploadingFile = true;
             
           // Iterate through uploaded files and scrape tags
-          if (!self.newSongs) { self.newSongs = []; }
           var newSongs = [];
           var fullLength = this.files.length;
           for (var i = 0; i < fullLength; i++) {
             var file = this.files[i];
             // Check if the file is one of approved filetype
             if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|m4a|mpeg|mp4|webm)")) {
-              console.log("Filetype not supported")
+              console.log("Filetype not supported");
               continue;
             }
 
@@ -149,12 +154,13 @@
 
                 // Run this once all songs are scraped
                 if (newSongs.length == fullLength) {
-                  // Add uploaded files to new songs list
-                  self.newSongs.push.apply(self.newSongs, newSongs);
+                  // Add uploaded files to Vuex store to access later on edit page
+                  page.store.commit('addNewSongs', newSongs);
+                  self.newSongs = page.store.state.newSongs;
                   self.uploadingFile = false;
 
                   // Close upload modal
-                  console.log('[newSongs]', self.newSongs)
+                  console.log('[newSongs]', page.store.state.newSongs)
                   self.uploadModal.M_Modal.close();
                 }
               },
@@ -179,6 +185,13 @@
         song['is_edit'] = false;
 
         return {"file": file, "song": song};
+      },
+      editNewSong: function(songIndex) {
+        // Need to head to the edit screen while also keeping current new song data intact.
+        // Should we store new song data in $store as well? Also using it for giving new song data to /edit
+        // Perhaps we should just store all new song data in $store and pass index to /edit/store/$index
+        // After edit is done, save changes to store and just come back here. We should load from store here.
+        Router.navigate('/edit/store/' + songIndex)
       }
     }
   }
