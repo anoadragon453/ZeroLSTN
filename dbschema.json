@@ -1,6 +1,6 @@
 {
 	"db_name": "ZeroLSTN",
-	"db_file": "merged-ZeroLSTN/ZeroLSTN.db",
+	"db_file": "merged-ZeroLSTN2/ZeroLSTN.db",
 	"version": 3,
 	"maps": {
 		".+/data/users/.+/content.json": {
@@ -10,50 +10,60 @@
 		".+/data/users/.+/data.json": {
 			"to_table": [
 				{"table": "songs", "node": "songs", "key_col": "id"},
-				{"table": "artwork", "node": "artwork", "key_col": "hash"}
+        {"table": "artwork", "node": "artwork", "key_col": "hash"},
+        {"tables": "genres", "node": "genres", "key_col": "id"}
 			]
 		},
-		"1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB/data/users/.+/data.json": {
+		"1idx27vRHSGXZeEhQrxwMRopGhjNrb3bk/data/users/.+/data.json": {
 			"to_table": [
-				{"table": "genres", "node": "genres", "key_col": "address"}
+				{"table": "mergers", "node": "mergers", "key_col": "address"}
 			]
 		}
 	},
 	"tables": {
 		"json": {
-      "cols": [
-        ["json_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
-        ["site", "TEXT"],
-        ["directory", "TEXT"],
-        ["file_name", "TEXT"],
-        ["cert_user_id", "TEXT"]
-      ],
-      "indexes": ["CREATE UNIQUE INDEX path ON json(directory, site, file_name)"],
-      "schema_changed": 3
+			"cols": [
+				["json_id", "INTEGER PRIMARY KEY AUTOINCREMENT"],
+				["site", "TEXT"],
+				["directory", "TEXT"],
+				["file_name", "TEXT"],
+				["cert_user_id", "TEXT"]
+			],
+			"indexes": ["CREATE UNIQUE INDEX path ON json(directory, site, file_name)"],
+			"schema_changed": 3
 		},
 		"songs": {
 			"cols": [
         ["id", "TEXT"],
-        ["tracknumber", "INTEGER"],
+				["track_number", "INTEGER"],
 				["filename", "TEXT"],
-        ["title", "TEXT"],
+				["title", "TEXT"],
 				["artist", "TEXT"],
-				["album", "TEXT"],
-				["art", "TEXT"],
+        ["album", "TEXT"],
+        ["art", "TEXT"],
+        ["year", "INTEGER"],
         ["date_added", "INTEGER"],
-        ["json_id", "INTEGER REFERENCES json (json_id)"]
+        ["is_edit", "INTEGER"],
+				["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
 			"indexes": ["CREATE UNIQUE INDEX song_id ON songs(json_id, id)"],
 			"schema_changed": 5
-		},
-		"genres": {
+    },
+    "genres": {
+      "cols": [
+        ["id", "TEXT"],
+        ["song_id", "TEXT"],
+        ["genre", "TEXT"]
+      ]
+    },
+		"mergers": {
 			"cols": [
 				["address", "TEXT"],
 				["name", "TEXT"],
-        ["date_added", "INTEGER"],
-        ["json_id", "INTEGER REFERENCES json (json_id)"]
+				["date_added", "INTEGER"],
+				["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
-			"indexes": ["CREATE UNIQUE INDEX genres_address ON genres(json_id, address)"],
+			"indexes": ["CREATE UNIQUE INDEX addresses_address ON addresses(json_id, address)"],
 			"schema_changed": 2
 		},
 		"artwork": {

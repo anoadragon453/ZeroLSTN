@@ -116,7 +116,7 @@
             page.getSongsInAlbum(album, self.artist)
             .then((songs) => {
               songs.forEach((song) => {
-                var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
+                var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
                 page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
               });
             });

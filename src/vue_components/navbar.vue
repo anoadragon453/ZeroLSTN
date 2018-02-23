@@ -86,11 +86,6 @@
 				var sidenavOverlay = document.querySelector(".sidenav-overlay");
 				sidenavOverlay.click();
         
-				// If logo was clicked, tell home to go back to music page
-				if (to === '') {
-					page.goHome();
-				}
-        
         // Go to specified page
         Router.navigate(to);
       },

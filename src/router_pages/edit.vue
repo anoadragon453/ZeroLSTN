@@ -2,31 +2,31 @@
   <div class="container" id="edit">
     <div class="row">
       <div class="input-field col s2">
-        <input pattern="\d+" id="tracknumber" type="number" min="1"
+        <input pattern="\d+" id="track_number" type="number" min="1"
           onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
-          class="validate" v-model="tracknumber">
-        <label id="tracknumber-label" for="tracknumber">Track #</label>
+          class="validate" v-model="song.track_number">
+        <label id="track_number-label" for="track_number">Track #</label>
         <span class="helper-text" data-error="Must be > 0" data-success=""></span>
       </div>
       <div class="input-field col s10">
-        <input id="title" type="text" class="validate" v-model="title">
+        <input id="title" type="text" class="validate" v-model="song.title">
         <label id="title-label" for="title">Title</label>
       </div>
     </div>
     <div class="row">
       <div class="input-field col s6">
-        <input id="album" type="text" class="validate" v-model="album">
+        <input id="album" type="text" class="validate" v-model="song.album">
         <label id="album-label" for="album">Album</label>
       </div>
       <div class="input-field col s6">
-        <input id="artist" type="text" class="validate" v-model="artist">
+        <input id="artist" type="text" class="validate" v-model="song.artist">
         <label id="artist-label" for="artist">Artist</label>
       </div>
     </div>
     <div id="albumArtRow" style="display: none" class="row">
       <div class="col s12 m7 l7">
         <!-- Album art -->
-        <img id="albumArt" :src="existingAlbumArt" width="100%">
+        <img id="albumArt" :src="song.art" width="100%">
       </div>
     </div>
     <div class="row">
@@ -39,7 +39,7 @@
         </a>
         
         <!-- Delete Image Button -->
-        <a v-if="existingAlbumArt" @click="deleteImage()" class="btn-flat">Delete</a>
+        <a v-if="song.art" @click="deleteImage()" class="btn-flat">Delete</a>
       </div>
       <div class="col s12 m5 l5">
         <!-- Save Button -->
@@ -48,7 +48,7 @@
         <!-- Cancel Button -->
         <a @click="cancelClicked()" class="right btn-flat">Cancel</a>
       </div>
-      <!-- TODO: Ability to switch genre? Have to have the other one downloaded. Delete from this genre and insert into other one, easy -->
+      <!-- TODO: Ability to switch merger site? Have to have the other one downloaded. Delete from this merger and insert into other one, easy -->
     </div>
     <div class="row"></div>
     <div class="row"></div>
@@ -66,12 +66,7 @@
     name: "edit",
     data: () => {
       return {
-        id: "",
-        tracknumber: "",
-        title: "",
-        artist: "",
-        album: "",
-        existingAlbumArt: "",
+        song: null,
         uploadingFile: false
       }
     },
@@ -80,26 +75,23 @@
       var self = this;
       page.cmdp("siteInfo", {})
 			.then(siteInfo => {
-        page.retrieveSongInfo(Router.currentParams["genre"], Router.currentParams["songID"], siteInfo.auth_address, function(song) {
+        page.retrieveSongInfo(Router.currentParams["mergerAddress"], Router.currentParams["songID"], siteInfo.auth_address, function(song) {
           if(!song) {
-            return page.cmdp("wrapperNotification", ["error", "Unable to retreive song information."]);
+            // We're creating a new song
+            self.song = {};
+            return;
           }
           
-          self.tracknumber = song.tracknumber;
-          self.id = song.id;
-          self.title = song.title;
-          self.album = song.album;
-          self.artist = song.artist;
+          self.song = song;
           if (song.art) {
             // Show img tag only if album art exists
             document.getElementById("albumArtRow").style.display = "";
-            self.existingAlbumArt = song.art;
           }
           
           // Make labels active so they don't cover the text.
-          if (song.tracknumber != "") {
-            document.getElementById("tracknumber").classList.add('valid');
-            document.getElementById("tracknumber-label").classList.add('active');
+          if (song.track_number != "") {
+            document.getElementById("track_number").classList.add('valid');
+            document.getElementById("track_number-label").classList.add('active');
           }
           if (song.title != "") {
             document.getElementById("title").classList.add('valid');
@@ -119,23 +111,22 @@
     methods: {
       saveClicked: function() {
         // Save file along with details
-        page.editSong(Router.currentParams["genre"], Router.currentParams["songID"], this.tracknumber,
-        this.title, this.album, this.artist, this.existingAlbumArt, function() {
-          // Head back to uploads page
-          Router.navigate('uploads');
+        page.editSong(Router.currentParams["mergerAddress"], Router.currentParams["songID"], this.song, function() {
+          // Head back to the previous page
+          history.back();
         });
       },
       cancelClicked: function() {
-        // Go back to the uploads page if they hit cancel
-        Router.navigate('uploads');
+        // Go back to the previous page if they hit cancel
+        history.back();
       },
       deleteImage: function() {
         // Delete the image from the filesystem
-        page.deleteImage(Router.currentParams["genre"], this.existingAlbumArt);
+        page.deleteImage(Router.currentParams["mergerAddress"], this.song.art);
         
         // Hide the image view
         document.getElementById("albumArtRow").style.display = "none";
-        this.existingAlbumArt = null;
+        this.song.art = "";
       },
       uploadAlbumArt: function() {
         // Run when Upload Art button is clicked
@@ -178,17 +169,17 @@
           // Set what happens once file reading is complete
           reader.onload = function(event) {
             var filedata = btoa(event.target.result);
-            var genreAddress = Router.currentParams["genre"];
+            var mergerAddress = Router.currentParams["mergerAddress"];
             
             // Copy and set image as optional file
-            page.uploadImage(file, filedata, genreAddress)
+            page.uploadImage(file, filedata, mergerAddress)
             .then((uploadURL) => {
               console.log("[URL]", uploadURL)
               // Display it on the page
               document.getElementById("albumArtRow").style.display = "";
               
-              // Attach to song later
-              self.existingAlbumArt = uploadURL;
+              // Attach to song
+              self.song = uploadURL;
               
               // Allow uploading further files
               self.uploadingFile = false;

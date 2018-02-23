@@ -3,11 +3,11 @@
     <i v-if="audioPlaying && currentSong && (currentSong.filename === song.filename)" 
     @click.prevent="pauseSong(song)" class="material-icons circle blue darken-1">pause</i>
     <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
-    <span class="title">{{ song.tracknumber ? song.tracknumber + '.' : '' }} {{ song.title }}</span>
+    <span class="title">{{ song.track_number ? song.track_number + '.' : '' }} {{ song.title }}</span>
     <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
       - {{ song.artist }} - {{ song.album }}
       <br>
-      Genre: {{ genre }}
+      Genre: {{ song.genre }}
     </p>
     <a href="#" class="secondary-content s2">
       <a @click.prevent="queueSong(song)" class="tooltipped" data-position="top" data-tooltip="Queue Song" data-delay="200"><i class="material-icons black-text">playlist_add</i></a>
@@ -27,6 +27,7 @@
     name: "songitem",
     mounted: function() {
       // Initialize JS for tooltips
+      // TODO: Use the better tooltip lib
       var tips = document.querySelectorAll(".tooltipped");
       tips.forEach((tip) => {
         // Initialize and add to array to destroy when page is later unloaded
@@ -41,7 +42,7 @@
     asyncComputed: {
       songInfo: {
         get() {
-          return page.cmdp("optionalFileInfo", ["merged-ZeroLSTN/" + this.song.site + "/" + this.song.directory + "/" + this.song.filename])
+          return page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + this.song.site + "/" + this.song.directory + "/" + this.song.filename])
           .then((info) => {
             if (!info) {
               return null;
@@ -90,7 +91,7 @@
         page.deleteSong(song);
       },
       downloadSong: function(song) {
-        var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
+        var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
         page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
       }
     },

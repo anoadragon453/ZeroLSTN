@@ -15,6 +15,7 @@ var Materialize = require("materialize-css/dist/js/materialize.min.js");
 var ZeroFrame = require("./libs/ZeroFrame.js");
 var Router = require("./libs/router.js");
 var Vue = require("vue/dist/vue.js");
+var Vuex = require("vuex");
 var VueZeroFrameRouter = require("./libs/vue-zeroframe-router.js");
 var AsyncComputed = require('vue-async-computed');
 
@@ -23,6 +24,7 @@ var { sanitizeStringForUrl, sanitizeStringForUrl_SQL, html_substr, sanitizeHtmlF
 // Initial Vue plugins
 Vue.use(VueZeroFrameRouter.VueZeroFrameRouter);
 Vue.use(AsyncComputed);
+Vue.use(Vuex);
 
 // Vue components
 var NavBar = require("./vue_components/navbar.vue");
@@ -188,12 +190,6 @@ class ZeroApp extends ZeroFrame {
 		return page.cmdp("wrapperNotification", ["info", "Unimplemented!"]);
 	}
 	
-	// Triggered when logo is clicked
-	// TODO: Shouldn't be necessary after moving index_genre to its own page1
-	goHome() {
-		app.$emit("goHome");
-	}
-	
 	// -------------------------------------------------- //
 	// ------ Uploading, Editing and Deleting Songs ----- //
 	
@@ -206,7 +202,7 @@ class ZeroApp extends ZeroFrame {
 		}
 		
 		// Get the user's data.json filepath
-		var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var content_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 		
 		// Verify that user has correct "optional" and "ignore" values
 		page.cmd("fileGet", { "inner_path": content_inner_path, "required": false }, (data) => {
@@ -218,7 +214,7 @@ class ZeroApp extends ZeroFrame {
 			}
 			
 			// Allowed filetypes
-			var curoptional = ".+\\.(mp3|flac|ogg|m4a|mp4|webm)";
+			var curoptional = ".+\\.(mp3|flac|ogg|m4a|mpeg|mp4|webm)";
 			var changed = false;
 			if (!data.hasOwnProperty("optional") || data.optional !== curoptional){
 				data.optional = curoptional
@@ -254,7 +250,7 @@ class ZeroApp extends ZeroFrame {
 		var orig_filename_list = file.name.split(".");
 		var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
 		
-		var f_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/" + filename;
+		var f_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/" + filename;
 		console.log(f_path);
 		
 		page.checkOptional(genreAddress, false, () => {
@@ -278,7 +274,7 @@ class ZeroApp extends ZeroFrame {
 	
 	// Store uploaded album art on a genre
 	uploadImage(file, file_data, genreAddress, existingImageToDelete=null, doSignAndPublish=false) {
-		var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var data_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
 		
 		// Calculate hash of image file. Save only first 64 chars
 		var hash = sha512(file_data).substring(0,64);
@@ -332,7 +328,7 @@ class ZeroApp extends ZeroFrame {
 				var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
 				
 				// Get inner path of image file
-				var filepath = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + filename;
+				var filepath = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + filename;
 				
 				data["artwork"][hash] = {
 					"image_path": filepath,
@@ -367,7 +363,7 @@ class ZeroApp extends ZeroFrame {
 	
 	// Remove an image
 	deleteImage(genreAddress, filepath) {
-		var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var data_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
 		console.log("Deleting", filepath)
 		
 		// Only delete image if no other song is using it
@@ -449,16 +445,17 @@ class ZeroApp extends ZeroFrame {
 		});
 	}
 	
-	// Add new song info to user's data.json. Returns new song ID.
-	uploadSong(genreAddress, filename, title, album, artist, f = null) {
+  // Add new song info to user's data.json. Returns new song ID.
+  /*
+	uploadSong(mergerAddress, filename, title, album, artist, f = null) {
 		// Check user is logged in (assume they are, but just in case...)
 		if (!app.siteInfo.cert_user_id) {
 			return this.cmdp("wrapperNotification", ["error", "You must be logged in to post a song."]);
 		}
 		
 		// Get the user's data.json filepath
-		var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var data_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 		
 		var self = this;
 		var date = Date.now();
@@ -498,18 +495,18 @@ class ZeroApp extends ZeroFrame {
 			// Run callback function
 			if (f !== null && typeof f === "function") f(date);
 		});
-	}
+	}*/
 	
-	// Edit existing song stored in user's data.json. Returns songID.
-	editSong(genreAddress, songID, tracknumber, title, album, artist, art, f = null) {
+	// Edit existing song stored in user's data.json. Does so by creating a new song with same ID, but updated values
+	editSong(genreAddress, song, f = null) {
 		// Check user is logged in (assume they are, but just in case...)
 		if (!app.siteInfo.cert_user_id) {
 			return this.cmdp("wrapperNotification", ["error", "You must be logged in to post a song."]);
 		}
 		
 		// Get the user's data.json filepath
-		var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var data_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 		
 		var self = this;
 		return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
@@ -531,11 +528,17 @@ class ZeroApp extends ZeroFrame {
 			}
 			
       // Update with new values
-      data["songs"][songID].tracknumber = tracknumber;
-			data["songs"][songID].title = title;
-			data["songs"][songID].album = album;
-			data["songs"][songID].artist = artist;
-			data["songs"][songID].art = art;
+      // TODO: year, genres
+      data["songs"].push({
+        id: song.id,
+        track_number: song.track_number,
+        title: song.title,
+        album: song.album,
+        artist: song.artist,
+        art: song.art,
+        date_added: Date.now(),
+        is_edit: true
+      });
 			
 			// Write values back to JSON string and the data.json
 			var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
@@ -559,12 +562,13 @@ class ZeroApp extends ZeroFrame {
 			}
 		});
 	}
-	
+  
+  /*
 	deleteSong(song) {
 		// Remove from user's data.json then delete song file and its piecemap
-		var data_inner_path = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-		var songFilepath = "merged-ZeroLSTN/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/" + song.filename;
+		var data_inner_path = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var songFilepath = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/" + song.filename;
 		var pieceMapFilepath = songFilepath + ".piecemap.msgpack";
 		
 		console.log("Deleting song:", song.title)
@@ -633,7 +637,8 @@ class ZeroApp extends ZeroFrame {
 			}
 		})
 		
-	}
+  }
+  */
 	
 	// -------------------------------------------------- //
 	// ------------ Installing/Editing Genres ----------- //
@@ -641,8 +646,8 @@ class ZeroApp extends ZeroFrame {
 	// Adds a new genre to the index
 	installGenre(genreName, genreAddress) {
 		console.log("Creating: " + genreAddress);
-		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var data_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 		this.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
 			if (!data) {
 				console.log("Creating default data.json...");
@@ -682,9 +687,9 @@ class ZeroApp extends ZeroFrame {
 	// Edits a genre in the index and changes content in the mergerZite
 	editGenre(genreName, genreAddress) {
 		console.log("editing: " + genreName + "/" + genreAddress)
-		var index_data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var index_content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-		var genre_content_path = "merged-ZeroLSTN/" + genreAddress + "/content.json";
+		var index_data_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var index_content_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var genre_content_path = "merged-ZeroLSTN2/" + genreAddress + "/content.json";
 		console.log("[genre_path]", genre_content_path)
 		
 		// Keep a reference to ourselves
@@ -759,8 +764,8 @@ class ZeroApp extends ZeroFrame {
 	// Removes an existing genre from the index
 	removeGenre(genreAddress) {
 		console.log("Removing: " + genreAddress);
-		var data_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+		var data_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+		var content_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 		console.log(data_inner_path)
 		
 		// Keep a reference to ourselves
@@ -908,40 +913,22 @@ class ZeroApp extends ZeroFrame {
 	}
 	
 	// Get song info from ID. Returns song object.
-	retrieveSongInfo(genreAddress, songID, authAddress, f = null) {	
-		// Get the user's data.json filepath
-		var data_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + authAddress + "/data.json";
-		var content_inner_path = "merged-ZeroLSTN/" + genreAddress + "/data/users/" + authAddress + "/content.json";
-		
-		return this.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
-		.then((data) => {
-			// Get user's existing data
-			if (!data) {
-				// Can't edit a song if there aren't any yet
-				console.log("ERROR");
-				return;
-			} else {
-				// Parse user's data into JS object
-				data = JSON.parse(data);
-			}
-			
-			// Can't edit a song if there aren't any yet
-			if (!data["songs"]) {
-				console.log("ERROR");
-				return;
-			}
-			
-			// Check for the song by ID
-			if (data["songs"][songID]) {
-				// Add ID to song
-				data["songs"][songID].id = songID;
-				
-				// Run callback function
-				if (f !== null && typeof f === "function") f(data["songs"][songID]);
-			} else {
-				// Return null if we didn't find it
-				if (f !== null && typeof f === "function") f(null);
-			}
+	retrieveSongInfo(songID) {
+    // Retrieve song by ID. Get latest update to this ID.
+    var query = `
+    SELECT * FROM songs
+    LEFT JOIN json USING (json_id)
+    WHERE id = ` + songID + `
+    AND date_added < ` + Date.now() + `
+    ORDER BY date_added DESC
+    LIMIT 1
+    `;
+
+    return this.cmdp("dbQuery", [query])
+		.then((results) => {
+			return new Promise((resolve, reject) => {
+				resolve(results[0]);
+			});
 		});
 	}
 	
@@ -1041,7 +1028,7 @@ class ZeroApp extends ZeroFrame {
 		return new Promise((resolve, reject) => {
 			songs.forEach(function(song) {
 				// Get the info for each song
-				song.info = page.cmdp("optionalFileInfo", ["merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename]);
+				song.info = page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename]);
 			});
 			
 			// Return the list of songs
@@ -1115,7 +1102,7 @@ class ZeroApp extends ZeroFrame {
 	
 	// Play a given song object
 	playSong(song) {
-		var filepath = "merged-ZeroLSTN/" + song.site + "/" + song.directory + "/" + song.filename;
+		var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename;
 		
 		// Play the song
 		this.playSongFile(filepath);
@@ -1334,6 +1321,28 @@ class ZeroApp extends ZeroFrame {
 
 page = new ZeroApp();
 
+// Vuex Store
+
+const store = new Vuex.Store({
+  state: {
+    count: 0,
+    songEdited: null                        // Used to temporarily store songs that haven't been stored yet
+  },
+  mutations: {
+    increment (state) {
+      state.count++
+    },
+    saveEditedSong (song) {
+      state.songEdited = song;
+    },
+    retrieveEditedSong () {
+      return state;
+    }
+  }
+})
+
+page.store = store;
+
 var Uploads = require("./router_pages/uploads.vue");
 var Edit = require("./router_pages/edit.vue");
 var PlayQueue = require("./router_pages/playqueue.vue");
@@ -1346,8 +1355,8 @@ var Search = require("./router_pages/search.vue");
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
 	{ route: "playqueue", component: PlayQueue },
-	{ route: "edit/:genre/:songID", component: Edit },
-	{ route: "addGenre/:genreName/:genreAddress", component: Home },
+	{ route: "edit/:mergerAddress/:songID", component: Edit },
+	{ route: "addGenre/:mergerName/:mergerAddress", component: Home },
 	{ route: "artist/:artist", component: Artist },
 	{ route: "album/:artist/:album", component: Album },
 	{ route: "nowplaying", component: NowPlaying },

@@ -138,7 +138,7 @@
         // Don't try to redownload a song we already have
         if (songs[offset].info && !songs[offset].info.is_downloaded) {
           // Do donwload if we don't have it already
-          var filepath = "merged-ZeroLSTN/" + songs[offset].site + "/" + songs[offset].directory + "/" + songs[offset].filename + "|all";
+          var filepath = "merged-music/" + songs[offset].site + "/" + songs[offset].directory + "/" + songs[offset].filename + "|all";
           page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
         }
         this.downloadAlbumBySongOffset(songs, ++offset);
