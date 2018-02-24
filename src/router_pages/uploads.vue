@@ -29,21 +29,27 @@
     <div class="container">
       <div class="row"></div>
       <div class="row">
-        <div class="col s6">
-          <h5 class="hide-on-med-and-down">Uploads</h5>
-        </div>
-        <div class="col s6">
-          <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">cloud_upload</i>Upload Songs</a>
-        </div>
+        <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>
+          Upload<span v-if="newSongs && newSongs.length != 0"> more</span> Songs
+        </a>
+        <a v-if="newSongs && newSongs.length != 0" @click.prevent="publishSongs()" style="margin-right: 1em" class="btn waves-effect waves-light right"><i class="material-icons left">cloud_upload</i>
+          Publish Songs
+        </a>
       </div>
       <div v-if="newSongs && newSongs.length != 0" class="row">
         <h5>Ready to Upload</h5>
         <ul class="collection">
-          <a href="#!" v-for="(songObject, index) in newSongs" @click.prevent="editNewSong(index)" class="collection-item">{{ songObject.song.title }}</a>
+          <a href="#!" v-for="(songObject, index) in newSongs" @click.prevent="editNewSong(index)" class="collection-item">
+            {{ (songObject.song.track_number ? songObject.song.track_number : '?') + '. ' }}
+            {{ songObject.song.artist }} - 
+            {{ songObject.song.album }} - 
+            {{ songObject.song.title }}
+          </a>
         </ul>
       </div>
-      <div v-if="!newSongs" class="row">
-        <ul v-if="songs && songs.length != 0" class="collection">
+      <div v-if="songs" class="row">
+        <h5>Uploads</h5>
+        <ul v-if="songs.length != 0" class="collection">
           <songitem v-for="song in songs" :song="song"></songitem>
         </ul>
         <p class="center" v-else><b>Nothing here yet...</b><br>Press the Upload button to get started.</p>
@@ -175,23 +181,54 @@
       craftSongFile: function(file, tags) {
         var song = {};
 
-        song['track_number'] = tags.track ? tags.track : '';
         song['title'] = tags.title ? tags.title : '';
         song['album'] = tags.album ? tags.album : '';
         song['artist'] = tags.artist ? tags.artist : '';
         song['year'] = tags.year ? tags.year : '';
-        // TODO: song['art'] = tags.picture ? tags.picture.data : '';
         song['date_added'] = Date.now();
         song['is_edit'] = false;
+
+        // Transform "x/y" -> "x" and "0x" -> "x"
+        if (tags.track) {
+          // Convert track to a string
+          tags.track = '' + tags.track;
+          tags.track = tags.track.split('/')[0];
+          tags.track = tags.track.replace(/^0+/, '');
+          song['track_number'] = tags.track;
+        }
+
+        // Convert album art from uint8 array to base64
+        if (tags.picture) {
+          var imageData = tags.picture.data;
+          var base64String = "";
+          for (var i = 0; i < imageData.length; i++) {
+            base64String += String.fromCharCode(imageData[i]);
+          }
+
+          // Save image URL as base64 string
+          song['art'] = "data:" + tags.picture.data.format + ";base64," + btoa(base64String);
+        }
 
         return {"file": file, "song": song};
       },
       editNewSong: function(songIndex) {
-        // Need to head to the edit screen while also keeping current new song data intact.
-        // Should we store new song data in $store as well? Also using it for giving new song data to /edit
-        // Perhaps we should just store all new song data in $store and pass index to /edit/store/$index
-        // After edit is done, save changes to store and just come back here. We should load from store here.
+        // Head to edit page with index of new song
         Router.navigate('/edit/store/' + songIndex)
+      },
+      publishSongs: function() {
+        // Upload all songs in newSongs
+
+        // Show new songs under uploads
+        if (!this.songs) { this.songs = []; }
+        for (var i in this.newSongs) {
+          this.songs.push(this.newSongs.song);
+        }
+
+        // Clear newSongs
+        this.newSongs = [];
+        page.store.commit('clearNewSongs');
+
+        console.log(this.songs)
       }
     }
   }

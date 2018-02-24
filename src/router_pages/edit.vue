@@ -66,55 +66,73 @@
     name: "edit",
     data: () => {
       return {
-        song: null,
+        song: {},
         uploadingFile: false
       }
     },
     mounted: function() {
-      // Get file information
       var self = this;
+
+      // If we're editing a not-yet-uploaded song, present data from its index in the store
+      if (Router.currentParams['index']) {
+        // Make a deep copy so v-model doesn't change the state
+        self.song = Object.assign({}, page.store.state.newSongs[Router.currentParams['index']].song);
+        self.presentSongData();
+      }
+
+      // Get already uploaded song info from the DB
       page.cmdp("siteInfo", {})
 			.then(siteInfo => {
-        page.retrieveSongInfo(Router.currentParams["mergerAddress"], Router.currentParams["songID"], siteInfo.auth_address, function(song) {
-          if(!song) {
-            // We're creating a new song
-            self.song = {};
+        page.retrieveSongInfo(Router.currentParams['mergerAddress'], Router.currentParams['songID'], siteInfo.auth_address, function(song) {
+          if (!song) {
+            console.log('Unable to retrieve song from DB.');
             return;
           }
-          
+
           self.song = song;
-          if (song.art) {
-            // Show img tag only if album art exists
-            document.getElementById("albumArtRow").style.display = "";
-          }
-          
-          // Make labels active so they don't cover the text.
-          if (song.track_number != "") {
-            document.getElementById("track_number").classList.add('valid');
-            document.getElementById("track_number-label").classList.add('active');
-          }
-          if (song.title != "") {
-            document.getElementById("title").classList.add('valid');
-            document.getElementById("title-label").classList.add('active');
-          }
-          if (song.album != "") {
-            document.getElementById("album").classList.add('valid');
-            document.getElementById("album-label").classList.add('active');
-          }
-          if (song.artist != "") {
-            document.getElementById("artist").classList.add('valid');
-            document.getElementById("artist-label").classList.add('active');
-          }
+          self.presentSongData();
         });
       });
     },
     methods: {
+      presentSongData: function() {
+        if (this.song.art) {
+          // Show img tag only if album art exists
+          document.getElementById("albumArtRow").style.display = "";
+        }
+        
+        // Make labels active so they don't cover the text.
+        if (this.song.track_number != "") {
+          document.getElementById("track_number").classList.add('valid');
+          document.getElementById("track_number-label").classList.add('active');
+        }
+        if (this.song.title != "") {
+          document.getElementById("title").classList.add('valid');
+          document.getElementById("title-label").classList.add('active');
+        }
+        if (this.song.album != "") {
+          document.getElementById("album").classList.add('valid');
+          document.getElementById("album-label").classList.add('active');
+        }
+        if (this.song.artist != "") {
+          document.getElementById("artist").classList.add('valid');
+          document.getElementById("artist-label").classList.add('active');
+        }
+      },
       saveClicked: function() {
-        // Save file along with details
-        page.editSong(Router.currentParams["mergerAddress"], Router.currentParams["songID"], this.song, function() {
-          // Head back to the previous page
+        // Save song details
+
+        // If we're editing a non-uploaded-yet song, save details to the store
+        if (Router.currentParams['index']) {
+          page.store.commit('saveSong', {"song": this.song, "index": parseInt(Router.currentParams['index'])});
           history.back();
-        });
+        } else {
+          // Otherwise, edit the already uploaded song
+          page.editSong(Router.currentParams["mergerAddress"], Router.currentParams["songID"], this.song, function() {
+            // Head back to the previous page
+            history.back();
+          });
+        }
       },
       cancelClicked: function() {
         // Go back to the previous page if they hit cancel
@@ -134,7 +152,7 @@
         var fileUploadButton = document.getElementById('artUpload');
         fileUploadButton.click();
         
-        // Listen for when a file has been uploaded
+         // Listen for when a file has been uploaded
         var self = this;
         fileUploadButton.addEventListener('change', function() {
           // Prevent this method from running twice on a single file upload

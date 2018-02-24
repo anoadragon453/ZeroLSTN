@@ -1333,6 +1333,11 @@ const store = new Vuex.Store({
       // Add list of songs to state.newSongs
       state.newSongs.push.apply(state.newSongs, newSongs);
     },
+    saveSong (state, payload) {
+      // Overwrite a song at a certain index
+      console.log(payload.song, payload.index)
+      state.newSongs[payload.index].song = payload.song;
+    },
     removeNewSong (state, songToRemove) {
       // Remove a song from newSongs
       state.newSongs.remove(songToRemove);
@@ -1358,9 +1363,9 @@ var Search = require("./router_pages/search.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
 	{ route: "uploads", component: Uploads },
-	{ route: "playqueue", component: PlayQueue },
-  { route: "edit/:mergerAddress/:songID", component: Edit },
+  { route: "playqueue", component: PlayQueue },
   { route: "edit/store/:index", component: Edit },
+  { route: "edit/:mergerAddress/:songID", component: Edit },
 	{ route: "addGenre/:mergerName/:mergerAddress", component: Home },
 	{ route: "artist/:artist", component: Artist },
 	{ route: "album/:artist/:album", component: Album },
