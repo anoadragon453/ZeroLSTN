@@ -545,6 +545,13 @@ class ZeroApp extends ZeroFrame {
     return filepath;
   }
 
+  removeDownload(song) {
+    // Delete a downloaded song
+    console.log(song)
+    var songFilepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename;
+    return this.cmdp("fileDelete", { "inner_path": songFilepath });
+  }
+
   deleteSong(song) {
     // Remove from user's data.json then delete song file and its piecemap
     var data_inner_path = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
@@ -1015,7 +1022,7 @@ class ZeroApp extends ZeroFrame {
         LEFT JOIN json USING (json_id)
         WHERE album="${albumName}"
         AND artist="${artistName}"
-        ORDER BY date_added ASC
+        ORDER BY track_number
         `;
 
     return this.cmdp("dbQuery", [query])
@@ -1309,7 +1316,8 @@ self = page;
 
 const store = new Vuex.Store({
   state: {
-    newSongs: []                        // Used to temporarily store songs that haven't been published yet
+    newSongs: [], // Used to temporarily store songs that haven't been published yet
+    downloadState: {notdownloaded: 0, downloaded: 1, unknown: -1} // enum for download icons
   },
   mutations: {
     addNewSongs (state, newSongs) {
