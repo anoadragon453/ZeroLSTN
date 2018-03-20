@@ -29,7 +29,7 @@
                 </popper>
                 <h4 v-if="album !== ''">{{ album }}</h4>
                 <h4 v-else><i>Blank</i></h4>
-                <p>{{ artist }}</p>
+                By <a @click.prevent="goToArtist()">{{ artist }}</a>
               </li>
               <songitem  v-for="song in songs" :editable="false" :song="song" :current-song="currentSong" :audio-playing="audioPlaying"></songitem>
             </ul>
@@ -109,7 +109,12 @@
     methods: {
       goBack: function() {
         // Hit the 'back' button
+        // TODO: Check that the previous page was on ZeroLSTN
         window.history.go(-1);
+      },
+      goToArtist: function(artist) {
+        // Go to artist page
+        Router.navigate('/artist/'+artist);
       },
       playAlbum: function() {
         // Queue songs and play the first one of the album
