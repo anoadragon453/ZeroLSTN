@@ -8,11 +8,7 @@
 			"file_name": "data.json"
 		},
 		".+/data/users/.+/data.json": {
-			"to_table": [
-				{"table": "songs", "node": "songs", "key_col": "id"},
-        {"table": "artwork", "node": "artwork", "key_col": "hash"},
-        {"tables": "genres", "node": "genres", "key_col": "id"}
-			]
+			"to_table": ["songs", "artwork", "genres"]
 		},
 		"1idx27vRHSGXZeEhQrxwMRopGhjNrb3bk/data/users/.+/data.json": {
 			"to_table": [
@@ -34,28 +30,31 @@
 		},
 		"songs": {
 			"cols": [
-        ["id", "TEXT"],
+				["id", "TEXT"],
 				["track_number", "INTEGER"],
 				["filename", "TEXT"],
 				["title", "TEXT"],
 				["artist", "TEXT"],
-        ["album", "TEXT"],
-        ["art", "TEXT"],
-        ["year", "INTEGER"],
-        ["date_added", "INTEGER"],
-        ["is_edit", "INTEGER"],
+				["album", "TEXT"],
+				["art", "TEXT"],
+				["year", "INTEGER"],
+				["date_added", "INTEGER"],
+				["is_edit", "INTEGER"],
 				["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
-			"indexes": ["CREATE UNIQUE INDEX song_id ON songs(json_id, id)"],
-			"schema_changed": 5
-    },
-    "genres": {
-      "cols": [
-        ["id", "TEXT"],
-        ["song_id", "TEXT"],
-        ["genre", "TEXT"]
-      ]
-    },
+			"indexes": ["CREATE UNIQUE INDEX songs_id ON songs(json_id, id)"],
+			"schema_changed": 6
+		},
+		"genres": {
+			"cols": [
+				["id", "TEXT"],
+				["song_id", "TEXT"],
+				["genre", "TEXT"],
+				["json_id", "INTEGER REFERENCES json (json_id)"]
+			],
+			"indexes": ["CREATE UNIQUE INDEX genres_hash ON genres(json_id, id)"],
+			"schema_changed": 2
+		},
 		"mergers": {
 			"cols": [
 				["address", "TEXT"],
@@ -63,8 +62,8 @@
 				["date_added", "INTEGER"],
 				["json_id", "INTEGER REFERENCES json (json_id)"]
 			],
-			"indexes": ["CREATE UNIQUE INDEX addresses_address ON addresses(json_id, address)"],
-			"schema_changed": 2
+			"indexes": ["CREATE UNIQUE INDEX mergers_address ON mergers(json_id, address)"],
+			"schema_changed": 3
 		},
 		"artwork": {
 			"cols": [

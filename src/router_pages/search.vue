@@ -98,11 +98,11 @@
 
 <script>
   var Router = require("../libs/router.js");
-  
+
   // Vue components that make up the search page
   var PlayQueue = require("../vue_components/play_queue.vue");
   var SongItem = require("../vue_components/song_item.vue");
-  
+
   module.exports = {
     components: {
       playQueue: PlayQueue,
@@ -129,7 +129,7 @@
       var instance = new M.Tabs(tabs, {
         onShow: self.tabClicked
       });
-      
+
       // Catch when user stops typing in search field
       var self = this;
       var keystoppedDelay = 600;
@@ -150,7 +150,7 @@
         if (key != "Enter" && searchText.length <= 3) {
           return;
         }
-        
+
         // Don't re-run a search if the user hits enter again
         if (searchText === this.lastSearch) {
           return;
@@ -162,7 +162,7 @@
         if (searchText === "") {
           return;
         }
-        
+
         // Get current tab
         console.log("currentTab:", this.currentTab());
 
@@ -205,10 +205,10 @@
             });
             break;
         }
-        
+
         // Conduct the search
         console.log("Searching: ", searchText);
-        
+
         // Keep track of last search term
         this.lastSearch = searchText;
       },
@@ -217,10 +217,10 @@
         if (this.lastTab === this.currentTab()) {
           return;
         }
-        
+
         // Make the search
         this.search(document.getElementById('searchField').value);
-        
+
         // Keep track of last tab clicked
         this.lastTab = this.currentTab();
       },

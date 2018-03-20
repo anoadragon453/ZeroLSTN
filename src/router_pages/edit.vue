@@ -14,11 +14,19 @@
       </div>
     </div>
     <div class="row">
-      <div class="input-field col s6">
+      <div class="input-field col s4">
+        <input pattern="\d+" id="year" type="number" min="1"
+          onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
+          class="validate" v-model="song.year">
+        <label id="year-label" for="year">Year</label>
+      </div>
+      <div class="input-field col s8">
         <input id="album" type="text" class="validate" v-model="song.album">
         <label id="album-label" for="album">Album</label>
       </div>
-      <div class="input-field col s6">
+    </div>
+    <div class="row">
+      <div class="input-field col s12">
         <input id="artist" type="text" class="validate" v-model="song.artist">
         <label id="artist-label" for="artist">Artist</label>
       </div>
@@ -37,14 +45,14 @@
           <span id="uploadImageText">Upload Art</span>
           <div class="file-field"><input id="artUpload" type="file" accept="image/x-png,image/jpeg"></div>
         </a>
-        
+
         <!-- Delete Image Button -->
         <a v-if="song.art" @click="deleteImage()" class="btn-flat">Delete</a>
       </div>
       <div class="col s12 m5 l5">
         <!-- Save Button -->
         <a @click="saveClicked()" class="right waves-effect waves-light btn">Save</a>
-        
+
         <!-- Cancel Button -->
         <a @click="cancelClicked()" class="right btn-flat">Cancel</a>
       </div>
@@ -60,7 +68,7 @@
 
 <script>
   var Router = require("../libs/router.js");
-  
+
   module.exports = {
     props: [],
     name: "edit",
@@ -78,12 +86,9 @@
         // Make a deep copy so v-model doesn't change the state
         self.song = Object.assign({}, page.store.state.newSongs[Router.currentParams['index']].song);
         self.presentSongData();
-      }
-
-      // Get already uploaded song info from the DB
-      page.cmdp("siteInfo", {})
-			.then(siteInfo => {
-        page.retrieveSongInfo(Router.currentParams['mergerAddress'], Router.currentParams['songID'], siteInfo.auth_address, function(song) {
+      } else {
+        // Get already uploaded song info from the DB
+        page.retrieveSongInfo(Router.currentParams['songID']).then((song) => {
           if (!song) {
             console.log('Unable to retrieve song from DB.');
             return;
@@ -92,7 +97,7 @@
           self.song = song;
           self.presentSongData();
         });
-      });
+      }
     },
     methods: {
       presentSongData: function() {
@@ -100,8 +105,12 @@
           // Show img tag only if album art exists
           document.getElementById("albumArtRow").style.display = "";
         }
-        
+
         // Make labels active so they don't cover the text.
+        if (this.song.year != "") {
+          document.getElementById("year").classList.add('valid');
+          document.getElementById("year-label").classList.add('active');
+        }
         if (this.song.track_number != "") {
           document.getElementById("track_number").classList.add('valid');
           document.getElementById("track_number-label").classList.add('active');
@@ -128,7 +137,7 @@
           history.back();
         } else {
           // Otherwise, edit the already uploaded song
-          page.editSong(Router.currentParams["mergerAddress"], Router.currentParams["songID"], this.song, function() {
+          page.createSongObjects([this.song], true, function() {
             // Head back to the previous page
             history.back();
           });
@@ -141,7 +150,7 @@
       deleteImage: function() {
         // Delete the image from the filesystem
         page.deleteImage(Router.currentParams["mergerAddress"], this.song.art);
-        
+
         // Hide the image view
         document.getElementById("albumArtRow").style.display = "none";
         this.song.art = "";
@@ -151,7 +160,7 @@
         // Open file upload window
         var fileUploadButton = document.getElementById('artUpload');
         fileUploadButton.click();
-        
+
          // Listen for when a file has been uploaded
         var self = this;
         fileUploadButton.addEventListener('change', function() {
@@ -160,50 +169,51 @@
             return;
           }
           self.uploadingFile = true;
-          
+
           // Return if no files were uploaded
           if (!this.files || !this.files[0]) {
             this.uploadingFile = false;
             return;
           }
-          
+
           // Get selected user file
           var file = this.files[0];
-          
+
           // Check if the file is one of approved filetype
           if (!file || typeof file !== "object" || !file.type.match("(image)\/.*(jpeg|png)")) {
             page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match jpeg/jpg/png."]);
             return;
           }
-          
+
           console.log("Uploading " + file.name);
           console.log(file);
-          
+
+
           // "Upload" the file to the user's 'artwork' folder
-          
+
           // Create an object to read the file's data
           let reader = new FileReader();
-          
+
           // Set what happens once file reading is complete
           reader.onload = function(event) {
             var filedata = btoa(event.target.result);
             var mergerAddress = Router.currentParams["mergerAddress"];
-            
+
             // Copy and set image as optional file
             page.uploadImage(file, filedata, mergerAddress)
             .then((uploadURL) => {
               console.log("[URL]", uploadURL)
               // Display it on the page
               document.getElementById("albumArtRow").style.display = "";
-              
+
               // Attach to song
               self.song = uploadURL;
-              
+
               // Allow uploading further files
               self.uploadingFile = false;
             });
           }
-          
+
           // Read the file's data
           reader.readAsBinaryString(file);
         });

@@ -11,7 +11,7 @@
     </p>
     <a href="#" class="secondary-content s2">
       <a @click.prevent="queueSong(song)" class="tooltipped" data-position="top" data-tooltip="Queue Song" data-delay="200"><i class="material-icons black-text">playlist_add</i></a>
-      <a v-if="editable" @click.prevent="editSong(song)" class="tooltipped" data-position="top" data-tooltip="Edit Song" data-delay="200"><i class="material-icons black-text">edit</i></a>
+      <a @click.prevent="editSong(song)" class="tooltipped" data-position="top" data-tooltip="Edit Song" data-delay="200"><i class="material-icons black-text">edit</i></a>
       <a v-if="!downloaded" @click.prevent="downloadSong(song)" class="tooltipped" data-position="top" data-tooltip="Download Song" data-delay="200"><i class="material-icons black-text">cloud_download</i></a>
       <a v-else class="tooltipped" data-position="top" data-tooltip="Remove Download"><i class="material-icons black-text" data-delay="200">cloud_done</i></a>
       <a v-if="editable" @click.prevent="deleteSong(song)" class="tooltipped" data-position="top" data-tooltip="Delete Song" data-delay="200"><i class="material-icons black-text">delete</i></a>
@@ -47,7 +47,7 @@
             if (!info) {
               return null;
             }
-            
+
             // Sometimes there is no "peer_seed" attribute. Set it to peers attribute instead.
             if (!info.peer_seed) {
               info.peer_seed = info.peer;
@@ -63,10 +63,8 @@
       },
       genre: {
         get() {
-          return page.getGenreNameFromAddress(this.song.site)
-          .then((name) => {
-            return name[0].name;
-          });
+          // Replace with year
+          return ""
         }
       }
     },

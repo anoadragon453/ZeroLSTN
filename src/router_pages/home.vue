@@ -13,11 +13,11 @@
 
 <script>
   var Router = require("../libs/router.js");
-  
+
   // All the Vue components that make up the homepage
   var Music = require("../vue_components/music.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
-  
+
   module.exports = {
     components: {
       music: Music,
