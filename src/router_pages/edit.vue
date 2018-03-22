@@ -14,13 +14,13 @@
       </div>
     </div>
     <div class="row">
-      <div class="input-field col s4">
+      <div class="input-field col s2">
         <input pattern="\d+" id="year" type="number" min="1"
           onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
           class="validate" v-model="song.year">
         <label id="year-label" for="year">Year</label>
       </div>
-      <div class="input-field col s8">
+      <div class="input-field col s10">
         <input id="album" type="text" class="validate" v-model="song.album">
         <label id="album-label" for="album">Album</label>
       </div>

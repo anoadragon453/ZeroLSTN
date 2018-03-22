@@ -272,6 +272,7 @@
         var songObjs = self.newSongs.map(a => a.song);
 
         // Publish the new list of songs in the user's data.json
+        console.log('Publishing songs:', songObjs)
         page.createSongObjects(songObjs, false);
       },
       // Wrapper function for jsmediatags. We need to link the file object to

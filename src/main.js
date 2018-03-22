@@ -172,6 +172,7 @@ class ZeroApp extends ZeroFrame {
   }
 
   isUserSignedIn() {
+    if (!app.siteInfo) { return false; }
     return app.siteInfo.cert_user_id != null;
   }
 
@@ -440,6 +441,7 @@ class ZeroApp extends ZeroFrame {
 
   // Edit existing song stored in user's data.json. Does so by creating a new song with same ID, but updated values
   createSongObjects(songs, isEdit, f = null) {
+    console.log("Got songs:", songs)
     // Keep track of song's decade addresses
     // We'll use them later for sign/publishing
     var songsByDecade = {};
@@ -464,7 +466,8 @@ class ZeroApp extends ZeroFrame {
       var songsInDecade = songsByDecade[decadeAddress];
 
       // Get the user's data file on this merger site
-      var data_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+      var user_path = decadeAddress + "/data/users/" + app.siteInfo.auth_address;
+      var data_inner_path = "merged-ZeroLSTN2/" + user_path + "/data.json";
       self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false }).then((data) => {
         // Parse user's data into JS object if exists
         data = (data ? JSON.parse(data) : {});
@@ -485,10 +488,11 @@ class ZeroApp extends ZeroFrame {
             id: song.id,
             track_number: song.track_number,
             filename: song.filename,
+            path: isEdit ? song.path : user_path,
             title: song.title,
             album: song.album,
             artist: song.artist,
-            decade: song.decade,
+            year: song.year,
             art: song.art,
             date_added: Date.now(),
             is_edit: isEdit
@@ -502,7 +506,7 @@ class ZeroApp extends ZeroFrame {
       });
     }
 
-    // Call calback function
+    // Call callback function
     console.log("Calling callback")
     if (f !== null && typeof f === "function") { f(); }
 
@@ -548,15 +552,15 @@ class ZeroApp extends ZeroFrame {
   removeDownload(song) {
     // Delete a downloaded song
     console.log(song)
-    var songFilepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename;
+    var songFilepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
     return this.cmdp("fileDelete", { "inner_path": songFilepath });
   }
 
   deleteSong(song) {
     // Remove from user's data.json then delete song file and its piecemap
-    var data_inner_path = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-    var content_inner_path = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-    var songFilepath = "merged-ZeroLSTN2/" + song.site + "/data/users/" + app.siteInfo.auth_address + "/" + song.filename;
+    var data_inner_path = "merged-ZeroLSTN2/" + song.path + "/data.json";
+    var content_inner_path = "merged-ZeroLSTN2/" + song.path + "/content.json";
+    var songFilepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
     var pieceMapFilepath = songFilepath + ".piecemap.msgpack";
 
     console.log("Deleting song:", song.title)
@@ -625,163 +629,6 @@ class ZeroApp extends ZeroFrame {
         }
       })
 
-  }
-
-  // -------------------------------------------------- //
-  // ------------ Installing/Editing Genres ----------- //
-
-  // Adds a new genre to the index
-  installGenre(genreName, genreAddress) {
-    console.log("Creating: " + genreAddress);
-    var data_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-    var content_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-    this.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
-      if (!data) {
-        console.log("Creating default data.json...");
-        data = {};
-      } else {
-        data = JSON.parse(data);
-      }
-
-      // Create "genres" object if it doesn't exist
-      if (!data.genres) {
-        data.genres = {};
-      }
-
-      // Add genre name and address to the index
-      data.genres[genreAddress] = {
-        name: genreName,
-        date_added: Date.now()
-      }
-
-      // Write (and Sign and Publish)
-      var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
-      this.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
-        if (res === "ok") {
-          this.cmd("siteSign", { "inner_path": content_inner_path }, () => {
-            this.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false }, (res) => {
-              // Tell genre index to update
-              app.$emit("genreIndexUpdate");
-            });
-          });
-        } else {
-          this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
-        }
-      });
-    });
-  }
-
-  // Edits a genre in the index and changes content in the mergerZite
-  editGenre(genreName, genreAddress) {
-    console.log("editing: " + genreName + "/" + genreAddress)
-    var index_data_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-    var index_content_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-    var genre_content_path = "merged-ZeroLSTN2/" + genreAddress + "/content.json";
-    console.log("[genre_path]", genre_content_path)
-
-    return self.cmdp("fileGet", { "inner_path": genre_content_path, "required": false })
-      .then((content) => {
-        // Return if there's no content
-        console.log("[content]", content)
-        if (!content) {
-          return { then: function() {} };  // Break the promise chain
-        } else {
-          content = JSON.parse(content);
-        }
-
-        // Set the new name of the genre
-        content.title = genreName;
-
-        // Write the new genre's content.json
-        var json_raw = unescape(encodeURIComponent(JSON.stringify(content, undefined, "\t")));
-        return self.cmdp("fileWrite", [genre_content_path, btoa(json_raw)])
-          .then((res) => {
-            if (res !== "ok") {
-              this.cmd("wrapperNotification", ["error", "File write error: " + JSON.stringify(res)]);
-              return { then: function() {} };
-            }
-
-            // Write to the index
-            return self.cmdp("fileGet", { "inner_path": index_data_inner_path, "required": false })
-              .then((data) => {
-                // Return if there's no data file
-                if (!data) {
-                  return { then: function() {} };
-                } else {
-                  data = JSON.parse(data);
-                }
-
-                // Change the genre's attributes in the index
-                data.genres[genreAddress].name = genreName;
-
-                // Write back to the index
-                var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
-                return self.cmdp("fileWrite", [index_data_inner_path, btoa(json_raw)]);
-              }).then((res) => {
-                if (res !== "ok") {
-                  return { then: function() {} };
-                }
-
-                // Sign/Publish genre's content.json
-                return self.cmdp("siteSign", { privatekey: "stored", "inner_path": genre_content_path })
-                  .then((res) => {
-                    if (res !== "ok") {
-                      return { then: function() {} };
-                    }
-
-                    return self.cmd("sitePublish", { "inner_path": genre_content_path, "sign": false })
-                  }).then((res) => {
-                    // Sign/Publish the index entry
-                    return self.cmdp("siteSign", { "inner_path": index_content_inner_path })
-                      .then((res) => {
-                        if (res !== "ok") {
-                          return { then: function() {} };
-                        }
-
-                        return self.cmd("sitePublish", { "inner_path": index_content_inner_path, "sign": false });
-                      })
-                  });
-              });
-          });
-      });
-  }
-
-  // Removes an existing genre from the index
-  removeGenre(genreAddress) {
-    console.log("Removing: " + genreAddress);
-    var data_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
-    var content_inner_path = "merged-ZeroLSTN2/" + indexAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-    console.log(data_inner_path)
-
-    return self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
-      .then((data) => {
-        // Return if there's no data file
-        if (!data) {
-          return { then: function() {} };  // Break the promise chain
-        } else {
-          data = JSON.parse(data);
-        }
-
-        console.log(data)
-
-        // If there are no genres here, just return
-        if (!data.genres) {
-          return { then: function() {} };
-        }
-
-        // Remove genre from the index
-        delete data.genres[genreAddress];
-
-        console.log(data)
-
-        // Write (and Sign and Publish)
-        var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
-        return self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)])
-      }).then((res) => {
-        return self.cmdp("siteSign", { "inner_path": content_inner_path })
-      }).then((res) => {
-        return self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false })
-      });
   }
 
   // -------------------------------------------------- //
@@ -1007,7 +854,7 @@ class ZeroApp extends ZeroFrame {
     return new Promise((resolve, reject) => {
       songs.forEach(function(song) {
         // Get the info for each song
-        song.info = page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename]);
+        song.info = page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + song.path + "/" + song.filename]);
       });
 
       // Return the list of songs
@@ -1017,11 +864,15 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given artist's album
   getSongsInAlbum(albumName, artistName) {
+    // LEFT JOIN json USING (json_id)
     var query = `
-        SELECT * FROM songs
+        SELECT songs.* FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
+        AND songs.id = aux.id
+        AND songs.album = "${albumName}"
+        AND songs.artist = "${artistName}"
         LEFT JOIN json USING (json_id)
-        WHERE album="${albumName}"
-        AND artist="${artistName}"
         ORDER BY track_number
         `;
 
@@ -1030,8 +881,6 @@ class ZeroApp extends ZeroFrame {
         return self.getInfoForSongs(songs);
       })
   }
-
-  // TODO: Sort by song number
 
   // -------------------------------------------------- //
   // ------------- Play Queue Operations -------------- //
@@ -1080,7 +929,7 @@ class ZeroApp extends ZeroFrame {
 
   // Play a given song object
   playSong(song) {
-    var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename;
+    var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
 
     // Play the song
     this.playSongFile(filepath);
