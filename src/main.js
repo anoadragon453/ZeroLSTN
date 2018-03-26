@@ -269,6 +269,7 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Store uploaded album art on a genre
+  // TODO: This doesn't work apparently
   uploadImage(file, file_data, genreAddress, existingImageToDelete=null, doSignAndPublish=false) {
     var data_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
 
@@ -748,6 +749,7 @@ class ZeroApp extends ZeroFrame {
     LEFT JOIN json USING (json_id)
     WHERE id = ${songID}
     AND date_added < time('now')
+    ORDER BY date_added DESC
     LIMIT 1
     `;
 
@@ -1211,5 +1213,6 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "album/:artist/:album", component: Album },
   { route: "nowplaying", component: NowPlaying },
   { route: "search", component: Search },
+  { route: "search/:params", component: Search },
   { route: "", component: Home }
 ]);
