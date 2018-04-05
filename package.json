@@ -1,5 +1,5 @@
 {
-  "name": "zero-lstn",
+  "name": "zerolstn",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -39,9 +39,7 @@
     "js-sha512": "^0.7.1",
     "jsmediatags": "^3.8.1",
     "markdown-it": "^8.4.0",
-    "materialize-css": "^1.0.0-alpha.3",
-    "medium-editor": "^5.23.3",
-    "moment": "^2.20.1",
+    "materialize-css": "^1.0.0-beta",
     "node-sass": "^4.7.2",
     "sanitize-html": "^1.16.3",
     "vue": "^2.5.13",

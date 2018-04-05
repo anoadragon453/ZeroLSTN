@@ -25,9 +25,6 @@
     },
     props: ["playQueueObj", "queueIndex"], // TODO: Move to store
     name: "home",
-    data: () => {},
-    mounted: function() {
-      console.log('song count', page.store.state.count);
-    }
+    data: () => {}
   }
 </script>

@@ -10,7 +10,7 @@
             <div class="card-content">
               <div class="input-field">
                 <i class="material-icons prefix black-text">search</i>
-                <input placeholder="Search Artists, Albums, Songs..." id="searchField" type="text" class="">
+                <input placeholder="Search Artists, Albums, Songs..." id="searchField" type="text" class="" autofocus>
               </div>
             </div>
             <div class="card-tabs">
@@ -143,6 +143,13 @@
           self.searchStoppedTyping(keystoppedInput.value, event.key);
         }, keystoppedDelay);
       }, false);
+
+      // Grab search string from URL bar if present
+      if (Router.currentParams["searchText"]) {
+        var urlSearchText = decodeURI(Router.currentParams["searchText"]);
+        document.getElementById("searchField").value = urlSearchText;
+        this.search(urlSearchText);
+      }
     },
     methods: {
       searchStoppedTyping: function(searchText, key) {
@@ -207,7 +214,21 @@
         }
 
         // Conduct the search
-        console.log("Searching: ", searchText);
+        console.log("Searching:", searchText);
+        /*
+        console.log(document.getElementById("base").href)
+        document.getElementById("base").href = document.location.href.replace("search", "peach")
+        console.log(document.getElementById("base").href)
+        */
+
+        // Set the URL to contain the search
+        /*
+        if (document.location.href.substring(-1) !== "/") { document.location.href += "/"; } // Add a '/' to end of URL if not already
+        var bla = window.location.href.replace(/(.*\/search\/)(.*)$/, function(str, prefix, existingTerm) {
+          console.log("Changing to", prefix + searchText)
+          return prefix + searchText;
+        });
+        */
 
         // Keep track of last search term
         this.lastSearch = searchText;

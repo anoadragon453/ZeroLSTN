@@ -31,7 +31,7 @@
         <div class="row"></div>
         <ul v-if="decades.length != 0" class="collection with-header">
           <li class="collection-header"><h4>Browse by Decade</h4></li>
-          <a href="#" v-for="(decade, address) in decades" class="collection-item">
+          <a href="#" v-for="(decade, address) in decades" class="collection-item" @click.prevent="goToDecade(decade.name)">
             {{ decade.name }}
           </a>
         </ul>
@@ -140,6 +140,10 @@
       goToAlbum: function(album) {
         // Go to the specified album page
         Router.navigate('/album/' + (album.artist !== '' ? album.artist : 'Blank') + '/' + (album.album !== '' ? album.album : 'Blank'));
+      },
+      goToDecade: function(decade) {
+        // Search by chosen decade
+        Router.navigate('/search/year:' + encodeURIComponent(decade));
       }
     }
   }

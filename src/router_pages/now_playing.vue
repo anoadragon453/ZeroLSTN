@@ -21,12 +21,12 @@
 
 <script>
   var Router = require("../libs/router.js");
-  
+
   // All the Vue components that make up the homepage
   var AlbumArt = require("../vue_components/album_art.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
   var SongDetails = require("../vue_components/song_details.vue");
-  
+
   module.exports = {
     components: {
       albumArt: AlbumArt,

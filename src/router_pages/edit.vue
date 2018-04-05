@@ -31,6 +31,13 @@
         <label id="artist-label" for="artist">Artist</label>
       </div>
     </div>
+    <div class="row">
+      <div class="input-field col s12">
+        <label id="genres-label">Genres</label>
+        <br>
+        <div id="genres" class="chips validate"></div>
+      </div>
+    </div>
     <div id="albumArtRow" style="display: none" class="row">
       <div class="col s12 m7 l7">
         <!-- Album art -->
@@ -75,6 +82,7 @@
     data: () => {
       return {
         song: {},
+        genres: null,
         uploadingFile: false
       }
     },
@@ -85,6 +93,26 @@
       if (Router.currentParams['index']) {
         // Make a deep copy so v-model doesn't change the state
         self.song = Object.assign({}, page.store.state.newSongs[Router.currentParams['index']].song);
+        page.getAllGenres().then((allGenresResult) => {
+          // Organize all known genres for autocompletion
+          var allGenres = {}
+          for (var i in allGenresResult) {
+            allGenres[allGenresResult[i].genre] = null
+          }
+
+          // Get autodetected genre from song tags if present
+          var genres = self.song.genre ? [{tag: self.song.genre}] : [];
+
+          // Initialize autocompletion of genres
+          var elem = document.querySelector('.chips');
+          self.genres = M.Chips.init(elem, {
+            data: genres,
+            autocompleteOptions: {
+              data: allGenres
+            },
+            placeholder: "Genres"
+          });
+        });
         self.presentSongData();
       } else {
         // Get already uploaded song info from the DB
@@ -96,6 +124,35 @@
 
           self.song = song;
           self.presentSongData();
+        });
+
+        // Retrieve genres
+        page.getGenresFromSong(Router.currentParams['songID']).then((genresResult) => {
+          console.log("[songGenres]", genresResult)
+
+          // Organize genres returned from DB for display
+          self.song.genres = [];
+          for (var i in genresResult) {
+            self.song.genres.push({"tag": genresResult[i].genre});
+          }
+
+          page.getAllGenres().then((allGenresResult) => {
+            // Organize all known genres for autocompletion
+            var allGenres = {}
+            for (var i in allGenresResult) {
+              allGenres[allGenresResult[i].genre] = null
+            }
+
+            // Initialize autocompletion of genres
+            var elem = document.querySelector('.chips');
+            self.genres = M.Chips.init(elem, {
+              data: self.song.genres,
+              autocompleteOptions: {
+                data: allGenres
+              },
+              placeholder: "Genres"
+            });
+          });
         });
       }
     },
@@ -130,12 +187,15 @@
       },
       saveClicked: function() {
         // Save song details
+        // Save genre information
+        this.song.genres = this.genres.chipsData;
 
         // If we're editing a non-uploaded-yet song, save details to the store
         if (Router.currentParams['index']) {
           page.store.commit('saveSong', {"song": this.song, "index": parseInt(Router.currentParams['index'])});
           history.back();
         } else {
+          console.log("Uploading edit of song:", this.song)
           // Otherwise, edit the already uploaded song
           page.createSongObjects([this.song], true, function() {
             // Head back to the previous page
@@ -185,10 +245,6 @@
             return;
           }
 
-          console.log("Uploading " + file.name);
-          console.log(file);
-
-
           // "Upload" the file to the user's 'artwork' folder
 
           // Create an object to read the file's data
@@ -197,7 +253,14 @@
           // Set what happens once file reading is complete
           reader.onload = function(event) {
             var filedata = btoa(event.target.result);
-            var mergerAddress = Router.currentParams["mergerAddress"];
+            var mergerAddress = Router.currentParams["index"] ? page.getAddressFromYear(self.song.year) : self.song.site;
+
+            if (Router.currentParams["index"]) {
+              // This is a yet-to-be-uploaded song, just set the art property to the filedata
+              // We'l actually upload this later
+              self.song.art = "data:image/jpeg;base64," + filedata;
+              return;
+            }
 
             // Copy and set image as optional file
             page.uploadImage(file, filedata, mergerAddress)
@@ -207,7 +270,7 @@
               document.getElementById("albumArtRow").style.display = "";
 
               // Attach to song
-              self.song = uploadURL;
+              self.song.art = uploadURL;
 
               // Allow uploading further files
               self.uploadingFile = false;

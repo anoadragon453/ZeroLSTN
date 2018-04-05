@@ -269,28 +269,26 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Store uploaded album art on a genre
-  // TODO: This doesn't work apparently
-  uploadImage(file, file_data, genreAddress, existingImageToDelete=null, doSignAndPublish=false) {
-    var data_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+  uploadImage(file, file_data, mergerAddress, existingImageToDelete=null, doSignAndPublish=false) {
+    var data_inner_path = "merged-ZeroLSTN2/" + mergerAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
 
     // Calculate hash of image file. Save only first 64 chars
     var hash = sha512(file_data).substring(0,64);
 
-    // Check if image already exists in this genre
+    // Check if image already exists on this merger
     // If so return filepath to it
     var query = `
         SELECT image_path FROM artwork as art
         LEFT JOIN json as js
         USING (json_id)
-        WHERE art.hash="${hash}" AND js.site="${genreAddress}"
+        WHERE art.hash="${hash}" AND js.site="${mergerAddress}"
         `;
 
     // Execute query
     return page.cmdp("dbQuery", [query])
       .then((art) => {
-        console.log(art);
         if (art.length > 0) {
-          // Return existing image in this genre
+          // Return existing image on this merger
           console.log("Returning existing artwork path");
           return self.newPromise(art[0].image_path)
         }
@@ -299,6 +297,7 @@ class ZeroApp extends ZeroFrame {
         return page.cmdp("fileGet", { "inner_path": data_inner_path, "required": false })
           .then((data) => {
             if (!data) {
+              page.cmdp("wrapperNotification", ["error", "Unable to write artwork metadata. Try logging in again. " + JSON.stringify(res)]);
               console.log("Unable to read", data_inner_path)
               return;
             }
@@ -324,7 +323,7 @@ class ZeroApp extends ZeroFrame {
             var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
 
             // Get inner path of image file
-            var filepath = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + filename;
+            var filepath = "merged-ZeroLSTN2/" + mergerAddress + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + filename;
 
             data["artwork"][hash] = {
               "image_path": filepath,
@@ -346,7 +345,7 @@ class ZeroApp extends ZeroFrame {
                         // Return the resulting image URL as a promise
                         return self.newPromise(filepath);
                       } else {
-                        page.cmdp("wrapperNotification", ["error", "Unable to write artwork metadata: " + JSON.stringify(res)]);
+                        page.cmdp("wrapperNotification", ["error", "Unable to write artwork metadata. Try logging in again. " + JSON.stringify(res)]);
                       }
                     });
                 } else {
@@ -440,7 +439,8 @@ class ZeroApp extends ZeroFrame {
       });
   }
 
-  // Edit existing song stored in user's data.json. Does so by creating a new song with same ID, but updated values
+  // Create new songs or edit existing ones stored in user's data.json.
+  // If edit, we creating a new song with same ID, but with updated values
   createSongObjects(songs, isEdit, f = null) {
     console.log("Got songs:", songs)
     // Keep track of song's decade addresses
@@ -473,20 +473,21 @@ class ZeroApp extends ZeroFrame {
         // Parse user's data into JS object if exists
         data = (data ? JSON.parse(data) : {});
 
-        // If no songs uploaded yet, create empty array
+        // If no songs or genres uploaded yet, create empty array
         if (!data["songs"]) data["songs"] = [];
+        if (!data["genres"]) data["genres"] = [];
 
         // Push new song values
         songsInDecade.forEach(function(song) {
           // Create a new songID if it doesn't exist
-          if(song.id == null) { song.id = Date.now(); }
+          if(song.id == null) { song.id = Date.now().toString(); }
 
           // Store album art on disk if necessary
           song.art = self.saveAlbumArt(song, decadeAddress);
 
           // Append new song information
           data["songs"].push({
-            id: song.id,
+            id: song.id.toString(),
             track_number: song.track_number,
             filename: song.filename,
             path: isEdit ? song.path : user_path,
@@ -498,6 +499,26 @@ class ZeroApp extends ZeroFrame {
             date_added: Date.now(),
             is_edit: isEdit
           });
+
+
+          // Push specified genres for this song
+          var genreDate = Date.now() // same date ID for all genre entries
+          if (song.genres) {
+            for (var i in song.genres) {
+              data["genres"].push({
+                song_id: song.id.toString(),
+                genre: song.genres[i].tag,
+                date_added: genreDate
+              });
+            }
+          } else if (song.genre){
+            // Push single genre if present
+            data["genres"].push({
+              song_id: song.id.toString(),
+              genre: song.genre,
+              date_added: genreDate
+            });
+          }
         });
 
         // Write values back to JSON string and the data.json
@@ -508,7 +529,6 @@ class ZeroApp extends ZeroFrame {
     }
 
     // Call callback function
-    console.log("Calling callback")
     if (f !== null && typeof f === "function") { f(); }
 
     // Sign and publish merger site(s)
@@ -525,7 +545,7 @@ class ZeroApp extends ZeroFrame {
   // song object to the saved filename
   // TODO: Add to artwork array. Deduplication of image with hash
   saveAlbumArt(song, address) {
-    // Check if album art is current base64
+    // Check if album art is currently base64
     if (!song.art.startsWith("data:")) {
       // If not, then no changes necessary
       return song.art;
@@ -636,33 +656,71 @@ class ZeroApp extends ZeroFrame {
   // ----- Retrieving Song/Album/Artist/Genre info ---- //
 
   search(searchTerm, type) {
+
+    // Check for any special keywords in the search string
+    // TODO: Have a randomize search button
+    let extraParams = "";
+    let yearKeywordValueIndex = searchTerm.indexOf("year:");
+    if (yearKeywordValueIndex != -1) {
+      // Only search for songs in given year name/address
+
+      // Find the end of the keyword value
+      var end = searchTerm.indexOf(" ", yearKeywordValueIndex) == -1 ? searchTerm.length - 1 : searchTerm.indexOf(" ", yearKeywordValueIndex);
+
+      // Deduce the year keyword value: '80s' or an exact address
+      var yearKeywordValue = searchTerm.substring(yearKeywordValueIndex + 5, end);
+
+      // Check to see if keyword value is in decade address/name
+      for (var i in app.decadeAddresses) {
+        var decade = app.decadeAddresses[i];
+        if (decade.name.indexOf(yearKeywordValue) != -1 || decade.address == yearKeywordValue) {
+          // If so, only search for songs within this decade
+          extraParams += 'AND site = "' + decade.address + '"';
+          break;
+        }
+      }
+
+      // Remove the keyword value from the actual search
+      searchTerm = searchTerm.substring(0, yearKeywordValueIndex - 1) + searchTerm.substring(end + 1);
+    }
+
     var query = "";
     switch (type) {
       case 'song':
         query = `
-        SELECT DISTINCT * FROM songs
+        SELECT DISTINCT songs.* FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
-        WHERE title LIKE "%` + searchTerm + `%"
+        WHERE title LIKE "%${searchTerm}%"
+        ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
         break;
       case 'album':
         query = `
-        SELECT DISTINCT album, artist FROM songs
+        SELECT DISTINCT songs.album FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
-        WHERE album LIKE "%` + searchTerm + `%"
-        ORDER BY album COLLATE NOCASE
+        WHERE album LIKE "%${searchTerm}%"
+        ${extraParams}
+        ORDER BY title COLLATE NOCASE
         `;
         break;
       case 'artist':
         query = `
-        SELECT DISTINCT artist FROM songs
+        SELECT DISTINCT songs.artist FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
-        WHERE artist LIKE "%` + searchTerm + `%"
-        ORDER BY artist COLLATE NOCASE
+        WHERE artist LIKE "%${searchTerm}%"
+        ${extraParams}
+        ORDER BY title COLLATE NOCASE
         `;
         break;
     }
+    console.log(query)
 
     // Execute search query and return results
     return this.cmdp("dbQuery", [query]);
@@ -697,22 +755,43 @@ class ZeroApp extends ZeroFrame {
   // Get name of a genre from its address
   getGenreNameFromAddress(address) {
     var query = `
-        SELECT name FROM genres
-        WHERE address='${address}'
-        LIMIT 1
-        `
+      SELECT name FROM genres
+      WHERE address='${address}'
+      LIMIT 1
+      `;
 
-    return this.cmdp("dbQuery", [query])
+    return this.cmdp("dbQuery", [query]);
+  }
+
+  // Get all genres from a given song
+  getGenresFromSong(songID) {
+    var query = `
+      SELECT genres.* FROM
+      (SELECT MAX(date_added) AS maxDate, song_id FROM genres GROUP BY song_id) AS aux
+      INNER JOIN genres ON genres.date_added = aux.maxDate
+      AND genres.song_id = '${songID}'
+    `;
+
+    return this.cmdp("dbQuery", [query]);
+  }
+
+  // Returns all currently known genres
+  getAllGenres() {
+    var query = `
+      SELECT DISTINCT genre FROM genres
+    `
+
+    return this.cmdp("dbQuery", [query]);
   }
 
   // Return list of a specific user's genres from the Genre Index
   getUserGenresFromIndex(authAddress) {
     var query = `
-        SELECT * FROM genres
-        LEFT JOIN json USING (json_id)
-        WHERE directory='data/users/${authAddress}'
-        ORDER BY name COLLATE NOCASE
-        `;
+      SELECT * FROM genres
+      LEFT JOIN json USING (json_id)
+      WHERE directory='data/users/${authAddress}'
+      ORDER BY name COLLATE NOCASE
+      `;
 
     // Convert genre array to map
     return this.cmdp("dbQuery", [query])
@@ -753,6 +832,7 @@ class ZeroApp extends ZeroFrame {
     LIMIT 1
     `;
 
+    // Grab first value from returned array
     return this.cmdp("dbQuery", [query])
       .then((results) => {
         return new Promise((resolve, reject) => {
@@ -767,10 +847,29 @@ class ZeroApp extends ZeroFrame {
     SELECT * FROM songs
     LEFT JOIN json USING (json_id)
     WHERE directory="data/users/${userAuthAddress}"
+    AND is_edit = 0
     ORDER BY album COLLATE NOCASE, track_number
     `;
 
     return this.cmdp("dbQuery", [query]);
+  }
+
+  // Checks if a song already exists in the database
+  songExists(song) {
+    var self = this;
+
+    var query = `
+    SELECT COUNT (*) FROM songs
+    WHERE title="${song.title}"
+    AND album="${song.album}"
+    AND artist="${song.artist}"
+    LIMIT 1
+    `;
+
+    this.cmd("dbQuery", [query], (res) => {
+      // Return true if there is at least one hash already in the DB
+      return res[0]["COUNT (*)"] ? true : false;
+    });
   }
 
   // Returns number of songs in a given genre
@@ -866,7 +965,6 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given artist's album
   getSongsInAlbum(albumName, artistName) {
-    // LEFT JOIN json USING (json_id)
     var query = `
         SELECT songs.* FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -895,6 +993,28 @@ class ZeroApp extends ZeroFrame {
       app.audioObject.load();
     } else { // Otherwise make a new audio object
       app.audioObject = new Audio(filepath);
+
+      // Update footer with new song duration once metadata has been loaded
+      app.audioObject.addEventListener('loadedmetadata', function() {
+        console.log("Updating with duration: " + app.audioObject.duration);
+        app.$emit("updateSongDuration", app.audioObject.duration);
+      });
+
+      // Add event listener for when song finishes, so we can either move to the next song,
+      // or stop the playback if it's the last song in the queue
+      app.audioObject.addEventListener('ended', function() {
+        // Don't fire this event if we're currently going to the next song
+        // due to a previous song ending.
+        if (app.goingToNextSong) {
+          return;
+        } else {
+          app.goingToNextSong = true;
+          setTimeout(() => {
+            app.goingToNextSong = false;
+          }, 1000);
+        }
+        self.songEnded();
+      });
     }
 
     // Set the audio source's volume
@@ -938,28 +1058,6 @@ class ZeroApp extends ZeroFrame {
 
     // Allow Vue components to access the current playing song
     app.currentSong = song;
-
-    // Update footer with new song duration once metadata has been loaded
-    app.audioObject.addEventListener('loadedmetadata', function() {
-      console.log("Updating with duration: " + app.audioObject.duration);
-      app.$emit("updateSongDuration", app.audioObject.duration);
-    });
-
-    // Add event listener for when song finishes, so we can either move to the next song,
-    // or stop the playback if it's the last song in the queue
-    app.audioObject.addEventListener('ended', function() {
-      // Don't fire this event if we're currently going to the next song
-      // due to a previous song ending.
-      if (app.goingToNextSong) {
-        return;
-      } else {
-        app.goingToNextSong = true;
-        setTimeout(() => {
-          app.goingToNextSong = false;
-        }, 1000);
-      }
-      self.songEnded();
-    });
   }
 
   // Called when the current song ends
@@ -1095,12 +1193,19 @@ class ZeroApp extends ZeroFrame {
     // if so, just skip over it. Prefetch next song to actually
     // check seeder number and to speed up playback.
 
-    // Move the index forward
-    app.queueIndex++;
-    if(app.queueIndex >= app.playQueue.length) {
-      // We've reached the end of the queue, stop playing
-      this.stopPlaying();
-      return;
+    // TODO: Prevent repeating songs when shuffling
+    // Create array of random numbers on shuffle click
+    // from 1 - queue length and run through them
+    if (page.store.state.shuffle) {
+      app.queueIndex = page.randomIntFromInterval(0, app.playQueue.length);
+    } else {
+      // Move the index forward
+      app.queueIndex++;
+      if(app.queueIndex >= app.playQueue.length) {
+        // We've reached the end of the queue, stop playing
+        this.stopPlaying();
+        return;
+      }
     }
 
     // Play whatever song is at that index
@@ -1117,6 +1222,16 @@ class ZeroApp extends ZeroFrame {
 
     // Play whatever song is at that index
     this.playSongAtQueueIndex(app.queueIndex);
+  }
+
+  // Switched between looping a list or song
+  loop() {
+    page.store.commit("toggleLoop");
+  }
+
+  // Toggle shuffling song queue
+  shuffle() {
+    page.store.commit("toggleShuffle");
   }
 
   // Set the current audio volume
@@ -1158,6 +1273,10 @@ class ZeroApp extends ZeroFrame {
     // Song's year is greater than latest decade, return latest
     return app.decadeAddresses[app.decadeAddresses.length - 1].address;
   }
+
+  randomIntFromInterval(min, max) {
+    return Math.floor(Math.random()*(max-min+1)+min);
+  }
 }
 
 page = new ZeroApp();
@@ -1168,7 +1287,9 @@ self = page;
 const store = new Vuex.Store({
   state: {
     newSongs: [], // Used to temporarily store songs that haven't been published yet
-    downloadState: {notdownloaded: 0, downloaded: 1, unknown: -1} // enum for download icons
+    downloadState: {notdownloaded: 0, downloaded: 1, unknown: -1}, // enum for download icons
+    loop: 0, // 0: not looping, 1: looping playqueue, 2: looping song
+    shuffle: false
   },
   mutations: {
     addNewSongs (state, newSongs) {
@@ -1188,9 +1309,17 @@ const store = new Vuex.Store({
       // Clear all new songs
       // Done after uploading complete
       state.newSongs = [];
+    },
+    toggleShuffle (state) {
+      // Toggle shuffle state
+      state.shuffle = !state.shuffle;
+    },
+    toggleLoop (state) {
+      // Increment loop state
+      state.loop = (state.loop + 1) % 3;
     }
   }
-})
+});
 
 page.store = store;
 
@@ -1207,12 +1336,11 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "uploads", component: Uploads },
   { route: "playqueue", component: PlayQueue },
   { route: "edit/store/:index", component: Edit },
-  { route: "edit/:mergerAddress/:songID", component: Edit },
-  { route: "addGenre/:mergerName/:mergerAddress", component: Home },
+  { route: "edit/:songID", component: Edit },
   { route: "artist/:artist", component: Artist },
   { route: "album/:artist/:album", component: Album },
   { route: "nowplaying", component: NowPlaying },
+  { route: "search/:searchText", component: Search },
   { route: "search", component: Search },
-  { route: "search/:params", component: Search },
   { route: "", component: Home }
 ]);

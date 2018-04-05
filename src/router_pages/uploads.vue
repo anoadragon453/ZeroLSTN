@@ -32,7 +32,7 @@
         <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>
           Upload<span v-if="newSongs && newSongs.length != 0"> more</span> Songs
         </a>
-        <a id="publishsongs" v-if="newSongs && newSongs.length != 0" @click.prevent="publishSongs()"
+        <a id="publishsongs" v-if="newSongs && newSongs.length != 0" @click.prevent="checkForDuplicates()"
           :class="{ 'disabled' : publishing }" style="margin-right: 1em" class="btn waves-effect waves-light right">
           <i class="material-icons left">cloud_upload</i>
           Publish Songs
@@ -70,10 +70,9 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  var SongItem = require("../vue_components/song_item.vue");
+  var Router = require('../libs/router.js');
+  var SongItem = require('../vue_components/song_item.vue');
 
-  // Import JSMediaTags
   var jsmediatags = require('jsmediatags');
 
   module.exports = {
@@ -140,7 +139,7 @@
         // Listen for when a file has been uploaded
         fileUploadButton.addEventListener('change', function() {
           // Prevent this method from running twice on a single file upload
-          if(self.muploadingFile) {
+          if(self.uploadingFile) {
             return;
           }
           self.uploadingFile = true;
@@ -195,6 +194,10 @@
         song['album'] = tags.album ? tags.album : '';
         song['artist'] = tags.artist ? tags.artist : '';
         song['year'] = tags.year ? tags.year : '';
+        song['genre'] = tags.genre ? tags.genre : '';
+
+        // Convert year to correct format
+        song['year'] = (new Date(song['year'])).getFullYear();
 
         // Transform "x/y" -> "x" and "0x" -> "x"
         if (tags.track) {
@@ -220,16 +223,44 @@
         return {"file": file, "song": song};
       },
       editSong: function(song) {
-        Router.navigate('edit/'+song.site+"/"+song.id);
+        Router.navigate('edit/'+song.id);
       },
       editNewSong: function(songIndex) {
         // Head to edit page with index of new song
         Router.navigate('/edit/store/' + songIndex);
       },
+      checkForDuplicates: function() {
+        // See if any songs have already been uploaded
+        var duplicateSongs = 0;
+
+        // Read the file's contents for hashing
+        for (var i = 0; i < this.newSongs.length;) {
+          if (page.songExists(this.newSongs[i])) {
+            // Prevent the new song from being published
+            this.newSongs.splice(i, 1);
+
+            // Update the duplicate song counter
+            duplicateSongs++;
+          } else {
+            i++;
+          }
+        }
+
+        // TODO: Change to toast
+        if (duplicateSongs > 0) {
+          alert(duplicateSongs + " were duplicate songs");
+        }
+        this.publishSongs();
+      },
       publishSongs: function() {
         var self = this;
         var totalSongs = this.newSongs.length;
         var publishCount = 0;
+
+        // All songs might've been duplicates. In that case, just return
+        if (this.newSongs.length == 0) {
+          return;
+        }
 
         var publishButton = document.getElementById("publishsongs");
         publishButton.innerHTML = "Publishing...";
@@ -272,7 +303,6 @@
         var songObjs = self.newSongs.map(a => a.song);
 
         // Publish the new list of songs in the user's data.json
-        console.log('Publishing songs:', songObjs)
         page.createSongObjects(songObjs, false);
       },
       // Wrapper function for jsmediatags. We need to link the file object to

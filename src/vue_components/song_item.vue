@@ -7,7 +7,7 @@
     <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
       - {{ song.artist }} - {{ song.album }}
       <br>
-      Genre: {{ song.year }}
+      Year: {{ song.year }}
     </p>
     <a class="secondary-content s2">
       <popper trigger="hover" :options="{placement: 'top'}">
@@ -42,7 +42,8 @@
     name: "songitem",
     mounted: function() {
       var self = this;
-      page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + this.song.site + "/" + this.song.directory + "/" + this.song.filename])
+      console.log("Getting info for song")
+      page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + this.song.path + "/" + this.song.filename])
       .then((info) => {
         if (!info) {
           return null;
@@ -67,7 +68,7 @@
     methods: {
       editSong: function(song) {
         // Navigate to edit page with correct data
-        Router.navigate('edit/'+song.site+"/"+song.id);
+        Router.navigate('edit/'+song.id);
       },
       playSong: function(song) {
         // Immediately play song
