@@ -1,5 +1,6 @@
 <template>
   <div id="artist">
+    <addtoplaylistmodal></addtoplaylistmodal>
     <div class="row">
       <div class="col s1 m1 l4 hide-on-med-and-down">
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
@@ -49,12 +50,14 @@
   var Popper = require("vue-popperjs");
   var SongItem = require("../vue_components/song_item.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
+  var addToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
 
   module.exports = {
     components: {
       songitem: SongItem,
       playQueue: PlayQueue,
-      popper: Popper
+      popper: Popper,
+      addtoplaylistmodal: addToPlaylistModal
     },
     props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
     name: "artist",
@@ -89,6 +92,8 @@
         Router.navigate('/album/'+this.artist+'/'+album);
       },
       playArtist: function() {
+        var self = this;
+
         // Queue songs and play the first one of the first album
         var queueLength = page.getQueueLength();
         var queueIndex = page.getQueueIndex();
@@ -111,18 +116,10 @@
         });
       },
       queueArtist: function() {
-        // Queue every album by this artist
         var self = this;
-        page.getAlbumsByArtist(this.artist)
-        .then((albums) => {
-          var songs = [];
-          albums.forEach((album) => {
-            page.getSongsInAlbum(album, self.artist)
-            .then((songs) => {
-              page.queueSongs(songs);
-            });
-          });
-        });
+
+        // Queue every album and song by this artist
+        page.bus.$emit("addToPlaylistArtist", this.artist);
       },
       downloadArtist: function() {
         var self = this;

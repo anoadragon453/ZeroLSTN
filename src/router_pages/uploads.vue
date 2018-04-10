@@ -6,14 +6,20 @@
         <div class="row">
           <h4>Upload Songs</h4>
         </div>
-        <div v-if="!uploadingFile" class="row center">
-          <div @click.prevent="uploadClicked()" class="upload-box">
+        <div v-if="!uploadingFile" class="row no-margin-bottom">
+          <div @click.prevent="uploadClicked()" class="upload-box center">
             <p class="valign-center center grey-text text-darken-2">
               Drag a song or folder here<br>
               Or click to select
             </p>
           </div>
           <input type="file" id="fileupload" style="display: none" webkitdirectory directory multiple>
+          <p>
+            <label>
+              <input type="checkbox" class="filled-in" checked="checked" v-model="doNotOverwrite"/>
+              <span>Do not overwrite existing songs.</span>
+            </label>
+          </p>
         </div>
         <div v-else class="row center">
           <p>Reading song info...</p>
@@ -86,6 +92,7 @@
         uploadModal: null,
         songs: null,
         newSongs: null,
+        doNotOverwrite: true,
         uploadingFile: false,
         publishing: false
       }
@@ -194,7 +201,7 @@
         song['album'] = tags.album ? tags.album : '';
         song['artist'] = tags.artist ? tags.artist : '';
         song['year'] = tags.year ? tags.year : '';
-        song['genre'] = tags.genre ? tags.genre : '';
+        song['genre'] = tags.genre && tags.genre != "Unknown Genre" ? tags.genre : '';
 
         // Convert year to correct format
         song['year'] = (new Date(song['year'])).getFullYear();
@@ -288,6 +295,9 @@
                 var songObjs = self.newSongs.map(a => a.song);
                 self.songs.push.apply(self.songs, songObjs);
 
+                // Publish the new list of songs in the user's data.json
+                page.createSongObjects(songObjs, false);
+
                 // Clear newSongs arrays
                 self.newSongs = [];
                 page.store.commit('clearNewSongs');
@@ -298,12 +308,6 @@
               }
           });
         }
-
-        // Extract songs from newSongs array
-        var songObjs = self.newSongs.map(a => a.song);
-
-        // Publish the new list of songs in the user's data.json
-        page.createSongObjects(songObjs, false);
       },
       // Wrapper function for jsmediatags. We need to link the file object to
       // the tags for BigFile uploading, and this wrapper allows us to do so.

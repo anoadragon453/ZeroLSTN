@@ -10,21 +10,25 @@
       Year: {{ song.year }}
     </p>
     <a class="secondary-content s2">
-      <popper trigger="hover" :options="{placement: 'top'}">
+      <popper trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Queue Song</div>
         <a class="tooltip" slot="reference" @click.prevent="queueSong(song)"><i class="material-icons black-text">playlist_add</i></a>
       </popper>
-      <popper trigger="hover" :options="{placement: 'top'}">
+      <popper trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Edit Song</div>
         <a class="tooltip" slot="reference" @click.prevent="editSong(song)"><i class="material-icons black-text">edit</i></a>
       </popper>
-      <popper v-if="!downloaded" trigger="hover" :options="{placement: 'top'}">
+      <popper v-if="!downloaded" trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Download Song</div>
         <a class="tooltip" slot="reference" @click.prevent="downloadSong(song)"><i class="material-icons black-text">cloud_download</i></a>
       </popper>
-      <popper v-else trigger="hover" :options="{placement: 'top'}">
+      <popper v-else trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Remove Download</div>
         <a class="tooltip" slot="reference" @click.prevent="removeDownload(song)"><i class="material-icons black-text">cloud_done</i></a>
+      </popper>
+      <popper trigger="hover" :options="{placement: 'auto'}">
+        <div class="popper">Remove</div>
+        <a class="tooltip" slot="reference" @click.prevent="removeSongParent(song)"><i class="material-icons black-text">delete</i></a>
       </popper>
     </a>
   </li>
@@ -36,9 +40,9 @@
 
   module.exports = {
     components: {
-      popper: Popper
+      popper: Popper,
     },
-    props: ["editable", "song", "currentSong", "audioPlaying"],
+    props: ["editable", "deletable", "song", "currentSong", "audioPlaying"],
     name: "songitem",
     mounted: function() {
       var self = this;
@@ -79,8 +83,8 @@
         page.pauseCurrentSong(song);
       },
       queueSong: function(song) {
-        // Add song to the play queue
-        page.queueSong(song);
+        // Add song to playlist
+        page.bus.$emit("addToPlaylist", [song]);
       },
       deleteSong: function(song) {
         page.deleteSong(song);
@@ -100,6 +104,10 @@
             self.downloaded = true;
           }
         });
+      },
+      removeSongParent: function(song) {
+      // Calls a method on the parent object relating to removing a song
+        this.$parent.removeSong(song);
       }
     }
   }

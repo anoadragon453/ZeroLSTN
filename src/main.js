@@ -1,10 +1,5 @@
 version = "1.1.0";
-var indexAddress = "1iNdEXm7ZNDpwyHHTtsh7QMiMDyx2wUZB";
-var defaultGenreAddress = "1GEnReVHyvRwC4BR32UnVwHX7npUmxVpiY";
-
-// JS Animations
-var anime = require("animejs");
-window.anime = anime;
+var playlistAddress = "1ListsNz9zbKVm163PToico2dqEqU98eAp";
 
 // Hashing
 var sha512 = require("js-sha512").sha512;
@@ -100,13 +95,22 @@ class ZeroApp extends ZeroFrame {
           page.requestPermission("Merger:ZeroLSTN2", siteInfo, function() {
             page.cmdp("mergerSiteList", [true])
               .then((mergerZites) => {
+                console.log("Merger sites:", mergerZites)
                 // Check through each known decade address
                 // If we aren't already connected to a decade merger zite, add it
+                var addressList = app.decadeAddresses.map(a => a.address);
+                addressList.push(playlistAddress);
+                console.log("addressList", addressList)
                 app.decadeAddresses.forEach(function(decade) {
                   if (!mergerZites[decade.address]){
-                    page.addMerger(decade.address);
+                    page.addMerger(addressList);
+                    return;
                   }
                 });
+                // Add the playlist merger if we haven't already
+                if (!mergerZites[playlistAddress]) {
+                  page.addMerger(playlistAddress);
+                }
               });
           });
         });
@@ -126,17 +130,9 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Adds a new merger site
-  addMerger(ziteAddress) {
-    return this.cmdp("mergerSiteAdd", [ziteAddress])
-      .then(() => {
-        return self.cmdp("mergerSiteList", [true])
-          .then((mergerZites) => {
-            app.mergerZites = mergerZites;
-            app.$emit('setMergerZites', mergerZites);
-            app.$emit('genreIndexUpdate');
-            self.cmd("wrapperNotification", ["info", "You may need to refresh to see new music."]);
-            return mergerZites;
-          });
+  addMerger(ziteAddresses) {
+    return this.cmd("mergerSiteAdd", [ziteAddresses], function(res) {
+        console.log("Gottem", res)
       });
   }
 
@@ -469,7 +465,7 @@ class ZeroApp extends ZeroFrame {
       // Get the user's data file on this merger site
       var user_path = decadeAddress + "/data/users/" + app.siteInfo.auth_address;
       var data_inner_path = "merged-ZeroLSTN2/" + user_path + "/data.json";
-      self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false }).then((data) => {
+      self.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, function(data) {
         // Parse user's data into JS object if exists
         data = (data ? JSON.parse(data) : {});
 
@@ -499,7 +495,6 @@ class ZeroApp extends ZeroFrame {
             date_added: Date.now(),
             is_edit: isEdit
           });
-
 
           // Push specified genres for this song
           var genreDate = Date.now() // same date ID for all genre entries
@@ -536,8 +531,10 @@ class ZeroApp extends ZeroFrame {
       var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
       console.log("Signing Merger:", content_inner_path)
 
-      self.cmd("siteSign", { "inner_path": content_inner_path });
-      self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+      self.cmdp("siteSign", { "inner_path": content_inner_path }).then(res => {
+        console.log("Res was", res)
+        self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+      });
     }
   }
 
@@ -979,7 +976,224 @@ class ZeroApp extends ZeroFrame {
     return this.cmdp("dbQuery", [query])
       .then((songs) => {
         return self.getInfoForSongs(songs);
-      })
+      });
+  }
+
+  // -------------------------------------------------- //
+  // ------------------- Playlists -------------------- //
+
+  // Creates a new, empty playlist with the given name
+  createPlaylist(name, f=null) {
+    var data_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+    var content_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+
+    page.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
+      if (!data) {
+        data = {};
+      } else {
+        data = JSON.parse(data);
+      }
+
+      // Create playlists array if it doesn't exist yet
+      if (!data["playlists"]) { data["playlists"] = []; }
+
+      // Add a new playlist to the end
+      data["playlists"].push({id: Date.now(), name: name, date_added: Date.now()});
+
+      // Write playlist data (and Sign and Publish)
+      var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+      page.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
+        if (res === "ok") {
+          // Call callback
+          if (f != null && typeof f === "function") f();
+
+          page.cmd("siteSign", { "inner_path": content_inner_path }, () => {
+            page.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+          });
+        } else {
+          page.cmd("wrapperNotification", ["error", "Playlist creation error: " + JSON.stringify(res)]);
+        }
+      });
+    });
+  }
+
+  // Return the playlists created by specified user auth address
+  // If an auth address isn't specified, get playlists by current user
+  getPlaylistsByUser(user=null) {
+    var query = `
+      SELECT * FROM playlists
+      LEFT JOIN json USING (json_id)
+      WHERE directory="data/users/` + (user ? user : app.siteInfo.auth_address) + `"
+      ORDER BY date_added
+      `;
+
+    return this.cmdp("dbQuery", [query]);
+  }
+
+  // Returns a playlist's information given a playlistID
+  getPlaylistByID(id) {
+    var query = `
+      SELECT * FROM playlists
+      WHERE id=${id}
+      `;
+
+    return this.cmdp("dbQuery", [query]).then((res) => {
+      return page.newPromise(res[0]);
+    });
+  }
+
+  // Returns a playlist's songs given a playlistID
+  getPlaylistSongsByID(id) {
+    // TODO: Prevent users from being able to add to other's playlists
+    // Need to know auth address of user who created playlist at querytime
+    var query = `
+      SELECT * FROM playlist_songs
+      LEFT JOIN songs on songs.id = playlist_songs.song_id
+      WHERE playlist_songs.playlist_id="${id}"
+      ORDER BY playlist_songs.playlist_index
+      `;
+    console.log(query)
+
+    return this.cmdp("dbQuery", [query]);
+  }
+
+  // Adds the specified songs to the specified playlist
+  addSongsToPlaylist(songs, id, f=null) {
+    // Get current length of playlist
+    var query = `
+      SELECT COUNT(*) FROM songs, playlist_songs
+      WHERE playlist_songs.playlist_id="${id}"
+      `;
+
+    return this.cmd("dbQuery", [query], (res) => {
+      var count = res[0]["COUNT (*)"];
+
+      var data_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+      var content_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+
+      page.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
+        if (!data) {
+          data = {};
+        } else {
+          data = JSON.parse(data);
+        }
+
+        // Create playlists array if it doesn't exist yet
+        if (!data["playlist_songs"]) { data["playlist_songs"] = []; }
+
+        // Add a new playlist to the end
+        songs.forEach(function(song) {
+          data["playlist_songs"].push({playlist_id: id, song_id: song.id, playlist_index: count++});
+        });
+
+        // Write playlist data (and Sign and Publish)
+        var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+        page.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
+          if (res === "ok") {
+            // Call callback
+            if (f != null && typeof f === "function") f();
+
+            page.cmd("siteSign", { "inner_path": content_inner_path }, () => {
+              page.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+            });
+          } else {
+            page.cmd("wrapperNotification", ["error", "Playlist creation error: " + JSON.stringify(res)]);
+          }
+        });
+      });
+    });
+  }
+
+  // Removes a single song from a playlist
+  removeSongFromPlaylist(song, id, f=null) {
+    // Get current length of playlist
+    var query = `
+      SELECT COUNT(*) FROM songs, playlist_songs
+      WHERE playlist_songs.playlist_id="${id}"
+      `;
+
+    return this.cmd("dbQuery", [query], (res) => {
+      var count = res[0]["COUNT (*)"];
+
+      var data_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+      var content_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+
+      page.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
+        if (!data) {
+          data = {};
+        } else {
+          data = JSON.parse(data);
+        }
+
+        // Return if we don't have any songs in a playlist
+        if (!data["playlist_songs"]) { return; }
+
+        // Remove song from playlist
+        for (var i = 0; i < data["playlist_songs"].length; i++) {
+          var listing = data["playlist_songs"][i];
+          if(listing.song_id == song.id && listing.playlist_id == id) {
+            data["playlist_songs"].splice(i, 1);
+            break;
+          }
+        }
+
+        // Write playlist data (and Sign and Publish)
+        var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+        page.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
+          if (res === "ok") {
+            // Call callback
+            if (f != null && typeof f === "function") f();
+
+            page.cmd("siteSign", { "inner_path": content_inner_path }, () => {
+              page.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+            });
+          } else {
+            page.cmd("wrapperNotification", ["error", "Playlist song deletion error: " + JSON.stringify(res)]);
+          }
+        });
+      });
+    });
+  }
+
+  // Deletes a playlist
+  deletePlaylistByID(id, f=null) {
+    var data_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/data.json";
+    var content_inner_path = "merged-ZeroLSTN2/" + playlistAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+
+    page.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, (data) => {
+      if (!data) {
+        data = {};
+      } else {
+        data = JSON.parse(data);
+      }
+
+      // No playlists to delete, just return
+      if (!data["playlists"]) { return; }
+
+      // Remove playlist from user's playlists
+      for (var i = 0; i < data["playlists"].length; i++) {
+        var list = data["playlists"][i];
+        if(list.id == id) {
+          data["playlists"].splice(i, 1);
+          break;
+        }
+      }
+
+      // Write playlist data (and Sign and Publish)
+      var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, "\t")));
+      page.cmd("fileWrite", [data_inner_path, btoa(json_raw)], (res) => {
+        if (res === "ok") {
+          // Call callback
+          if (f != null && typeof f === "function") f();
+
+          page.cmd("siteSign", { "inner_path": content_inner_path }, () => {
+            page.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+          });
+        } else {
+          page.cmd("wrapperNotification", ["error", "Playlist deletion error: " + JSON.stringify(res)]);
+        }
+      });
+    });
   }
 
   // -------------------------------------------------- //
@@ -1096,15 +1310,7 @@ class ZeroApp extends ZeroFrame {
 
   // Add a song to the end of the play queue
   queueSong(song) {
-    console.log("Queueing " + song.title + " by " + song.artist);
     app.playQueue.push(song);
-
-    // Make sure our queueIndex exists
-    // Update Vue components that play queue changed
-    console.log("Emitting update!")
-    console.log("Mainapp's queue:")
-    console.log(app.playQueue);
-    console.log("Current queue index: " + app.queueIndex);
   }
 
   // Removes a single song from the play queue
@@ -1196,15 +1402,25 @@ class ZeroApp extends ZeroFrame {
     // TODO: Prevent repeating songs when shuffling
     // Create array of random numbers on shuffle click
     // from 1 - queue length and run through them
-    if (page.store.state.shuffle) {
+    //
+    // If looping on one song, repeat song
+    if (page.store.state.loop == 2) {
+      // Don't change current queue index
+    } else if (page.store.state.shuffle) {
+      // Randomize queue index
       app.queueIndex = page.randomIntFromInterval(0, app.playQueue.length);
     } else {
       // Move the index forward
       app.queueIndex++;
       if(app.queueIndex >= app.playQueue.length) {
-        // We've reached the end of the queue, stop playing
-        this.stopPlaying();
-        return;
+        // If looping in general, repeat from beginning of playqueue
+        if (page.store.state.loop == 1) {
+          app.queueIndex = 0;
+        } else {
+          // We've reached the end of the queue, stop playing
+          this.stopPlaying();
+          return;
+        }
       }
     }
 
@@ -1280,6 +1496,7 @@ class ZeroApp extends ZeroFrame {
 }
 
 page = new ZeroApp();
+page.bus = new Vue({});
 self = page;
 
 // Vuex Store
@@ -1331,6 +1548,8 @@ var Artist = require("./router_pages/artist.vue");
 var Album = require("./router_pages/album.vue");
 var NowPlaying = require("./router_pages/now_playing.vue");
 var Search = require("./router_pages/search.vue");
+var Playlists = require("./router_pages/playlists.vue");
+var Playlist = require("./router_pages/playlist.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "uploads", component: Uploads },
@@ -1342,5 +1561,7 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "nowplaying", component: NowPlaying },
   { route: "search/:searchText", component: Search },
   { route: "search", component: Search },
+  { route: "playlist/:playlistID", component: Playlist },
+  { route: "playlists", component: Playlists },
   { route: "", component: Home }
 ]);

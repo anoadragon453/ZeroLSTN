@@ -14,6 +14,9 @@
             "to_table": [
                 {"table": "mergers", "node": "mergers", "key_col": "address"}
             ]
+        },
+        "1ListsNz9zbKVm163PToico2dqEqU98eAp/data/users/.+/data.json": {
+            "to_table": ["playlists", "playlist_songs"]
         }
     },
     "tables": {
@@ -55,6 +58,26 @@
             ],
             "indexes": ["CREATE INDEX genres_song_id ON genres(json_id, genre)"],
             "schema_changed": 6
+        },
+        "playlists": {
+            "cols": [
+                ["id", "TEXT"],
+                ["name", "TEXT"],
+                ["date_added", "INTEGER"],
+                ["json_id", "INTEGER REFERENCES json (json_id)"]
+            ],
+            "indexes": ["CREATE UNIQUE INDEX playlists_id ON playlists(json_id, id)"],
+            "schema_changed": 1
+        },
+        "playlist_songs": {
+            "cols": [
+                ["playlist_id", "TEXT"],
+                ["song_id", "TEXT"],
+                ["playlist_index", "INTEGER"],
+                ["json_id", "INTEGER REFERENCES json (json_id)"]
+            ],
+            "indexes": ["CREATE INDEX playlist_songs_playlist_id ON playlist_songs(json_id, playlist_id)"],
+            "schema_changed": 3
         },
         "mergers": {
             "cols": [

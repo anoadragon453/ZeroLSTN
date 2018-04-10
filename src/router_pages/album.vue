@@ -1,5 +1,6 @@
 <template>
   <div id="album">
+    <addtoplaylistmodal></addtoplaylistmodal>
     <div class="row">
       <div class="col s1 m1 l4 hide-on-med-and-down">
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
@@ -48,12 +49,14 @@
   var Popper = require("vue-popperjs");
   var SongItem = require("../vue_components/song_item.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
+  var addToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
 
   module.exports = {
     components: {
       songitem: SongItem,
       playQueue: PlayQueue,
-      popper: Popper
+      popper: Popper,
+      addtoplaylistmodal: addToPlaylistModal
     },
     props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
     name: "album",
@@ -132,7 +135,7 @@
       },
       queueAlbum: function() {
         // Queue songs
-        page.queueSongs(this.songs);
+        page.bus.$emit("addToPlaylist", this.songs);
       },
       downloadAlbum: function() {
         this.downloadAlbumBySongOffset(this.songs, 0);
@@ -141,7 +144,6 @@
         page.cmdp("wrapperConfirm", ["Remove this album?", "Delete"])
         .then((confirmed) => {
           if (confirmed) {
-            // TODO: Add hovering make the cloud change to delete cloud
             console.log("Deleting album...")
           }
         });
@@ -181,7 +183,7 @@
           page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
         }
         this.downloadAlbumBySongOffset(songs, ++offset);
-      },
+      }
     }
   }
 </script>
