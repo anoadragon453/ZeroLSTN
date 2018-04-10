@@ -208,7 +208,7 @@ class ZeroApp extends ZeroFrame {
       }
 
       // Allowed filetypes
-      var curoptional = ".+\\.(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)";
+      var curoptional = ".+\\.(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)";
       var changed = false;
       if (!data.hasOwnProperty("optional") || data.optional !== curoptional){
         data.optional = curoptional

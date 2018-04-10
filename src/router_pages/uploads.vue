@@ -157,7 +157,7 @@
           for (var i = 0; i < fullLength; i++) {
             var file = this.files[i];
             // Check if the file is one of approved filetype
-            if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)")) {
+            if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)")) {
               console.log("Filetype not supported");
               continue;
             }
