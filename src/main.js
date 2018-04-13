@@ -101,14 +101,21 @@ class ZeroApp extends ZeroFrame {
                 var addressList = app.decadeAddresses.map(a => a.address);
                 addressList.push(playlistAddress);
                 console.log("addressList", addressList)
+                var needToGet = [];
                 app.decadeAddresses.forEach(function(decade) {
                   if (!mergerZites[decade.address]){
-                    page.addMerger(addressList);
-                    return;
+                    needToGet.push(decade.address);
                   }
                 });
+
                 // Add the playlist merger if we haven't already
                 if (!mergerZites[playlistAddress]) {
+                  needToGet.push(playlistAddress);
+                }
+
+                // Request ZeroFrame to add any mergers we need
+                if (needToGet.length > 0) {
+                  console.log("We need:", needToGet);
                   page.addMerger(playlistAddress);
                 }
               });
@@ -439,6 +446,8 @@ class ZeroApp extends ZeroFrame {
   // Create new songs or edit existing ones stored in user's data.json.
   // If edit, we creating a new song with same ID, but with updated values
   createSongObjects(songs, isEdit, f = null) {
+    var self = this;
+
     console.log("Got songs:", songs)
     // Keep track of song's decade addresses
     // We'll use them later for sign/publishing
@@ -461,6 +470,7 @@ class ZeroApp extends ZeroFrame {
 
     // Iterate through decade addresses and publish the songs in each
     for (var decadeAddress in songsByDecade) {
+      console.log("Working on decade:", decadeAddress)
       var songsInDecade = songsByDecade[decadeAddress];
 
       // Get the user's data file on this merger site
@@ -469,6 +479,7 @@ class ZeroApp extends ZeroFrame {
       self.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, function(data) {
         // Parse user's data into JS object if exists
         data = (data ? JSON.parse(data) : {});
+        console.log("data:", data)
 
         // If no songs or genres uploaded yet, create empty array
         if (!data["songs"]) data["songs"] = [];
@@ -518,6 +529,8 @@ class ZeroApp extends ZeroFrame {
             });
           }
         });
+
+        console.log("Data afterwards:", data)
 
         // Write values back to JSON string and the data.json
         var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
@@ -1485,7 +1498,7 @@ class ZeroApp extends ZeroFrame {
   getAddressFromYear(year) {
     for (var i = 1; i < app.decadeAddresses.length; i++) {
       // Check if year is within the last and current decade
-      if (app.decadeAddresses[i-1].year < year && app.decadeAddresses[i].year >= year) {
+      if (app.decadeAddresses[i-1].year < year && app.decadeAddresses[i].year > year) {
         return app.decadeAddresses[i-1].address;
       }
     }
@@ -1546,7 +1559,6 @@ page.store = store;
 
 var Uploads = require("./router_pages/uploads.vue");
 var Edit = require("./router_pages/edit.vue");
-var PlayQueue = require("./router_pages/playqueue.vue");
 var Home = require("./router_pages/home.vue");
 var Artist = require("./router_pages/artist.vue");
 var Album = require("./router_pages/album.vue");
@@ -1557,7 +1569,6 @@ var Playlist = require("./router_pages/playlist.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "uploads", component: Uploads },
-  { route: "playqueue", component: PlayQueue },
   { route: "edit/store/:index", component: Edit },
   { route: "edit/:songID", component: Edit },
   { route: "artist/:artist", component: Artist },

@@ -49,14 +49,14 @@
   var Popper = require("vue-popperjs");
   var SongItem = require("../vue_components/song_item.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
-  var addToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
+  var AddToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
 
   module.exports = {
     components: {
       songitem: SongItem,
       playQueue: PlayQueue,
       popper: Popper,
-      addtoplaylistmodal: addToPlaylistModal
+      addtoplaylistmodal: AddToPlaylistModal
     },
     props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
     name: "album",

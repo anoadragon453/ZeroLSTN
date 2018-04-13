@@ -33,7 +33,6 @@
                     <li><a @click.prevent="goto('search')"><i class="material-icons left">search</i>Search</a></li>
                     <li><a @click.prevent="goto('nowplaying')"><i class="material-icons left">music_note</i>Now Playing</a></li>
                     <li><a @click.prevent="goto('playlists')"><i class="material-icons left">playlist_play</i>Playlists</a></li>
-                    <li><a @click.prevent="goto('playqueue')"><i class="material-icons left">play_arrow</i>Play Queue</a></li>
                     <li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
                     <!--
             <li>

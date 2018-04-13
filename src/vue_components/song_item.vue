@@ -26,7 +26,7 @@
         <div class="popper">Remove Download</div>
         <a class="tooltip" slot="reference" @click.prevent="removeDownload(song)"><i class="material-icons black-text">cloud_done</i></a>
       </popper>
-      <popper trigger="hover" :options="{placement: 'auto'}">
+      <popper v-if="deletable && deleteable == true" trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Remove</div>
         <a class="tooltip" slot="reference" @click.prevent="removeSongParent(song)"><i class="material-icons black-text">delete</i></a>
       </popper>

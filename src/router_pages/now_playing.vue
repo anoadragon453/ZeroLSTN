@@ -8,11 +8,8 @@
         <div class="row">
           <songDetails :current-song="currentSong"></songDetails>
         </div>
-        <div class="row"></div>
-        <div class="row"></div>
-        <div class="row"></div>
       </div>
-      <div class="col hide-on-small-only m8 l9">
+      <div class="col s12 m8 l9">
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
       </div>
     </div>

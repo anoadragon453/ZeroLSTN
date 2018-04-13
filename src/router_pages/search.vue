@@ -1,5 +1,6 @@
 <template>
   <div id="search">
+    <addtoplaylistmodal></addtoplaylistmodal>
     <div class="row">
       <div class="col s1 m1 l4 hide-on-med-and-down">
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
@@ -102,11 +103,13 @@
   // Vue components that make up the search page
   var PlayQueue = require("../vue_components/play_queue.vue");
   var SongItem = require("../vue_components/song_item.vue");
+  var AddToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
 
   module.exports = {
     components: {
       playQueue: PlayQueue,
-      songitem: SongItem
+      songitem: SongItem,
+      addtoplaylistmodal: AddToPlaylistModal
     },
     props: ["playQueueObj", "queueIndex"],
     name: "search",
