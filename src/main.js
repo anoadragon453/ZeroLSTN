@@ -132,7 +132,7 @@ class ZeroApp extends ZeroFrame {
   // Adds a new merger site
   addMerger(ziteAddresses) {
     return this.cmd("mergerSiteAdd", [ziteAddresses], function(res) {
-        console.log("Gottem", res)
+        console.log("Added merger sites");
       });
   }
 
@@ -145,9 +145,7 @@ class ZeroApp extends ZeroFrame {
           .then((mergerZites) => {
             console.log(mergerZites)
             app.mergerZites = mergerZites;
-            app.$emit('setMergerZites', mergerZites);
-            app.$emit('genreIndexUpdate');
-            self.cmd("wrapperNotification", ["info", "Genre removed. Refresh to see changes."]);
+            self.cmd("wrapperNotification", ["info", "Merger removed. Refresh to see changes.", 3000]);
             return mergerZites;
           });
       });
@@ -188,7 +186,7 @@ class ZeroApp extends ZeroFrame {
   // ------ Uploading, Editing and Deleting Songs ----- //
 
   // Check user has correct "optional" and "ignore" values set in their own content.json
-  checkOptional(genreAddress, doSignPublish, f) {
+  checkOptional(yearAddress, doSignPublish, f=null) {
     // Make sure user is logged in first
     if (!app.userInfo || !app.userInfo.cert_user_id) {
       this.cmd("wrapperNotification", ["info", "Please login first."]);
@@ -196,7 +194,7 @@ class ZeroApp extends ZeroFrame {
     }
 
     // Get the user's data.json filepath
-    var content_inner_path = "merged-ZeroLSTN2/" + genreAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+    var content_inner_path = "merged-ZeroLSTN2/" + yearAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
 
     // Verify that user has correct "optional" and "ignore" values
     page.cmd("fileGet", { "inner_path": content_inner_path, "required": false }, (data) => {
@@ -208,7 +206,7 @@ class ZeroApp extends ZeroFrame {
       }
 
       // Allowed filetypes
-      var curoptional = ".+\\.(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)";
+      var curoptional = ".+\\.(png|jpg|jpeg|gif|mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)";
       var changed = false;
       if (!data.hasOwnProperty("optional") || data.optional !== curoptional){
         data.optional = curoptional
@@ -247,18 +245,21 @@ class ZeroApp extends ZeroFrame {
     var filepath = "merged-ZeroLSTN2/" + yearAddress + "/data/users/" + app.siteInfo.auth_address + "/" + filename;
     console.log("Uploading:", filepath)
 
-    self.cmd("bigfileUploadInit", [filepath, file.size], (init_res) => {
-      var formdata = new FormData();
-      formdata.append(file.name, file);
+    // Make sure big file is set as optional
+    page.checkOptional(yearAddress, false, function() {
+      self.cmd("bigfileUploadInit", [filepath, file.size], (init_res) => {
+        var formdata = new FormData();
+        formdata.append(file.name, file);
 
-      var req = new XMLHttpRequest();
+        var req = new XMLHttpRequest();
 
-      req.upload.addEventListener("loadend", () => {
-        if (f !== null && typeof f === "function") f(filename);
+        req.upload.addEventListener("loadend", () => {
+          if (f !== null && typeof f === "function") f(filename);
+        });
+        req.withCredentials = true;
+        req.open("POST", init_res.url);
+        req.send(formdata);
       });
-      req.withCredentials = true;
-      req.open("POST", init_res.url);
-      req.send(formdata);
     });
 
     return filename;
@@ -350,7 +351,7 @@ class ZeroApp extends ZeroFrame {
               });
           });
       });
-  }
+  };
 
   // Remove an image
   deleteImage(genreAddress, filepath) {
@@ -479,7 +480,9 @@ class ZeroApp extends ZeroFrame {
           if(song.id == null) { song.id = Date.now().toString(); }
 
           // Store album art on disk if necessary
-          song.art = self.saveAlbumArt(song, decadeAddress);
+          if (song.art) {
+            song.art = self.saveAlbumArt(song, decadeAddress);
+          }
 
           // Append new song information
           data["songs"].push({
@@ -519,23 +522,25 @@ class ZeroApp extends ZeroFrame {
         // Write values back to JSON string and the data.json
         var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
 
-        self.cmd("fileWrite", [data_inner_path, btoa(json_raw)])
+        self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]).then((res) => {
+          if (res != 'ok') {
+            this.cmd("wrapperNotification", ["error writing to file:", res]);
+            return;
+          }
+
+          // Sign and publish this decade
+          var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+          console.log("Signing Merger:", content_inner_path)
+
+          self.cmdp("siteSign", { "inner_path": content_inner_path }).then(res => {
+            self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
+          });
+        });
       });
     }
 
     // Call callback function
     if (f !== null && typeof f === "function") { f(); }
-
-    // Sign and publish merger site(s)
-    for (var decadeAddress in songsByDecade) {
-      var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-      console.log("Signing Merger:", content_inner_path)
-
-      self.cmdp("siteSign", { "inner_path": content_inner_path }).then(res => {
-        console.log("Res was", res)
-        self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
-      });
-    }
   }
 
   // Saves base64 album art to a file and sets the "art" attribute of the
@@ -643,7 +648,7 @@ class ZeroApp extends ZeroFrame {
         if (res === "ok") {
           return this.cmdp("sitePublish", { "inner_path": content_inner_path, "sign": false });
         } else {
-          return this.cmdp("wrapperNotification", ["error", "Failed to sign user data."]);
+          return this.cmdp("wrapperNotification", ["error", "Failed to sign user data.", 3000]);
         }
       })
 
@@ -717,7 +722,6 @@ class ZeroApp extends ZeroFrame {
         `;
         break;
     }
-    console.log(query)
 
     // Execute search query and return results
     return this.cmdp("dbQuery", [query]);
@@ -841,10 +845,11 @@ class ZeroApp extends ZeroFrame {
   // Get all songs a user has uploaded as an array
   getSongsByUser(userAuthAddress) {
     var query = `
-    SELECT * FROM songs
+    SELECT DISTINCT songs.* FROM
+    (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+    INNER JOIN songs ON songs.date_added = aux.maxDate
     LEFT JOIN json USING (json_id)
     WHERE directory="data/users/${userAuthAddress}"
-    AND is_edit = 0
     ORDER BY album COLLATE NOCASE, track_number
     `;
 
@@ -1052,7 +1057,6 @@ class ZeroApp extends ZeroFrame {
       WHERE playlist_songs.playlist_id="${id}"
       ORDER BY playlist_songs.playlist_index
       `;
-    console.log(query)
 
     return this.cmdp("dbQuery", [query]);
   }

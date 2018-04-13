@@ -9,11 +9,10 @@
         <div v-if="!uploadingFile" class="row no-margin-bottom">
           <div @click.prevent="uploadClicked()" class="upload-box center">
             <p class="valign-center center grey-text text-darken-2">
-              Drag a song or folder here<br>
-              Or click to select
+              Click to select a song or folder<br>
             </p>
           </div>
-          <input type="file" id="fileupload" style="display: none" webkitdirectory directory multiple>
+          <input type="file" id="fileupload" style="display: none" webkitdirectory directory  multiple>
           <p>
             <label>
               <input type="checkbox" class="filled-in" checked="checked" v-model="doNotOverwrite"/>
@@ -154,11 +153,13 @@
           // Iterate through uploaded files and scrape tags
           var newSongs = [];
           var fullLength = this.files.length;
-          for (var i = 0; i < fullLength; i++) {
+          for (var i = 0; i < this.files.length; i++) {
             var file = this.files[i];
             // Check if the file is one of approved filetype
             if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)")) {
-              console.log("Filetype not supported");
+              console.log("Filetype not supported. Skipping...");
+              fullLength--;
+              if (i == fullLength) { self.finishUploading(newSongs); }
               continue;
             }
 
@@ -170,32 +171,46 @@
                 newSongs.push(self.craftSongObject(filename, tag.tags));
 
                 // Run this once all songs are scraped
+                console.log(newSongs.length, fullLength)
                 if (newSongs.length == fullLength) {
-                  // Add uploaded files to Vuex store to access later on edit page
-                  page.store.commit('addNewSongs', newSongs);
-                  self.newSongs = page.store.state.newSongs;
-
-                  // Sort songs by track/album
-                  self.newSongs.sort(function(a, b) {
-                    return (a.song.album < b.song.album) ? -1 : (a.song.album > b.song.album) ? 1 : 0;
-                  });
-
-                  // Close upload modal
-                  self.uploadingFile = false;
-                  self.uploadModal.M_Modal.close();
+                  self.finishUploading(newSongs)
                 }
               },
               onError: function(file, error) {
                 console.log("[jsmediatags]:", error.type, error.info);
-                newSongs.push({});
+
+                newSongs.push(self.craftSongObject(file, {}));
+
+                // Run this once all songs are scraped
+                // Last one may have had failed tag reading
+                console.log(newSongs.length, fullLength)
+                if (newSongs.length == fullLength) {
+                  self.finishUploading(newSongs);
+                }
               }
             });
           }
         });
       },
+      finishUploading: function(newSongs) {
+        console.log("Finishing upload...")
+        // Add uploaded files to Vuex store to access later on edit page
+        page.store.commit('addNewSongs', newSongs);
+        this.newSongs = page.store.state.newSongs;
+
+        // Sort songs by track/album
+        this.newSongs.sort(function(a, b) {
+          return (a.song.album < b.song.album) ? -1 : (a.song.album > b.song.album) ? 1 : 0;
+        });
+
+        // Close upload modal
+        this.uploadingFile = false;
+        this.uploadModal.M_Modal.close();
+      },
       craftSongObject: function(file, tags) {
         var song = {};
 
+        // Set song information
         song['id'] = Date.now();
         song['title'] = tags.title ? tags.title : '';
         song['album'] = tags.album ? tags.album : '';
@@ -225,6 +240,16 @@
 
           // Save image URL as base64 string
           song['art'] = "data:" + tags.picture.format + ";base64," + btoa(base64String);
+        }
+
+        // Mark song as untagged if tags is null
+        if (Object.keys(tags).length == 0) {
+          song['untagged'] = true;
+          song['title'] = file.name;
+          song['artist'] = 'Unknown';
+          song['album'] = 'Unknown';
+          song['track_number'] = 1;
+          song['year'] = 1;
         }
 
         return {"file": file, "song": song};

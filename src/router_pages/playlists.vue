@@ -95,6 +95,10 @@
 
         // Open create playlist modal
         this.createPlaylistModal.M_Modal.open()
+
+        // Reinitialize text fields.
+        // Playlist name field gets stuck otherwise
+        M.updateTextFields();
       },
       createPlaylistModalClicked: function() {
         var self = this;
