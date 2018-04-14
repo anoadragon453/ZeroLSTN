@@ -115,8 +115,8 @@ class ZeroApp extends ZeroFrame {
 
                 // Request ZeroFrame to add any mergers we need
                 if (needToGet.length > 0) {
-                  console.log("We need:", needToGet);
-                  page.addMerger(playlistAddress);
+                  console.log("We need to get:", needToGet);
+                  page.addMerger(needToGet);
                 }
               });
           });
@@ -164,7 +164,7 @@ class ZeroApp extends ZeroFrame {
     if (cmd === "setSiteInfo") {
       this.siteInfo = message.params;
       app.siteInfo = message.params;
-      app.getUserInfo();
+      //app.getUserInfo();
     }
 
     if (message.params.event && message.params.event[0] === "file_done") {
@@ -671,7 +671,6 @@ class ZeroApp extends ZeroFrame {
   // ----- Retrieving Song/Album/Artist/Genre info ---- //
 
   search(searchTerm, type) {
-
     // Check for any special keywords in the search string
     // TODO: Have a randomize search button
     let extraParams = "";
@@ -698,6 +697,9 @@ class ZeroApp extends ZeroFrame {
       // Remove the keyword value from the actual search
       searchTerm = searchTerm.substring(0, yearKeywordValueIndex - 1) + searchTerm.substring(end + 1);
     }
+
+    // Convert quotes to double quotes for DB
+    searchTerm = this.preprocessQuotes(searchTerm);
 
     var query = "";
     switch (type) {
@@ -780,7 +782,7 @@ class ZeroApp extends ZeroFrame {
   // Get all genres from a given song
   getGenresFromSong(songID) {
     var query = `
-      SELECT genres.* FROM
+      SELECT DISTINCT genres.* FROM
       (SELECT MAX(date_added) AS maxDate, song_id FROM genres GROUP BY song_id) AS aux
       INNER JOIN genres ON genres.date_added = aux.maxDate
       AND genres.song_id = '${songID}'
@@ -873,6 +875,10 @@ class ZeroApp extends ZeroFrame {
   songExists(song) {
     var self = this;
 
+    song.title = this.preprocessQuotes(song.title);
+    song.album = this.preprocessQuotes(song.album);
+    song.artist = this.preprocessQuotes(song.artist);
+
     var query = `
     SELECT COUNT (*) FROM songs
     WHERE title="${song.title}"
@@ -949,11 +955,16 @@ class ZeroApp extends ZeroFrame {
 
   // Returns an array of album titles, made by the given artist
   getAlbumsByArtist(artistName) {
+    artistName = this.preprocessQuotes(artistName);
+
     var query = `
-        SELECT DISTINCT album FROM songs
+        SELECT DISTINCT songs.album FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
+        AND songs.id = aux.id
+        AND artist="${artistName}"
         LEFT JOIN json USING (json_id)
-        WHERE artist="${artistName}"
-        ORDER BY album COLLATE NOCASE
+        ORDER BY songs.album COLLATE NOCASE
         `;
 
     return this.cmdp("dbQuery", [query])
@@ -980,6 +991,9 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given artist's album
   getSongsInAlbum(albumName, artistName) {
+    albumName = this.preprocessQuotes(albumName);
+    artistName = this.preprocessQuotes(artistName);
+
     var query = `
         SELECT songs.* FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1509,6 +1523,23 @@ class ZeroApp extends ZeroFrame {
 
   randomIntFromInterval(min, max) {
     return Math.floor(Math.random()*(max-min+1)+min);
+  }
+
+  // Escape any quotes in a song title, album name, or artist name
+  preprocessQuotes(str) {
+    str = this.replaceAll(str, '"', '""');
+    str = this.replaceAll(str, "'", "''");
+    str = this.replaceAll(str, "`", "``");
+    return str;
+  }
+
+  // Replaces all occurrances of a substring in a string
+  replaceAll(str, find, replace) {
+    return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
+  }
+
+  escapeRegExp(str) {
+    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
   }
 }
 

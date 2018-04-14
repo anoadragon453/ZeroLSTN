@@ -54,7 +54,7 @@
         </a>
 
         <!-- Delete Image Button -->
-        <a v-if="song.art" @click="deleteImage()" class="btn-flat">Delete</a>
+        <a v-if="song.art" @click="deleteImage()" class="btn-flat">Delete Art</a>
       </div>
       <div class="col s12 m5 l5">
         <!-- Save Button -->

@@ -86,27 +86,6 @@
             return true;
           });
         }
-      },
-      downloaded: {
-        get() {
-          // TODO: Start a timer that checks every so often for download progress on each song
-          // Show progress on page, as well as check to see if they're all done
-          if (!this.songInfo) {
-            return false;
-          }
-
-          var self = this;
-          return this.checkSongsFromOffset(this.songs, 0)
-          .then((downloaded) => {
-            if (!downloaded) {
-              // Tell artist page we may be embedded in that we're not completely downloaded
-              if (self.$parent.notDownloaded) {
-                self.$parent.notDownloaded();
-              }
-            }
-            return downloaded;
-          });
-        }
       }
     },
     methods: {

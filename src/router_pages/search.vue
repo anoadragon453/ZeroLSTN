@@ -218,20 +218,9 @@
 
         // Conduct the search
         console.log("Searching:", searchText);
-        /*
-        console.log(document.getElementById("base").href)
-        document.getElementById("base").href = document.location.href.replace("search", "peach")
-        console.log(document.getElementById("base").href)
-        */
 
         // Set the URL to contain the search
-        /*
-        if (document.location.href.substring(-1) !== "/") { document.location.href += "/"; } // Add a '/' to end of URL if not already
-        var bla = window.location.href.replace(/(.*\/search\/)(.*)$/, function(str, prefix, existingTerm) {
-          console.log("Changing to", prefix + searchText)
-          return prefix + searchText;
-        });
-        */
+        Router.navigate("/search/"+searchText);
 
         // Keep track of last search term
         this.lastSearch = searchText;

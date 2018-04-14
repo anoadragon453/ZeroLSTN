@@ -89,7 +89,7 @@
       },
       goToAlbum: function(album) {
         // Go to album's page
-        Router.navigate('/album/'+this.artist+'/'+album);
+        Router.navigate('/album/'+this.artist+'/'+(album !== '' ? album : 'Blank'));
       },
       playArtist: function() {
         var self = this;
