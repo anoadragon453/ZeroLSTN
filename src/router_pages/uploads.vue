@@ -6,20 +6,39 @@
         <div class="row">
           <h4>Upload Songs</h4>
         </div>
-        <div v-if="!uploadingFile" class="row no-margin-bottom">
-          <div @click.prevent="uploadClicked()" class="upload-box center">
-            <p class="valign-center center grey-text text-darken-2">
-              Click to select a song or folder<br>
+        <span v-if="!uploadingFile">
+          <div class="row no-margin-bottom">
+            <p>Supported filetypes: mp3, flac, ogg, opus, m4a, mpeg, mp4, webm</p>
+          </div>
+          <div class="row no-margin-bottom">
+            <div @click.prevent="uploadClicked('file')" class="col s12 upload-box center">
+              <span class="valign-center center">
+                <i class="large material-icons">music_video</i>
+                <p class="grey-text text-darken-2">
+                  Click to upload one or more songs<br>
+                </p>
+              </span>
+            </div>
+            <input type="file" id="fileupload" style="display: none" multiple>
+            <div @click.prevent="uploadClicked('folder')" @ondrop="filesDropped" @ondragover="filesDropped" class="col s12 upload-box center">
+              <span class="valign-center center">
+                <i class="large material-icons">folder_open</i>
+                <p class="grey-text text-darken-2">
+                  Click to upload a folder of songs<br>
+                </p>
+              </span>
+            </div>
+            <input type="file" id="folderupload" style="display: none" required multiple webkitdirectory directory>
+          </div>
+          <div class="row no-margin-bottom">
+            <p>
+              <label>
+                <input type="checkbox" class="filled-in" checked="checked" v-model="doNotOverwrite"/>
+                <span>Do not overwrite existing songs.</span>
+              </label>
             </p>
           </div>
-          <input type="file" id="fileupload" style="display: none" webkitdirectory directory  multiple>
-          <p>
-            <label>
-              <input type="checkbox" class="filled-in" checked="checked" v-model="doNotOverwrite"/>
-              <span>Do not overwrite existing songs.</span>
-            </label>
-          </p>
-        </div>
+        </span>
         <div v-else class="row center">
           <p>Reading song info...</p>
           <div class="progress">
@@ -29,8 +48,6 @@
       </div>
     </div>
     <!-- Show uploads if there are any -->
-    <!-- TODO: Show new uploads in a different way from existing in the list. Show a "Publish Changes" button that doesn't publish
-      until you tell it to. Have editing a song not publish in this instance with a prop sent to it. -->
     <div class="container">
       <div class="row"></div>
       <div class="row">
@@ -46,12 +63,15 @@
       <div v-if="newSongs && newSongs.length != 0" class="row">
         <h5>Ready to Upload</h5>
         <ul class="collection">
-          <a href="#!" v-for="(songObject, index) in newSongs" @click.prevent="editNewSong(index)" class="collection-item">
+          <li v-for="(songObject, index) in newSongs" class="collection-item">
+            <a href="" @click.prevent="editNewSong(index)" class="teal-text">
             {{ (songObject.song.track_number ? songObject.song.track_number : '?') + '. ' }}
-            {{ songObject.song.artist }} - 
-            {{ songObject.song.album }} - 
+            {{ songObject.song.artist }} -
+            {{ songObject.song.album }} -
             {{ songObject.song.title }}
-          </a>
+            </a>
+            <i @click.prevent="removeNewSong(index)" class="material-icons right">close</i>
+          </li>
         </ul>
       </div>
       <div v-if="songs" class="row">
@@ -123,6 +143,13 @@
       });
     },
     methods: {
+      // TODO: Figure out file dropping
+      filesDropped: function(event) {
+        event.preventDefault();
+        console.log("Dropped")
+
+        this.processUploadedFiles(event.target.files);
+      },
       showModal: function() {
         // Make sure user is signed in first
         if(!page.isUserSignedIn()) {
@@ -134,63 +161,81 @@
         // Reveal the upload modal
         this.uploadModal.M_Modal.open()
       },
-      uploadClicked: function() {
+      uploadClicked: function(type) {
         // Open file upload window
-        var fileUploadButton = document.getElementById('fileupload');
-        fileUploadButton.click();
+        var uploadButton;
+        if (type == "file") {
+          uploadButton = document.getElementById('fileupload');
+        } else {
+          uploadButton = document.getElementById('folderupload');
+        }
+        uploadButton.click();
 
         // Keep a reference to ourselves
         var self = this;
 
         // Listen for when a file has been uploaded
-        fileUploadButton.addEventListener('change', function() {
+        uploadButton.addEventListener('change', function() {
           // Prevent this method from running twice on a single file upload
           if(self.uploadingFile) {
             return;
           }
-          self.uploadingFile = true;
 
-          // Iterate through uploaded files and scrape tags
-          var newSongs = [];
-          var fullLength = this.files.length;
-          for (var i = 0; i < this.files.length; i++) {
-            var file = this.files[i];
-            // Check if the file is one of approved filetype
-            if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)")) {
-              console.log("Filetype not supported. Skipping...");
-              fullLength--;
-              if (i == fullLength) { self.finishUploading(newSongs); }
-              continue;
-            }
-
-            // Read the ID3 tags
-            self.readTags(file, {
-              onSuccess: function(filename, tag) {
-                // Add the file with the tags into filesWithTags
-                // DEBUG: console.log("file is", filename)
-                newSongs.push(self.craftSongObject(filename, tag.tags));
-
-                // Run this once all songs are scraped
-                console.log(newSongs.length, fullLength)
-                if (newSongs.length == fullLength) {
-                  self.finishUploading(newSongs)
-                }
-              },
-              onError: function(file, error) {
-                console.log("[jsmediatags]:", error.type, error.info);
-
-                newSongs.push(self.craftSongObject(file, {}));
-
-                // Run this once all songs are scraped
-                // Last one may have had failed tag reading
-                console.log(newSongs.length, fullLength)
-                if (newSongs.length == fullLength) {
-                  self.finishUploading(newSongs);
-                }
-              }
-            });
-          }
+          // Start uploading the files
+          self.processUploadedFiles(this.files);
         });
+      },
+      processUploadedFiles: function(files) {
+        var self = this;
+        self.uploadingFile = true;
+
+        // Iterate through uploaded files and scrape tags
+        var newSongs = [];
+        var fullLength = files.length;
+        var skippedFiles = 0;
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          // Check if the file is one of approved filetype
+          if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)")) {
+            console.log(file.name, "Filetype not supported. Skipping...");
+            skippedFiles++;
+            fullLength--;
+            if (i == fullLength) { self.finishUploading(newSongs); }
+            continue;
+          }
+
+          // Read the ID3 tags
+          self.readTags(file, {
+            onSuccess: function(filename, tag) {
+              // Add the file with the tags into filesWithTags
+              // DEBUG: console.log("file is", filename)
+              newSongs.push(self.craftSongObject(filename, tag.tags));
+
+              // Run this once all songs are scraped
+              console.log(newSongs.length, fullLength)
+              if (newSongs.length == fullLength) {
+                self.finishUploading(newSongs)
+              }
+            },
+            onError: function(file, error) {
+              console.log("[jsmediatags]:", error.type, error.info);
+
+              newSongs.push(self.craftSongObject(file, {}));
+
+              // Run this once all songs are scraped
+              // Last one may have had failed tag reading
+              console.log(newSongs.length, fullLength)
+              if (newSongs.length == fullLength) {
+                self.finishUploading(newSongs);
+              }
+            }
+          });
+        }
+
+        // Show a toast to warn users if any files weren't proper formats
+        if (skippedFiles > 0) {
+          M.toast({html: skippedFiles + ' with incorrect filetype.'});
+        }
       },
       finishUploading: function(newSongs) {
         console.log("Finishing upload...")
@@ -267,7 +312,7 @@
 
         // Read the file's contents for hashing
         for (var i = 0; i < this.newSongs.length;) {
-          if (page.songExists(this.newSongs[i])) {
+          if (page.songExists(this.newSongs[i].song)) {
             // Prevent the new song from being published
             this.newSongs.splice(i, 1);
 
@@ -285,6 +330,13 @@
         this.publishSongs();
       },
       publishSongs: function() {
+        // Make sure user is signed in first
+        if(!page.isUserSignedIn()) {
+          // Show sign in prompt
+          page.selectUser();
+          return;
+        }
+
         var self = this;
         var totalSongs = this.newSongs.length;
         var publishCount = 0;
@@ -303,6 +355,9 @@
         for (var i in this.newSongs) {
           // Upload each song file
           this.newSongs[i].song.filename = page.uploadSongBigFile(this.newSongs[i].song.year, this.newSongs[i].file, function() {
+              // Song is done uploading, release it from memory
+              self.newSongs[i].file = null;
+
               // Count the progress we've made in uploading
               publishCount++;
 
@@ -323,7 +378,7 @@
                 // Publish the new list of songs in the user's data.json
                 page.createSongObjects(songObjs, false);
 
-                // Clear newSongs arrays
+                // Clear newSongs array
                 self.newSongs = [];
                 page.store.commit('clearNewSongs');
 
@@ -341,6 +396,10 @@
           onSuccess: func.onSuccess.bind(this, file),
           onError: func.onError.bind(this, file)
         });
+      },
+      // Remove specified song from newSongs array
+      removeNewSong: function(index) {
+        this.newSongs.splice(index, 1);
       }
     }
   }

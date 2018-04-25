@@ -7,16 +7,14 @@
       <input type="range" @input="visualChangeSongProgress()" @change="changeSongProgress()" v-model="songProgress" id="track-progress" min="0" max="100" />
     </div>
     <div class="row">
-      <div class="col s1 m1 l1">
+      <div class="col s1 m3 l3">
         <b>{{ songProgressLeft }}</b>
       </div>
-      <div class="col s4 m3 l4">
-        <!-- Song Details -->
-      </div>
-      <div class="col s10 m4 l2 center">
+      <div class="col s10 m6 l6 center">
         <a @click.prevent="loop()" class="btn-floating waves-effect waves-light" :class="isLooping ? 'purple darken-2' : 'indigo'"><i class="material-icons">{{ isLooping == 2 ? 'looks_one' : 'loop' }}</i></a>
         <a @click.prevent="prev()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_rewind</i></a>
-        <a @click.prevent="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ audioPlaying ? "pause" : "play_arrow" }}</i></a>
+        <playerSpinner v-if="songLoading"></playerSpinner>
+        <a v-else @click.prevent="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ audioPlaying ? "pause" : "play_arrow" }}</i></a>
         <a @click.prevent="next()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_forward</i></a>
         <a @click.prevent="shuffle()" class="btn-floating waves-effect waves-light" :class="isShuffling ? 'purple darken-2' : 'indigo'"><i class="material-icons">shuffle</i></a>
       </div>
@@ -25,7 +23,7 @@
           <input type="range" v-model="volume" id="volume-slider" min="0" max="100" />
         </div>
       </div>
-      <div class="col s1 m2 l3">
+      <div class="col s1 m1 l1">
         <b class="right">{{ songProgressRight }}</b>
       </div>
     </div>
@@ -34,10 +32,14 @@
 
 <script>
   var Router = require("../libs/router.js");
+  var PlayerSpinner = require("../vue_components/player_spinner.vue");
 
   module.exports = {
+    components: {
+      playerSpinner: PlayerSpinner
+    },
     props: ["currentSong", "audioPlaying"],
-    name: "BottomBar",
+    name: "FooterBar",
     data: () => {
       return {
         playing: false,
@@ -48,7 +50,8 @@
         songProgressLeft: "00:00",
         songProgressRight: "00:00",
         songTotalDuration: 0,
-        progressCurrentlyChanging: false
+        progressCurrentlyChanging: false,
+        songLoading: false
       }
     },
     mounted: function() {
@@ -87,6 +90,19 @@
 
       // Update current song progress every second
       setInterval(this.updateSongProgress, 1000);
+
+      // TODO: Make this work for loading song on siteload
+      // They currently don't work as page hasn't been created yet
+      // Callback events for song loaded state
+      setTimeout(function() {
+        page.bus.$on("songLoading", function() {
+          self.songLoading = true;
+        });
+
+        page.bus.$on("songLoaded", function() {
+          self.songLoading = false;
+        });
+      }, 400);
     },
     methods: {
       playPause: function() {

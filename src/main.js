@@ -89,7 +89,6 @@ class ZeroApp extends ZeroFrame {
         // Import all decade merger sites
         page.cmd("fileGet", { "inner_path": "decades.json", "required": false }, (decades) => {
           app.decadeAddresses = JSON.parse(decades);
-          console.log('[decades]', app.decadeAddresses)
 
           // Request permission to the ZeroLSTN2 Merger
           page.requestPermission("Merger:ZeroLSTN2", siteInfo, function() {
@@ -158,13 +157,28 @@ class ZeroApp extends ZeroFrame {
       });
   }
 
+  // Gets all known decades and their addresses
+  getDecades() {
+    // If we haven't gotten the addresses yet, get them
+    if (!app.decadeAddresses || app.decadeAddresses.length == 0) {
+      console.log("Wasn't available, returning json file contents")
+      return page.cmdp("fileGet", { "inner_path": "decades.json", "required": false }).then((decades) => {
+        console.log("Returning:", JSON.parse(decades))
+        return page.newPromise(JSON.parse(decades));
+      });
+    }
+
+    // Otherwise if they're cached, return cached version
+    return page.newPromise(app.decadeAddresses);
+  }
+
   // Needed for ZeroRouter to work properly
   onRequest(cmd, message) {
     Router.listenForBack(cmd, message);
     if (cmd === "setSiteInfo") {
       this.siteInfo = message.params;
       app.siteInfo = message.params;
-      //app.getUserInfo();
+      app.getUserInfo();
     }
 
     if (message.params.event && message.params.event[0] === "file_done") {
@@ -213,7 +227,7 @@ class ZeroApp extends ZeroFrame {
       }
 
       // Allowed filetypes
-      var curoptional = ".+\\.(png|jpg|jpeg|gif|mp3|flac|ogg|opus|m4a|mpeg|mp4|webm|wma)";
+      var curoptional = ".+\\.(png|jpg|jpeg|gif|mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)";
       var changed = false;
       if (!data.hasOwnProperty("optional") || data.optional !== curoptional){
         data.optional = curoptional
@@ -248,6 +262,7 @@ class ZeroApp extends ZeroFrame {
     var date_added = Date.now();
     var orig_filename_list = file.name.split(".");
     var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
+    filename = this.cleanFilename(filename);
 
     var filepath = "merged-ZeroLSTN2/" + yearAddress + "/data/users/" + app.siteInfo.auth_address + "/" + filename;
     console.log("Uploading:", filepath)
@@ -325,6 +340,7 @@ class ZeroApp extends ZeroFrame {
             // [^\x00-\x7F] will match anything that is NOT ascii
             var orig_filename_list = file.name.split(".");
             var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
+            filename = page.cleanFilename(filename);
 
             // Get inner path of image file
             var filepath = "merged-ZeroLSTN2/" + mergerAddress + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + filename;
@@ -468,89 +484,120 @@ class ZeroApp extends ZeroFrame {
       songsByDecade[decadeAddress].push(song);
     });
 
+    console.log('songsByDecade:', songsByDecade)
+
     // Iterate through decade addresses and publish the songs in each
-    for (var decadeAddress in songsByDecade) {
-      console.log("Working on decade:", decadeAddress)
-      var songsInDecade = songsByDecade[decadeAddress];
+    let upload = Object.keys(songsByDecade).reduce((promiseChain, decadeAddress) => {
+      // All this reduce nonsense is so that we actually iterate through each decade address
+      // Beforehand it would just iterate through all of them before the promises actually got
+      // started, so it would just read and write to the last address over and over, which was
+      // obviously not very helpful.
+      return promiseChain.then(() => new Promise((resolve) => {
+        console.log("Working on decade:", decadeAddress)
 
-      // Get the user's data file on this merger site
-      var user_path = decadeAddress + "/data/users/" + app.siteInfo.auth_address;
-      var data_inner_path = "merged-ZeroLSTN2/" + user_path + "/data.json";
-      self.cmd("fileGet", { "inner_path": data_inner_path, "required": false }, function(data) {
-        // Parse user's data into JS object if exists
-        data = (data ? JSON.parse(data) : {});
-        console.log("data:", data)
+        // Get the user's data file on this merger site
+        var user_path = decadeAddress + "/data/users/" + app.siteInfo.auth_address;
+        var data_inner_path = "merged-ZeroLSTN2/" + user_path + "/data.json";
+        var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+        return self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false }).then(data => {
+          // Parse user's data into JS object if exists
+          data = (data ? JSON.parse(data) : {});
+          console.log("Data before:", data)
 
-        // If no songs or genres uploaded yet, create empty array
-        if (!data["songs"]) data["songs"] = [];
-        if (!data["genres"]) data["genres"] = [];
+          // If no songs or genres uploaded yet, create empty array
+          if (!data["songs"]) data["songs"] = [];
+          if (!data["genres"]) data["genres"] = [];
 
-        // Push new song values
-        songsInDecade.forEach(function(song) {
-          // Create a new songID if it doesn't exist
-          if(song.id == null) { song.id = Date.now().toString(); }
+          // Push new song values
+          var songsInDecade = songsByDecade[decadeAddress];
+          console.log(decadeAddress)
+          console.log('songsInDecade:', songsInDecade)
+          for (var i in songsInDecade) {
+            var song = songsInDecade[i];
 
-          // Store album art on disk if necessary
-          if (song.art) {
-            song.art = self.saveAlbumArt(song, decadeAddress);
-          }
+            console.log("Inserting song:", song)
+            // Create a new songID if it doesn't exist
+            if(song.id == null) { song.id = Date.now().toString(); }
 
-          // Append new song information
-          data["songs"].push({
-            id: song.id.toString(),
-            track_number: song.track_number,
-            filename: song.filename,
-            path: isEdit ? song.path : user_path,
-            title: song.title,
-            album: song.album,
-            artist: song.artist,
-            year: song.year,
-            art: song.art,
-            date_added: Date.now(),
-            is_edit: isEdit
-          });
+            // Store album art on disk if necessary
+            if (song.art) {
+              song.art = self.saveAlbumArt(song, decadeAddress);
+            }
 
-          // Push specified genres for this song
-          var genreDate = Date.now() // same date ID for all genre entries
-          if (song.genres) {
-            for (var i in song.genres) {
+            // Append new song information
+            data["songs"].push({
+              id: song.id.toString(),
+              track_number: song.track_number,
+              filename: song.filename,
+              path: isEdit ? song.path : user_path,
+              title: song.title,
+              album: song.album,
+              artist: song.artist,
+              year: song.year,
+              art: song.art,
+              compilation: song.compilation,
+              date_added: Date.now(),
+              is_edit: isEdit
+            });
+
+            // Push specified genres for this song
+            var genreDate = Date.now() // same date ID for all genre entries
+            if (song.genres) {
+              for (var i in song.genres) {
+                data["genres"].push({
+                  song_id: song.id.toString(),
+                  genre: song.genres[i].tag,
+                  date_added: genreDate
+                });
+              }
+            } else if (song.genre){
+              // Push single genre if present
               data["genres"].push({
                 song_id: song.id.toString(),
-                genre: song.genres[i].tag,
+                genre: song.genre,
                 date_added: genreDate
               });
             }
-          } else if (song.genre){
-            // Push single genre if present
-            data["genres"].push({
-              song_id: song.id.toString(),
-              genre: song.genre,
-              date_added: genreDate
-            });
           }
-        });
 
-        console.log("Data afterwards:", data)
+          console.log("Data afterwards:", data)
 
-        // Write values back to JSON string and the data.json
-        var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
-
-        self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]).then((res) => {
+          // Write values back to JSON string and the data.json
+          return unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
+        }).then(json_raw => {
+          return self.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]);
+        }).then(res => {
           if (res != 'ok') {
-            this.cmd("wrapperNotification", ["error writing to file:", res]);
+            self.cmd("wrapperNotification", ["error writing to file:", res]);
             return;
           }
 
           // Sign and publish this decade
-          var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
-          console.log("Signing Merger:", content_inner_path)
+          console.log("Wrote to data.json. Now signing", content_inner_path);
 
-          self.cmdp("siteSign", { "inner_path": content_inner_path }).then(res => {
-            self.cmd("sitePublish", { "inner_path": content_inner_path, "sign": false });
-          });
+          return self.cmdp("siteSign", { "inner_path": content_inner_path });
+        }).catch(err => {
+          self.cmd("wrapperNotification", ["error signing:", err]);
+        }).then(() => {
+          // TODO: Needed?
+          resolve();
+        });
+      }));
+
+    }, Promise.resolve());
+
+    upload.then(() => {
+      console.log("done signing... Now publishing...")
+
+      let publishes = Object.keys(songsByDecade).map((decadeAddress) => {
+        return new Promise((resolve) => {
+          var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+          return self.cmdp("sitePublish", { "inner_path": content_inner_path, "sign": false });
         });
       });
-    }
+
+      Promise.all(publishes).then(() => console.log("Done with publishing."));
+    });
 
     // Call callback function
     if (f !== null && typeof f === "function") { f(); }
@@ -573,8 +620,11 @@ class ZeroApp extends ZeroFrame {
     var imageData = atob(b64)
 
     // Write to file
-    var imageFiletype = song.art.substring(11).split(';')[0];
+    var imageFiletype = song.art.substring(11).split(';')[0] || "jpeg";
     var imageFilename = song.artist + "_" + song.album + "." + imageFiletype;
+    console.log("imageFilename before:", imageFilename)
+    imageFilename = this.cleanFilename(imageFilename)
+    console.log("imageFilename after:", imageFilename)
     imageFilename = imageFilename.replace(/ /g, "_");
     var filepath = "merged-ZeroLSTN2/" + address + "/data/users/" + app.siteInfo.auth_address + "/artwork/" + imageFilename;
 
@@ -664,7 +714,6 @@ class ZeroApp extends ZeroFrame {
           return this.cmdp("wrapperNotification", ["error", "Failed to sign user data.", 3000]);
         }
       })
-
   }
 
   // -------------------------------------------------- //
@@ -689,13 +738,31 @@ class ZeroApp extends ZeroFrame {
         var decade = app.decadeAddresses[i];
         if (decade.name.indexOf(yearKeywordValue) != -1 || decade.address == yearKeywordValue) {
           // If so, only search for songs within this decade
-          extraParams += 'AND site = "' + decade.address + '"';
+          extraParams += 'AND site = "' + decade.address + '" ';
           break;
         }
       }
 
       // Remove the keyword value from the actual search
       searchTerm = searchTerm.substring(0, yearKeywordValueIndex - 1) + searchTerm.substring(end + 1);
+    }
+
+    let genreKeywordValueIndex = searchTerm.indexOf("genre:");
+    // TODO: Put in for loop for multiple genres
+    if (genreKeywordValueIndex != -1) {
+      // Only search for songs in given genre
+
+      // Find the end of the keyword value
+      var end = searchTerm.indexOf(" ", genreKeywordValueIndex) == -1 ? searchTerm.length - 1 : searchTerm.indexOf(" ", genreKeywordValueIndex);
+
+      // Deduce the genre keyword value: 'Rock'
+      var genreKeywordValue = searchTerm.substring(genreKeywordValueIndex + 6, end);
+
+      // Add genre restriction to search
+      //extraParams += 'AND genre = "' + decade.address + '" ';
+
+      // Remove the keyword value from the actual search
+      searchTerm = searchTerm.substring(0, genreKeywordValueIndex - 1) + searchTerm.substring(end + 1);
     }
 
     // Convert quotes to double quotes for DB
@@ -716,7 +783,7 @@ class ZeroApp extends ZeroFrame {
         break;
       case 'album':
         query = `
-        SELECT DISTINCT songs.album FROM
+        SELECT DISTINCT songs.album, songs.artist FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
@@ -851,9 +918,7 @@ class ZeroApp extends ZeroFrame {
     // Grab first value from returned array
     return this.cmdp("dbQuery", [query])
       .then((results) => {
-        return new Promise((resolve, reject) => {
-          resolve(results[0]);
-        });
+        return newPromise(results[0]);
       });
   }
 
@@ -875,15 +940,15 @@ class ZeroApp extends ZeroFrame {
   songExists(song) {
     var self = this;
 
-    song.title = this.preprocessQuotes(song.title);
-    song.album = this.preprocessQuotes(song.album);
-    song.artist = this.preprocessQuotes(song.artist);
+    var title = this.preprocessQuotes(song.title);
+    var album = this.preprocessQuotes(song.album);
+    var artist = this.preprocessQuotes(song.artist);
 
     var query = `
     SELECT COUNT (*) FROM songs
-    WHERE title="${song.title}"
-    AND album="${song.album}"
-    AND artist="${song.artist}"
+    WHERE title="${title}"
+    AND album="${album}"
+    AND artist="${artist}"
     LIMIT 1
     `;
 
@@ -920,10 +985,13 @@ class ZeroApp extends ZeroFrame {
 
   // Returns a list of all albums, with an optional max song amount and offset
   // TODO: Deal with two artists having the same name for an album
-  // Somehow send information back with both artist and album...
   getAllAlbums(limit = 0, offset = 0) {
     var query = `
-        SELECT DISTINCT album, artist FROM songs
+        SELECT DISTINCT album FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
+        AND songs.id = aux.id
+        AND songs.album != ""
         LEFT JOIN json USING (json_id)
         ORDER BY album COLLATE NOCASE
         `;
@@ -939,7 +1007,10 @@ class ZeroApp extends ZeroFrame {
   // Returns an array of all known artist names, with an optional max song amount and offset
   getAllArtists(limit = 0, offset = 0) {
     var query = `
-        SELECT DISTINCT artist FROM songs
+        SELECT DISTINCT artist FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
+        AND songs.id = aux.id
         LEFT JOIN json USING (json_id)
         ORDER BY artist COLLATE NOCASE
         `;
@@ -1079,10 +1150,12 @@ class ZeroApp extends ZeroFrame {
     // TODO: Prevent users from being able to add to other's playlists
     // Need to know auth address of user who created playlist at querytime
     var query = `
-      SELECT * FROM playlist_songs
-      LEFT JOIN songs on songs.id = playlist_songs.song_id
+      SELECT * FROM playlist_songs,
+      (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+      LEFT JOIN songs ON songs.id = playlist_songs.song_id
       WHERE playlist_songs.playlist_id="${id}"
-      ORDER BY playlist_songs.playlist_index
+      AND songs.date_added = aux.maxDate
+      ORDER BY playlist_songs.playlist_index;
       `;
 
     return this.cmdp("dbQuery", [query]);
@@ -1232,6 +1305,10 @@ class ZeroApp extends ZeroFrame {
 
   // Play a music file
   playSongFile(filepath) {
+    // Tell all we're loading the current song
+    page.bus.$emit("songLoading");
+    console.log("Song loading...")
+
     // If audioObject already exists, change its source
     if(app.audioObject) {
       app.audioObject.src = filepath;
@@ -1259,6 +1336,11 @@ class ZeroApp extends ZeroFrame {
           }, 1000);
         }
         self.songEnded();
+      });
+
+      app.audioObject.addEventListener('canplay', function() {
+        // Tell app we've finishing loading the song
+        page.bus.$emit('songLoaded');
       });
     }
 
@@ -1345,14 +1427,13 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Removes a single song from the play queue
-  removeSongFromQueue(song) {
-    var index = app.playQueue.indexOf(song);
+  removeSongFromQueue(index) {
     if (index != -1) {
       app.playQueue.splice(index, 1);
       if (index < app.queueIndex) {
         app.queueIndex--;
         if (app.queueIndex < 0) { app.queueIndex = 0; }
-      } else if (index == app.queueIndex) {
+      } else if (index == app.queueIndex && app.playQueue.length != 0) {
         // If the current song was removed, try to play the next song
         this.playSongAtQueueIndex(app.queueIndex)
       }
@@ -1541,6 +1622,13 @@ class ZeroApp extends ZeroFrame {
   escapeRegExp(str) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
   }
+
+  // Remove any non-allowed characters in a filename
+  cleanFilename(str) {
+    str = this.replaceAll(str, '|', '_');
+    str = this.replaceAll(str, ':', '_');
+    return str;
+  }
 }
 
 page = new ZeroApp();
@@ -1609,5 +1697,6 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "search", component: Search },
   { route: "playlist/:playlistID", component: Playlist },
   { route: "playlists", component: Playlists },
+  { route: "tab/:currentTab", component: Home},
   { route: "", component: Home }
 ]);

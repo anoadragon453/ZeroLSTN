@@ -1,6 +1,21 @@
 <template>
   <div id="playlist">
     <addtoplaylistmodal></addtoplaylistmodal>
+    <!-- Modal Structure -->
+    <div class="modal">
+      <div class="modal-content">
+        <div class="row">
+          <h4>Playlist Link</h4>
+        </div>
+        <div class="row">
+          <div class="input-field col s6">
+            <!-- TODO: Make a copy link modal vue component for song linking and whatever else -->
+            <input placeholder="Placeholder" id="playlist_link" :value="playlistLink" type="text" class="validate" readonly>
+            <label for="playlist_link" class="active">Link to Playlist</label>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="row">
       <div class="col s1 m1 l4 hide-on-med-and-down">
         <playQueue :play-queue-obj="playQueueObj" :queue-index="queueIndex"></playQueue>
@@ -12,11 +27,15 @@
           <div class="col s12">
             <ul class="collection with-header">
               <li class="collection-header">
+                <popper trigger="hover" :options="{placement: 'auto'}">
+                  <div class="popper">Delete Playlist</div>
+                  <i slot="reference" @click.prevent="deletePlaylist()" class="material-icons tooltip right">delete</i>
+                </popper>
+                <popper trigger="hover" :options="{placement: 'auto'}">
+                  <div class="popper">Get Link</div>
+                  <i slot="reference" @click.prevent="getLinkToPlaylist()" class="material-icons tooltip right">link</i>
+                </popper>
                 <span v-if="songs.length > 0">
-                  <popper trigger="hover" :options="{placement: 'auto'}">
-                    <div class="popper">Delete Playlist</div>
-                    <i slot="reference" @click.prevent="deletePlaylist()" class="material-icons tooltip right">delete</i>
-                  </popper>
                   <popper trigger="hover" :options="{placement: 'auto'}">
                     <div class="popper">Download Playlist</div>
                     <i slot="reference" @click.prevent="downloadPlaylist()" class="material-icons tooltip right">cloud_download</i>
@@ -66,7 +85,8 @@
     data: () => {
       return {
         playlist: null,
-        songs: []
+        songs: [],
+        playlistLink: ""
       }
     },
     mounted: function() {
@@ -78,6 +98,9 @@
         console.log("[playlist]", playlist)
         self.playlist = playlist;
       });
+
+      // Save link to current playlist to display later
+      self.playlistLink = "http://127.0.0.1:43110/zerolstn.bit/playlist/" + Router.currentParams["playlistID"];
 
       // Load songs of this playlist
       this.loadSongs();
@@ -139,6 +162,9 @@
           // Reload songs
           self.loadSongs();
         });
+      },
+      getLinkToPlaylist: function() {
+        
       }
     }
   }

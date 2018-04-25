@@ -25,6 +25,13 @@
     },
     props: ["playQueueObj", "queueIndex"], // TODO: Move to store
     name: "home",
-    data: () => {}
+    data: () => {},
+    mounted: function() {
+      // Tell the music component to switch to the right tab if it is
+      // specified in the URL
+      if (Router.currentParams['currentTab']) {
+        page.bus.$emit("currentTab", Router.currentParams['currentTab']);
+      }
+    }
   }
 </script>

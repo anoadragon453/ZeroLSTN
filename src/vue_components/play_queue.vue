@@ -14,7 +14,7 @@
               <span v-if="index == queueIndex"><b>{{ song.title }}</b></span>
               <span v-else>{{ song.title }}</span>
             </a>
-            <i @click.prevent="removeFromQueue(song)" class="material-icons right">close</i>
+            <i @click.prevent="removeFromQueue(index)" class="material-icons right">close</i>
           </li>
         </ul>
       </div>
@@ -40,9 +40,9 @@
         // Skip to clicked play queue song index
         page.playSongAtQueueIndex(index);
       },
-      removeFromQueue: function(song) {
+      removeFromQueue: function(index) {
         // Remove a single song from the PlayQueue
-        page.removeSongFromQueue(song);
+        page.removeSongFromQueue(index);
       },
       clearPlayQueue: function() {
         // Remove all the songs in the play queue

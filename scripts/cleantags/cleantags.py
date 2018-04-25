@@ -21,8 +21,12 @@ from mutagen.id3 import ID3, APIC, TIT2, TPE1, TRCK, TALB, USLT, TYER, TORY, TDR
 # TCON: genre
 
 def check_filetype(path):
-    # Prevent any album art from being selected
-    return not re.match(r'.*\.jpeg|.*\.jpg|.*\.png', path, re.I) # case insensitive match
+    # Don't match hidden files
+    if os.path.basename(path).startswith("."):
+        return False
+
+    # Prevent anything other than audio from being selected
+    return re.match(r'(.*\.)(mp3|wav|wma|ogg|mpeg|m4a|opus|flac|ac3|adx|aiff|alaw|alsa|amr|apng|asf|ass|ast|au|avi|bit|caf|cavsvideo|data|daud|dirac|dnxhd|dts|dv|eac3|fbdev|ffm|ffmetadata|filmstrip|flv|h264|hevc|m4v|mlp|mpeg|mpegts|oss|pulse|truehd|tta|webm|wv)$', path, re.I) # case insensitive match
 
 def get_tag(audio, key):
     # Try to extract the tag. If unsuccessful return empty string
@@ -81,16 +85,16 @@ def clean_metadata(path):
     except ID3NoHeaderError:
         cleanfile = ID3()
 
-    cleanfile.add(TPE1(encoding=3, text=artist))
-    cleanfile.add(TALB(encoding=3, text=album))
-    cleanfile.add(TIT2(encoding=3, text=title))
-    cleanfile.add(TCON(encoding=3, text=genre))
-    cleanfile.add(TRCK(encoding=3, text=track_num))
-    cleanfile.add(TDRC(encoding=3, text=date))
-    cleanfile.add(TYER(encoding=3, text=year))
-    cleanfile.add(TORY(encoding=3, text=year))
-    cleanfile.add(USLT(encoding=3, text=lyrics))
-    cleanfile.add(APIC(encoding=3, mime='image/jpeg', type=3, desc=u'Cover', data=art))
+    if artist != "":    cleanfile.add(TPE1(encoding=3, text=artist))
+    if album != "":     cleanfile.add(TALB(encoding=3, text=album))
+    if title != "":     cleanfile.add(TIT2(encoding=3, text=title))
+    if genre != "":     cleanfile.add(TCON(encoding=3, text=genre))
+    if track_num != "": cleanfile.add(TRCK(encoding=3, text=track_num))
+    if date != "":      cleanfile.add(TDRC(encoding=3, text=date))
+    if year != "":      cleanfile.add(TYER(encoding=3, text=year))
+    if year != "":      cleanfile.add(TORY(encoding=3, text=year))
+    if lyrics != "":    cleanfile.add(USLT(encoding=3, text=lyrics))
+    if art != "":       cleanfile.add(APIC(encoding=3, mime='image/jpeg', type=3, desc=u'Cover', data=art))
     cleanfile.save(path, v2_version=3)
 
     # Delete old, dirty file
@@ -115,6 +119,10 @@ parser = argparse.ArgumentParser(description='Clean potentially identifiable inf
 parser.add_argument("path", help="Path to song file or directory containing song files")
 args = parser.parse_args()
 path = os.path.abspath(args.path)
+
+# Appease stupid windows
+if path.endswith('"'):
+    path = path[:-1]
 
 # Get music files specified on the commandline
 files_to_process = []

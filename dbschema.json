@@ -41,13 +41,14 @@
                 ["artist", "TEXT"],
                 ["album", "TEXT"],
                 ["art", "TEXT"],
+                ["compilation", "INTEGER"],
                 ["year", "INTEGER"],
                 ["date_added", "INTEGER"],
                 ["is_edit", "INTEGER"],
                 ["json_id", "INTEGER REFERENCES json (json_id)"]
             ],
             "indexes": ["CREATE UNIQUE INDEX songs_id ON songs(json_id, id)"],
-            "schema_changed": 13
+            "schema_changed": 14
         },
         "genres": {
             "cols": [

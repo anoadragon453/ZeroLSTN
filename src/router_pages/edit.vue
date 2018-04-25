@@ -26,9 +26,17 @@
       </div>
     </div>
     <div class="row">
-      <div class="input-field col s12">
+      <div class="input-field col s12 no-margin-bottom">
         <input id="artist" type="text" class="validate" v-model="song.artist">
         <label id="artist-label" for="artist">Artist</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="input-field col s12 no-margin-bottom">
+        <label>
+            <input type="checkbox" v-model="song.compilation" class="filled-in"/>
+            <span>This song is part of a compilation album.</span>
+        </label>
       </div>
     </div>
     <div class="row">
@@ -158,6 +166,7 @@
     },
     methods: {
       presentSongData: function() {
+        console.log("Editing song:", this.song)
         if (this.song.art) {
           // Show img tag only if album art exists
           document.getElementById("albumArtRow").style.display = "";

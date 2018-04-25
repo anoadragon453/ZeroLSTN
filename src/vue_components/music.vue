@@ -5,7 +5,7 @@
       <div class="col s12">
         <ul class="tabs tabs-fixed-width z-depth-1">
           <li v-for="tab in tabs" class="tab col s3">
-            <a :href="'#' + tab.show">{{ tab.name }}</a>
+            <a :href="'#' + tab.name.toLowerCase()">{{ tab.name }}</a>
           </li>
         </ul>
       </div>
@@ -36,36 +36,6 @@
           </a>
         </ul>
       </div>
-      <!--
-        <div id="playlists" class="col s12">
-          <ul class="collapsible" data-collapsible="expandable">
-            <li>
-              <div class="collapsible-header"><i class="material-icons">playlist_play</i>Best Songs 2017</div>
-              <div class="collapsible-body">
-                <div class="row">
-                  <div class="col s12">
-                    <ul class="collection with-header">
-                      <li class="collection-header"><h4>Best Songs 2017</h4></li>
-                      <li class="collection-item">Strawberry Swing</li>
-                      <li class="collection-item">Past Winters</li>
-                      <li class="collection-item">Snowcone</li>
-                      <li class="collection-item">Here We Play</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li>
-              <div class="collapsible-header"><i class="material-icons">playlist_play</i>Second</div>
-              <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-            </li>
-            <li>
-              <div class="collapsible-header"><i class="material-icons">playlist_play</i>Third</div>
-              <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-            </li>
-          </ul>
-        </div>
-      -->
     </div>
     <div class="row"></div>
     <div class="row"></div>
@@ -77,7 +47,7 @@
   var Router = require("../libs/router.js");
 
   module.exports = {
-    props: ["siteInfo"],
+    props: ["siteInfo", "currentTab"],
     name: "Music",
     beforeMount: function() {
       // TODO: Paginate
@@ -100,35 +70,39 @@
 
       // Initialize tabs
       var tabs = document.querySelector("ul.tabs");
-      var instance = new M.Tabs(tabs, {});
-
-      // Initialize collapsible
-      // TODO: Uncomment when playlists are live again
-      //var collap = document.querySelector("ul.collapsible");
-      //var collapInstance = new M.Collapsible(collap, {});
-
-      // Pull decades from a local file
-      page.cmdp("fileGet", { inner_path: "./decades.json" })
-      .then((decades) => {
-        // If the file doesn't exist, we won't show the listing
-        self.decades  = decades ? JSON.parse(decades) : {};
+      self.tabSwitcher = new M.Tabs(tabs, {
+        onShow: self.switchedTab
       });
+
+      // If there's a tab in the URL, switch to that
+      page.bus.$on("currentTab", function(currentTab) {
+        self.tabSwitcher.select(currentTab.toLowerCase());
+      });
+
+      // Get decades
+      page.getDecades().then((decades) => {
+        self.decades = decades;
+      });
+      console.log('decades:', self.decades)
     },
     data: () => {
       return {
+        tabSwitcher: null,
         tabs: [
-          { name: "Artists", icon: "people", active: false, show: "artists" },
-          { name: "Albums", icon: "album", active: false, show: "albums" },
-          { name: "Years", icon: "library_music", active: false, show: "years" }
-          //{ name: "Playlists", icon: "playlist_add", active: false, show: "playlists" }
+          { name: "Artists", icon: "people", active: false },
+          { name: "Albums", icon: "album", active: false },
+          { name: "Years", icon: "library_music", active: false }
         ],
         artists: [],
         albums: [],
-        playlists: [],
         decades: []
       }
     },
     methods: {
+      switchedTab: function() {
+        var currentTab = this.tabs[this.tabSwitcher.index].name;
+        Router.navigate('/tab/' + currentTab);
+      },
       goToArtist: function(artist) {
         // Go to the specified artist page
         if (artist === '') {
