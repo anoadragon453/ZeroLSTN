@@ -1,5 +1,5 @@
 <template>
-  <footer class="page-footer blue lighten-2" id="Bottombar">
+  <footer class="page-footer sitebar" id="Bottombar">
     <div id="song-progress" class="hide-on-med-and-down range-field center">
       <input type="range" @input="visualChangeSongProgress()" @change="changeSongProgress()" v-model="songProgress" id="track-progress" min="0" max="100" />
     </div>

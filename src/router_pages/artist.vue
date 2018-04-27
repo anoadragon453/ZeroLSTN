@@ -100,7 +100,7 @@
 
         var songs = [];
         this.albums.forEach((album) => {
-          page.getSongsInAlbum(album, self.artist)
+          page.getSongsInAlbumByArtist(album, self.artist)
           .then((songs) => {
             // Queue songs
             console.log("[queuing]", songs)
@@ -127,7 +127,7 @@
         .then((albums) => {
           var songs = [];
           albums.forEach((album) => {
-            page.getSongsInAlbum(album, self.artist)
+            page.getSongsInAlbumByArtist(album, self.artist)
             .then((songs) => {
               songs.forEach((song) => {
                 var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename + "|all";

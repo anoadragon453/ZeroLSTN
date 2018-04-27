@@ -30,7 +30,8 @@
                 </popper>
                 <h4 v-if="album !== ''">{{ album }}</h4>
                 <h4 v-else><i>Blank</i></h4>
-                By <a @click.prevent="goToArtist(artist)">{{ artist }}</a>
+                <span v-if="artist">By <a @click.prevent="goToArtist(artist)">{{ artist }}</a></span>
+                <span v-else>Compilation Album</span>
               </li>
               <songitem  v-for="song in songs" :editable="false" :song="song" :current-song="currentSong" :audio-playing="audioPlaying"></songitem>
             </ul>
@@ -62,30 +63,40 @@
     name: "album",
     data: () => {
       return {
+        compilationAlbum: false,
         album: "",
         artist: "",
         songs: []
       }
     },
     mounted: function() {
-      // Get album/artist from URL
-      this.artist = decodeURI(Router.currentParams["artist"]);
-      this.album = decodeURI(Router.currentParams["album"]);
+      var self = this;
 
-      // Account for blank titles
-      if (this.artist === "Blank") { this.artist = "" };
+      // Get album/artist from URL
+      if (Router.currentParams["artist"]) {
+        this.artist = decodeURI(Router.currentParams["artist"]);
+        if (this.artist === "Blank") { this.artist = "" };
+      } else {
+        // Do different things if this is a compilation album
+        this.compilationAlbum = true;
+        console.log("It's a compilatoin Album!")
+      }
+
+      // Get album name
+      this.album = decodeURI(Router.currentParams["album"]);
       if (this.album === "Blank") { this.album = "" };
-    },
-    asyncComputed: {
-      songInfo: {
-        get() {
-          var self = this;
-          return page.getSongsInAlbum(self.album, self.artist)
-          .then((songs) => {
-            self.songs = songs;
-            return true;
-          });
-        }
+
+      // Get song info
+      if (self.compilationAlbum) {
+        page.getSongsInCompilationAlbum(self.album)
+        .then((songs) => {
+          self.songs = songs;
+        });
+      } else {
+        page.getSongsInAlbumByArtist(self.album, self.artist)
+        .then((songs) => {
+          self.songs = songs;
+        });
       }
     },
     methods: {

@@ -4,7 +4,7 @@
       <div id="queue" class="col s12">
         <ul class="collection with-header">
           <li class="collection-header">
-            <i @click.prevent="clearPlayQueue()" class="material-icons right black-text">clear_all</i>
+            <i @click.prevent="clearPlayQueue()" class="material-icons right">clear_all</i>
             <h4>Play Queue</h4>
           </li>
           <li class="collection-item" v-if="!playQueueObj || playQueueObj.length == 0">No songs in queue.</li>

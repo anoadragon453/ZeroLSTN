@@ -43,6 +43,7 @@ var app = new Vue({
     currentSong: null,              // The currently playing song
     userInfo: null,                 // ZeroFrame userInfo object
     siteInfo: null,                 // ZeroFrame siteInfo object
+    localStorage: null,             // Localstorage data
     decadeAddresses: [],            // List of all merger Zites (decades) we know of
     playQueue: [],                  // Play Queue itself
     queueIndex: 0,                  // Current index in the play queue of song we're playing
@@ -86,38 +87,43 @@ class ZeroApp extends ZeroFrame {
         app.siteInfo = siteInfo;
         app.getUserInfo();
 
-        // Import all decade merger sites
-        page.cmd("fileGet", { "inner_path": "decades.json", "required": false }, (decades) => {
-          app.decadeAddresses = JSON.parse(decades);
+        // Get localstorage for site
+        page.cmd("wrapperGetLocalStorage", {}, (localStorage) => {
+          app.localStorage = localStorage ? localStorage[0] || {} : {};
 
-          // Request permission to the ZeroLSTN2 Merger
-          page.requestPermission("Merger:ZeroLSTN2", siteInfo, function() {
-            page.cmdp("mergerSiteList", [true])
-              .then((mergerZites) => {
-                console.log("Merger sites:", mergerZites)
-                // Check through each known decade address
-                // If we aren't already connected to a decade merger zite, add it
-                var addressList = app.decadeAddresses.map(a => a.address);
-                addressList.push(playlistAddress);
-                console.log("addressList", addressList)
-                var needToGet = [];
-                app.decadeAddresses.forEach(function(decade) {
-                  if (!mergerZites[decade.address]){
-                    needToGet.push(decade.address);
+          // Import all decade merger sites
+          page.cmd("fileGet", { "inner_path": "decades.json", "required": false }, (decades) => {
+            app.decadeAddresses = JSON.parse(decades);
+
+            // Request permission to the ZeroLSTN2 Merger
+            page.requestPermission("Merger:ZeroLSTN2", siteInfo, function() {
+              page.cmdp("mergerSiteList", [true])
+                .then((mergerZites) => {
+                  console.log("Merger sites:", mergerZites)
+                  // Check through each known decade address
+                  // If we aren't already connected to a decade merger zite, add it
+                  var addressList = app.decadeAddresses.map(a => a.address);
+                  addressList.push(playlistAddress);
+                  console.log("addressList", addressList)
+                  var needToGet = [];
+                  app.decadeAddresses.forEach(function(decade) {
+                    if (!mergerZites[decade.address]){
+                      needToGet.push(decade.address);
+                    }
+                  });
+
+                  // Add the playlist merger if we haven't already
+                  if (!mergerZites[playlistAddress]) {
+                    needToGet.push(playlistAddress);
+                  }
+
+                  // Request ZeroFrame to add any mergers we need
+                  if (needToGet.length > 0) {
+                    console.log("We need to get:", needToGet);
+                    page.addMerger(needToGet);
                   }
                 });
-
-                // Add the playlist merger if we haven't already
-                if (!mergerZites[playlistAddress]) {
-                  needToGet.push(playlistAddress);
-                }
-
-                // Request ZeroFrame to add any mergers we need
-                if (needToGet.length > 0) {
-                  console.log("We need to get:", needToGet);
-                  page.addMerger(needToGet);
-                }
-              });
+            });
           });
         });
       });
@@ -190,6 +196,44 @@ class ZeroApp extends ZeroFrame {
     if (!app.siteInfo) { return false; }
     return app.siteInfo.cert_user_id != null;
   }
+
+  getLocalStorage(key) {
+    var self = this;
+
+    // Attempt to return cached value
+    if (app.localStorage) {
+      return self.newPromise(app.localStorage[key]);
+    }
+
+    // If cached value isn't available yet, get manually
+    return page.cmdp("siteInfo", {}).then(() => {
+      return page.cmdp("wrapperGetLocalStorage", {}).then((storage) => {
+        app.localStorage = storage ? storage[0] || {} : {};
+        console.log("siteInfo:", app.siteInfo)
+        console.log("localStorage:", app.localStorage)
+        console.log("storage:", storage)
+        return self.newPromise(app.localStorage[key]);
+      });
+    });
+  }
+
+  setLocalStorage(key, value) {
+    // Set a value for a key in site's localstorage
+
+    // Check for cached value first
+    if (app.localStorage) {
+      app.localStorage[key] = value;
+
+      console.log("Writing:", app.localStorage)
+      return page.cmdp("wrapperSetLocalStorage", [app.localStorage], null);
+    } else {
+      return page.cmdp("wrapperGetLocalStorage", {}).then((storage) => {
+        app.localStorage = storage ? storage[0] || {} : {};
+        app.localStorage[key] = value;
+
+        return page.cmdp("wrapperSetLocalStorage", [app.localStorage], null);
+      });
+  }}
 
   selectUser() {
     return this.cmdp("certSelect", { accepted_domains: ["zeroid.bit", "kaffie.bit", "cryptoid.bit"] });
@@ -275,9 +319,13 @@ class ZeroApp extends ZeroFrame {
 
         var req = new XMLHttpRequest();
 
-        req.upload.addEventListener("loadend", () => {
-          if (f !== null && typeof f === "function") f(filename);
-        });
+        console.log(req)
+        req.onreadystatechange = () => {
+          // Listen for server closing connection: http://stackoverflow.com/questions/15418608/#15491086
+          if ( req.readyState == 4 ) {
+            if (f !== null && typeof f === "function") f(filename);
+          }
+        };
         req.withCredentials = true;
         req.open("POST", init_res.url);
         req.send(formdata);
@@ -916,9 +964,10 @@ class ZeroApp extends ZeroFrame {
     `;
 
     // Grab first value from returned array
+    var self = this;
     return this.cmdp("dbQuery", [query])
       .then((results) => {
-        return newPromise(results[0]);
+        return self.newPromise(results[0]);
       });
   }
 
@@ -987,14 +1036,16 @@ class ZeroApp extends ZeroFrame {
   // TODO: Deal with two artists having the same name for an album
   getAllAlbums(limit = 0, offset = 0) {
     var query = `
-        SELECT DISTINCT album FROM
+        SELECT album, compilation, artist FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
         INNER JOIN songs ON songs.date_added = aux.maxDate
         AND songs.id = aux.id
         AND songs.album != ""
         LEFT JOIN json USING (json_id)
+        GROUP BY album, compilation
         ORDER BY album COLLATE NOCASE
         `;
+    // TODO: WIP Need to not group together non-compilation albums
 
     // Execute query
     return this.cmdp("dbQuery", [query])
@@ -1060,8 +1111,30 @@ class ZeroApp extends ZeroFrame {
     });
   }
 
+  // Returns all songs in a given compilation album
+  getSongsInCompilationAlbum(albumName) {
+    albumName = this.preprocessQuotes(albumName);
+
+    var query = `
+        SELECT songs.* FROM
+        (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+        INNER JOIN songs ON songs.date_added = aux.maxDate
+        AND songs.id = aux.id
+        AND songs.album = "${albumName}"
+        AND songs.compilation = 1
+        LEFT JOIN json USING (json_id)
+        ORDER BY track_number
+        `;
+
+    return this.cmdp("dbQuery", [query])
+      .then((songs) => {
+        console.log("Compilation got songs:", songs)
+        return self.getInfoForSongs(songs);
+      });
+  }
+
   // Returns all songs in a given artist's album
-  getSongsInAlbum(albumName, artistName) {
+  getSongsInAlbumByArtist(albumName, artistName) {
     albumName = this.preprocessQuotes(albumName);
     artistName = this.preprocessQuotes(artistName);
 
@@ -1078,6 +1151,7 @@ class ZeroApp extends ZeroFrame {
 
     return this.cmdp("dbQuery", [query])
       .then((songs) => {
+        console.log("Normal get songs:", songs)
         return self.getInfoForSongs(songs);
       });
   }
@@ -1691,6 +1765,7 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "edit/store/:index", component: Edit },
   { route: "edit/:songID", component: Edit },
   { route: "artist/:artist", component: Artist },
+  { route: "album/compilation/:album", component: Album },
   { route: "album/:artist/:album", component: Album },
   { route: "nowplaying", component: NowPlaying },
   { route: "search/:searchText", component: Search },

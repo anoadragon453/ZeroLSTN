@@ -113,7 +113,9 @@
         newSongs: null,
         doNotOverwrite: true,
         uploadingFile: false,
-        publishing: false
+        publishing: false,
+        publishCount: 0,
+        uploadBatchSize: 100
       }
     },
     beforeMount: function() {
@@ -196,7 +198,7 @@
         for (var i = 0; i < files.length; i++) {
           var file = files[i];
           // Check if the file is one of approved filetype
-          if (!file || typeof file !== "object" || !file.type.match("(audio)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)")) {
+          if (!file || typeof file !== "object" || !file.type.match("(audio|video)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)")) {
             console.log(file.name, "Filetype not supported. Skipping...");
             skippedFiles++;
             fullLength--;
@@ -206,10 +208,10 @@
 
           // Read the ID3 tags
           self.readTags(file, {
-            onSuccess: function(filename, tag) {
+            onSuccess: function(loadedFile, tag) {
               // Add the file with the tags into filesWithTags
               // DEBUG: console.log("file is", filename)
-              newSongs.push(self.craftSongObject(filename, tag.tags));
+              newSongs.push({file: loadedFile, song: self.craftSongObject(loadedFile.name, tag.tags)});
 
               // Run this once all songs are scraped
               console.log(newSongs.length, fullLength)
@@ -217,10 +219,10 @@
                 self.finishUploading(newSongs)
               }
             },
-            onError: function(file, error) {
-              console.log("[jsmediatags]:", error.type, error.info);
+            onError: function(loadedFile, error) {
+              console.log("[jsmediatags]:", loadedFile.name, error.type, error.info);
 
-              newSongs.push(self.craftSongObject(file, {}));
+              newSongs.push({file: loadedFile, song: self.craftSongObject(loadedFile.name, {})});
 
               // Run this once all songs are scraped
               // Last one may have had failed tag reading
@@ -252,7 +254,8 @@
         this.uploadingFile = false;
         this.uploadModal.M_Modal.close();
       },
-      craftSongObject: function(file, tags) {
+      craftSongObject: function(filename, tags) {
+        // Create a song object with all relevant tags
         var song = {};
 
         // Set song information
@@ -290,14 +293,14 @@
         // Mark song as untagged if tags is null
         if (Object.keys(tags).length == 0) {
           song['untagged'] = true;
-          song['title'] = file.name;
+          song['title'] = filename;
           song['artist'] = 'Unknown';
           song['album'] = 'Unknown';
           song['track_number'] = 1;
-          song['year'] = 1;
+          song['year'] = (new Date()).getFullYear(); // Default to current year
         }
 
-        return {"file": file, "song": song};
+        return song;
       },
       editSong: function(song) {
         Router.navigate('edit/'+song.id);
@@ -337,10 +340,6 @@
           return;
         }
 
-        var self = this;
-        var totalSongs = this.newSongs.length;
-        var publishCount = 0;
-
         // All songs might've been duplicates. In that case, just return
         if (this.newSongs.length == 0) {
           return;
@@ -349,26 +348,34 @@
         var publishButton = document.getElementById("publishsongs");
         publishButton.innerHTML = "Publishing...";
 
-        self.publishing = true;
+        this.publishing = true;
 
         // Upload all songs in newSongs
-        for (var i in this.newSongs) {
-          // Upload each song file
-          this.newSongs[i].song.filename = page.uploadSongBigFile(this.newSongs[i].song.year, this.newSongs[i].file, function() {
-              // Song is done uploading, release it from memory
-              self.newSongs[i].file = null;
+        this.publishCount = 0;
+        this.runBatchPublish(0);
+      },
+      runBatchPublish: function(offset) {
+        // Upload a batch of songs
+        var totalSongs = this.newSongs.length;
+        var batchCount = totalSongs / this.uploadBatchSize;
+        var publishButton = document.getElementById("publishsongs");
 
+        for (var i = offset; i < offset + this.uploadBatchSize && i < totalSongs; i++) {
+          // Upload each song file
+          var self = this;
+          console.log("Publishing", this.newSongs[i])
+          this.newSongs[i].song.filename = page.uploadSongBigFile(this.newSongs[i].song.year, this.newSongs[i].file, function() {
               // Count the progress we've made in uploading
-              publishCount++;
+              self.publishCount++;
 
               // Show progress in publish button
-              publishButton.innerHTML = "Publishing... (" + publishCount + "/" + totalSongs + ")";
+              publishButton.innerHTML = "Publishing... (" + self.publishCount + "/" + totalSongs + ")";
 
               // Once we've published all songs, hide publish button
-              if (publishCount == totalSongs){
-                console.log("Done")
+              if (self.publishCount == totalSongs){
+                console.log("Done publishing all batches.");
 
-                // Add the published song to the list of uploaded songs
+                // Add the published songs to the list of uploaded songs
                 if (!self.songs) { self.songs = []; }
 
                 // Extract songs from newSongs array
@@ -379,12 +386,17 @@
                 page.createSongObjects(songObjs, false);
 
                 // Clear newSongs array
+                self.newSongs = null;
                 self.newSongs = [];
                 page.store.commit('clearNewSongs');
 
                 self.publishing = false;
 
                 publishButton.innerHTML = "Publish Songs";
+              } else if (self.publishCount == offset + self.uploadBatchSize) {
+                // We still need to publish another batch
+                console.log("Done publishing batch, moving to next one...")
+                self.runBatchPublish(offset + self.uploadBatchSize);
               }
           });
         }

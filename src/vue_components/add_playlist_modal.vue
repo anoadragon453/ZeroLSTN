@@ -1,7 +1,7 @@
 <template>
   <div id="addplaylistmodal" class="row center card">
     <!-- Modal Structure -->
-    <div class="modal">
+    <div id="playlistmodal" class="modal">
       <div class="modal-content">
         <div class="row">
           <h4>Add to Playlist</h4>
@@ -38,12 +38,12 @@
       var self = this;
 
       // Initialize modal view
-      var modal = document.querySelector(".modal");
+      var modal = document.getElementById("playlistmodal");
       var instance_modal = new M.Modal(modal, {
         onCloseEnd: function() {
           // Fix scrolling after modal closes
           // https://github.com/Dogfalo/materialize/issues/4622
-          document.querySelector('body').style.overflow = 'visible'
+          document.querySelector('body').style.overflow = 'visible';
         }
       });
       this.addToPlaylistModal = modal;
@@ -76,7 +76,7 @@
         page.getAlbumsByArtist(artist)
         .then((albums) => {
           albums.forEach((album) => {
-            page.getSongsInAlbum(album, artist)
+            page.getSongsInAlbumByArtist(album, artist)
             .then((songs) => {
               self.playlist_songs = self.playlist_songs.concat(songs);
               console.log("Adding artist", self.playlist_songs)

@@ -10,7 +10,7 @@
           <div class="card">
             <div class="card-content">
               <div class="input-field">
-                <i class="material-icons prefix black-text">search</i>
+                <i class="material-icons prefix">search</i>
                 <input placeholder="Search Artists, Albums, Songs..." id="searchField" type="text" class="" autofocus>
               </div>
             </div>
@@ -22,7 +22,7 @@
                 <li class="tab"><a href="#songs">Songs</a></li>
               </ul>
             </div>
-            <div class="card-content grey lighten-4">
+            <div class="card-content">
               <div id="all" class="container">
                 <span v-if="allSongs.length != 0">
                   <h4>Songs</h4>

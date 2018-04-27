@@ -12,23 +12,23 @@
       <div id="artists" class="col s12">
         <ul v-if="artists.length != 0" class="collection with-header">
           <li class="collection-header"><h4>Artists</h4></li>
-          <li v-for="artist in artists" class="collection-item">
-            <a href="#!" v-html="artist !== '' ? artist : '<i>Blank</i>'" @click.prevent="goToArtist(artist)"></a>
-          </li>
+          <a href="#" v-for="artist in artists" class="collection-item" @click.prevent="goToArtist(artist)">
+            <span v-if="artist != ''">{{artist}}</span>
+            <span v-else><i>Blank</i></span>
+          </a>
         </ul>
         <p v-else class="center">No artists found.</p>
       </div>
       <div id="albums" class="col s12">
         <ul v-if="albums.length != 0" class="collection with-header">
           <li class="collection-header"><h4>Albums</h4></li>
-          <li v-for="album in albums" class="collection-item">
-            <a href="#!" v-html="album.album !== '' ? album.album : '<i>Blank</i>'" @click.prevent="goToAlbum(album)"></a>
-          </li>
+          <a href="#" v-for="album in albums" class="collection-item" @click.prevent="goToAlbum(album)">
+            {{album.album}}
+          </a>
         </ul>
         <p v-else class="center">No albums found.</p>
       </div>
       <div id="years" class="col s12">
-        <div class="row"></div>
         <ul v-if="decades.length != 0" class="collection with-header">
           <li class="collection-header"><h4>Browse by Decade</h4></li>
           <a href="#" v-for="(decade, address) in decades" class="collection-item" @click.prevent="goToDecade(decade.name)">
@@ -113,7 +113,11 @@
       },
       goToAlbum: function(album) {
         // Go to the specified album page
-        Router.navigate('/album/' + (album.artist !== '' ? album.artist : 'Blank') + '/' + (album.album !== '' ? album.album : 'Blank'));
+        if (album.compilation) {
+          Router.navigate('/album/compilation' + '/' + (album.album !== '' ? album.album : 'Blank'));
+        } else {
+          Router.navigate('/album/' + (album.artist !== '' ? album.artist : 'Blank') + '/' + (album.album !== '' ? album.album : 'Blank'));
+        }
       },
       goToDecade: function(decade) {
         // Search by chosen decade

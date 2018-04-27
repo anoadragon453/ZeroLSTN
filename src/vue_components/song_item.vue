@@ -12,23 +12,23 @@
     <a class="secondary-content s2">
       <popper trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Queue Song</div>
-        <a class="tooltip" slot="reference" @click.prevent="queueSong(song)"><i class="material-icons black-text">playlist_add</i></a>
+        <a class="tooltip" slot="reference" @click.prevent="queueSong(song)"><i class="material-icons switch-color">playlist_add</i></a>
       </popper>
       <popper trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Edit Song</div>
-        <a class="tooltip" slot="reference" @click.prevent="editSong(song)"><i class="material-icons black-text">edit</i></a>
+        <a class="tooltip" slot="reference" @click.prevent="editSong(song)"><i class="material-icons switch-color">edit</i></a>
       </popper>
       <popper v-if="!downloaded" trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Download Song</div>
-        <a class="tooltip" slot="reference" @click.prevent="downloadSong(song)"><i class="material-icons black-text">cloud_download</i></a>
+        <a class="tooltip" slot="reference" @click.prevent="downloadSong(song)"><i class="material-icons switch-color">cloud_download</i></a>
       </popper>
       <popper v-else trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Remove Download</div>
-        <a class="tooltip" slot="reference" @click.prevent="removeDownload(song)"><i class="material-icons black-text">cloud_done</i></a>
+        <a class="tooltip" slot="reference" @click.prevent="removeDownload(song)"><i class="material-icons switch-color">cloud_done</i></a>
       </popper>
       <popper v-if="deletable && deletable == true" trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Remove</div>
-        <a class="tooltip" slot="reference" @click.prevent="removeSongParent(song)"><i class="material-icons black-text">delete</i></a>
+        <a class="tooltip" slot="reference" @click.prevent="removeSongParent(song)"><i class="material-icons switch-color">delete</i></a>
       </popper>
     </a>
   </li>

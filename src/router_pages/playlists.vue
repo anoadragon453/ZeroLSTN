@@ -8,7 +8,7 @@
         </div>
         <div class="row">
           <div class="input-field col s12">
-            <input id="name" type="text" class="active validate" placeholder="My Playlist">
+            <input id="name" type="text" class="active" placeholder="My Playlist">
             <label id="name-label" for="title">Playlist Name</label>
           </div>
         </div>
@@ -103,11 +103,16 @@
       createPlaylistModalClicked: function() {
         var self = this;
 
+        var name = document.getElementById('name').value;
+        if (name == "") {
+          M.toast({html: "Please enter a name."});
+          return;
+        }
+
         // Close modal
         this.createPlaylistModal.M_Modal.close();
 
         // Save new playlist with desired name
-        var name = document.getElementById('name').value;
         page.createPlaylist(name, function() {
           // Reload playlists from DB
           page.getPlaylistsByUser().then((playlists) => {

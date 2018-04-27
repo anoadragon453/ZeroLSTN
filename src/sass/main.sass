@@ -1,14 +1,32 @@
+// Override materialize colors
+$primary-color: #64B5F6
+
 @import "materialize-css/sass/materialize"
 @import "vue-popperjs/dist/css/vue-popper";
 
+// Custom colors
+$offwhite: #eee
+
+// Custom themable (overriable) colors
+$site-background: $offwhite !default
+$bar-background: #64B5F6 !default
+$text-color: black !default
+$tab-active-text-color: $primary-color !default
+
+html, .text-color, .switch-color
+  color: $text-color !important
+
 body
-  background-color: #eee
+  background-color: $site-background
 
 footer
   position: fixed !important
   bottom: 0 !important
   width: 100%
   z-index: 5
+
+.modal
+  background-color: $site-background
 
 #song-progress
   position: fixed !important
@@ -28,12 +46,22 @@ footer
   margin-left: 0.5em
   margin-right: 0.5em
 
+.btn-flat
+  color: $text-color
+
 .tabs
   margin-top: 0.5em
+
+.tabs .tab a.active,.tabs .tab a:hover
+  color: $tab-active-text-color
+
 .tooltip
   padding-top: 10px
   padding-left: 3px
   padding-right: 3px
+
+input
+  color: $text-color
 
 input[type=range]
   border: none
@@ -55,6 +83,8 @@ input[type=range]
   display: block
   overflow: hidden
 
+.card-content
+  background-color: $card-bg-color
 .card-section
   border-top: 1px solid rgba(160,160,160,0.2)
 .materialize-textarea
@@ -72,6 +102,12 @@ pre, code
   -webkit-tab-size: 4 !important
 pre code, pre, code
   overflow-x: auto !important
+
+// Nav and footer bars
+// ===============================
+.sitebar
+  background-color: $bar-background
+
 .nav-container
   padding-left: 1em
   padding-right: 5em

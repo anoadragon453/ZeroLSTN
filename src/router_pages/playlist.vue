@@ -1,6 +1,7 @@
 <template>
   <div id="playlist">
     <addtoplaylistmodal></addtoplaylistmodal>
+    <linkmodal></linkmodal>
     <!-- Modal Structure -->
     <div class="modal">
       <div class="modal-content">
@@ -71,14 +72,16 @@
   var Popper = require("vue-popperjs");
   var SongItem = require("../vue_components/song_item.vue");
   var PlayQueue = require("../vue_components/play_queue.vue");
-  var addToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
+  var LinkModal = require("../vue_components/link_modal.vue");
+  var AddToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
 
   module.exports = {
     components: {
       songitem: SongItem,
       playQueue: PlayQueue,
       popper: Popper,
-      addtoplaylistmodal: addToPlaylistModal
+      addtoplaylistmodal: AddToPlaylistModal,
+      linkmodal: LinkModal
     },
     props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
     name: "playlist",
@@ -107,10 +110,8 @@
     },
     methods: {
       goBack: function() {
-        // Hit the 'back' button
-        // TODO: Check that the previous page was on ZeroLSTN
+        // Go back to playlists
         Router.navigate("/playlists");
-        //window.history.go(-1);
       },
       loadSongs: function() {
         var self = this;
@@ -164,7 +165,8 @@
         });
       },
       getLinkToPlaylist: function() {
-        
+        // Open playlist URL copy modal
+        page.bus.$emit('copyLink', `http://127.0.0.1:43110/zerolstn.bit/?/playlist/${this.playlist.id}`);
       }
     }
   }
