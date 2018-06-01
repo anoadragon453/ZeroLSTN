@@ -1,5 +1,23 @@
 <template>
   <div class="container" id="edit">
+    <!-- Modal Structure -->
+    <div id="mergesongmodal" class="modal">
+      <div class="modal-content">
+        <div class="row">
+          <h4>Merge Song</h4>
+        </div>
+        <p>Enter the ID of the other song you want to merge into:</p>
+        <div class="row">
+          <div class="input-field col s10">
+            <input id="songid" type="text" class="validate" v-model="otherSongID">
+            <label id="songid-label" for="songid">Song ID</label>
+          </div>
+        </div>
+        <div class="row">
+          <a @click.prevent="mergeSong()" class="btn waves-effect waves-light right">Merge</a>
+        </div>
+      </div>
+    </div>
     <div class="row">
       <div class="input-field col s2">
         <input pattern="\d+" id="track_number" type="number" min="1"
@@ -73,6 +91,14 @@
       </div>
       <!-- TODO: Ability to switch merger site? Have to have the other one downloaded. Delete from this merger and insert into other one, easy -->
     </div>
+    <div class="row">
+      <div class="col s6">
+        <a @click="mergeClicked()" class="left btn-flat">Merge Song</a>
+      </div>
+      <div class="col s6">
+        <a class="right btn-flat">Song ID: {{song.id}}</a>
+      </div>
+    </div>
     <div class="row"></div>
     <div class="row"></div>
     <div class="row"></div>
@@ -91,11 +117,24 @@
       return {
         song: {},
         genres: null,
-        uploadingFile: false
+        uploadingFile: false,
+        mergeSongModal: null,
+        otherSongID: ""
       }
     },
     mounted: function() {
       var self = this;
+
+      // Initialize modal view
+      var modal = document.getElementById("mergesongmodal");
+      var instance_modal = new M.Modal(modal, {
+        onCloseEnd: function() {
+          // Fix scrolling after modal closes
+          // https://github.com/Dogfalo/materialize/issues/4622
+          document.querySelector('body').style.overflow = 'visible';
+        }
+      });
+      this.mergeSongModal = modal;
 
       // If we're editing a not-yet-uploaded song, present data from its index in the store
       if (Router.currentParams['index']) {
@@ -289,6 +328,30 @@
           // Read the file's data
           reader.readAsBinaryString(file);
         });
+      },
+      mergeClicked: function() {
+        // Open the merge modal
+        this.mergeSongModal.M_Modal.open();
+      },
+      mergeSong: async function() {
+        // Merge the current song and the foreign song
+        if (this.song.id == this.otherSongID) {
+          M.toast({html: "Can't merge song into itself."});
+          return;
+        }
+
+        console.log("Merging song", this.song.id, "into song", this.otherSongID);
+        res = await page.mergeSongs(this.song, this.otherSongID);
+        if (res !== "ok") {
+          M.toast({html: res});
+          return;
+        }
+
+        // Close the modal
+        this.mergeSongModal.M_Modal.close();
+
+        // Come out from song
+        history.back();
       }
     }
   }

@@ -301,11 +301,12 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Uploads a file using the BigFile API. Returns new filename.
-  uploadSongBigFile(year, file, f = null) {
+  uploadSongBigFile(year, file, index, f = null) {
     var yearAddress = page.getAddressFromYear(year);
     var date_added = Date.now();
     var orig_filename_list = file.name.split(".");
     var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
+    var self = this;
     filename = this.cleanFilename(filename);
 
     var filepath = "merged-ZeroLSTN2/" + yearAddress + "/data/users/" + app.siteInfo.auth_address + "/" + filename;
@@ -319,12 +320,18 @@ class ZeroApp extends ZeroFrame {
 
         var req = new XMLHttpRequest();
 
-        console.log(req)
+        // Listen for request finish
         req.onreadystatechange = () => {
           // Listen for server closing connection: http://stackoverflow.com/questions/15418608/#15491086
           if ( req.readyState == 4 ) {
-            if (f !== null && typeof f === "function") f(filename);
+            if (f !== null && typeof f === "function") f(index);
           }
+        };
+
+        // Listen for request error in order to restart
+        req.onerror = () => {
+          // Oh no, an error! Restart!
+          self.uploadSongBigFile(year, file, index, f);
         };
         req.withCredentials = true;
         req.open("POST", init_res.url);
@@ -544,9 +551,9 @@ class ZeroApp extends ZeroFrame {
         console.log("Working on decade:", decadeAddress)
 
         // Get the user's data file on this merger site
-        var user_path = decadeAddress + "/data/users/" + app.siteInfo.auth_address;
-        var data_inner_path = "merged-ZeroLSTN2/" + user_path + "/data.json";
-        var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
+        var user_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address;
+        var data_inner_path = user_path + "/data.json";
+        var content_inner_path = user_path + "/content.json";
         return self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false }).then(data => {
           // Parse user's data into JS object if exists
           data = (data ? JSON.parse(data) : {});
@@ -577,6 +584,7 @@ class ZeroApp extends ZeroFrame {
               id: song.id.toString(),
               track_number: song.track_number,
               filename: song.filename,
+              filesize: song.filesize,
               path: isEdit ? song.path : user_path,
               title: song.title,
               album: song.album,
@@ -686,8 +694,77 @@ class ZeroApp extends ZeroFrame {
   removeDownload(song) {
     // Delete a downloaded song
     console.log(song)
-    var songFilepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
+    let songFilepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
     return this.cmdp("fileDelete", { "inner_path": songFilepath });
+  }
+
+  async mergeSongs(song, otherSongID) {
+    // Merge one song into another by marking the initial song as merged with the ID of the other
+    // TODO: Display files from the merged song on the new song, one we have file display working
+
+    // Check that the other songID exists
+    let query = `
+      SELECT COUNT (songs.id) FROM
+      (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
+      INNER JOIN songs ON songs.date_added = aux.maxDate
+      AND songs.id = aux.id
+      AND songs.id = "${otherSongID}"
+      LIMIT 1
+    `;
+    let count = await this.cmdp("dbQuery", [query]);
+    if (count[0]["COUNT (songs.id)"] == 0) {
+      return "Invalid song ID";
+    }
+
+    // If so, merge the song
+    let decadeAddress = page.getAddressFromYear(song.year);
+    let user_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address;
+    let data_inner_path = user_path + "/data.json";
+    let content_inner_path = user_path + "/content.json";
+
+    console.log(data_inner_path)
+    let data = await this.cmdp("fileGet", {"inner_path": data_inner_path, "required": false});
+    if (!data) {
+      // User hasn't uploaded any songs yet. Create data for them.
+      data = {};
+    } else {
+      data = JSON.parse(data);
+    }
+
+    // If data.songs doesn't exist yet, create that too
+    if (!data.songs) {
+      data.songs = [];
+    }
+
+    // Mark the song as merged
+    data["songs"].push({
+      id: song.id.toString(),
+      track_number: song.track_number,
+      filename: song.filename,
+      filesize: song.filesize,
+      path: song.path,
+      title: song.title,
+      album: song.album,
+      artist: song.artist,
+      year: song.year,
+      art: song.art,
+      compilation: song.compilation,
+      date_added: Date.now(),
+      has_merged: otherSongID,
+      is_edit: song.is_edit
+    });
+
+    // Write the new data
+    var json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
+    let ok = await this.cmdp("fileWrite", [data_inner_path, btoa(json_raw)]);
+    if (ok != "ok") {
+      return ok;
+    }
+
+    // Sign and publish content
+    this.cmdp("sitePublish", { "inner_path": content_inner_path, "sign": true });
+
+    return "ok";
   }
 
   deleteSong(song) {
@@ -825,6 +902,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
         WHERE title LIKE "%${searchTerm}%"
+        AND song.has_merged is null
         ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
@@ -836,6 +914,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
         WHERE album LIKE "%${searchTerm}%"
+        AND song.has_merged is null
         ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
@@ -847,6 +926,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
         WHERE artist LIKE "%${searchTerm}%"
+        AND song.has_merged is null
         ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
@@ -979,61 +1059,51 @@ class ZeroApp extends ZeroFrame {
     INNER JOIN songs ON songs.date_added = aux.maxDate
     LEFT JOIN json USING (json_id)
     WHERE directory="data/users/${userAuthAddress}"
+    AND songs.has_merged is null
     ORDER BY album COLLATE NOCASE, track_number
     `;
 
     return this.cmdp("dbQuery", [query]);
   }
 
-  // Checks if a song already exists in the database
-  songExists(song) {
-    var self = this;
-
-    var title = this.preprocessQuotes(song.title);
-    var album = this.preprocessQuotes(song.album);
-    var artist = this.preprocessQuotes(song.artist);
+  // Checks if a song already exists in the database by tags
+  async isDuplicateSongByTags(tags) {
+    var title = this.preprocessQuotes(tags.title);
+    var album = this.preprocessQuotes(tags.album);
+    var artist = this.preprocessQuotes(tags.artist);
 
     var query = `
     SELECT COUNT (*) FROM songs
     WHERE title="${title}"
     AND album="${album}"
     AND artist="${artist}"
+    AND has_merged is null
     LIMIT 1
     `;
 
-    this.cmd("dbQuery", [query], (res) => {
-      // Return true if there is at least one hash already in the DB
-      return res[0]["COUNT (*)"] ? true : false;
-    });
+    // Return true if there is at least one hash already in the DB
+    let result = await this.cmdp("dbQuery", [query]);
+    return result[0]["COUNT (*)"];
   }
 
-  // Returns number of songs in a given genre
-  countSongsInGenre(genreAddress) {
+  async isDuplicateSongByNameSize(fileObj) {
+    let filename = fileObj.name;
+    let filesize = fileObj.size;
+
+    // TODO: Figure out how to check filename when having timestamp
     var query = `
     SELECT COUNT (*) FROM songs
+    WHERE filename="${filename}"
+    AND filesize="${filesize}"
+    AND has_merged is null
+    LIMIT 1
     `;
 
-    return this.cmdp("dbQuery", [query])
-      .then((res) => {
-        // Unpack count into just a single integer
-        return self.newPromise(res[0]["COUNT (*)"]);
-      });
-  }
-
-  // Returns a list of all songs, with an optional max song amount and offset
-  getAllSongs(limit = 0, offset = 0) {
-    var query = `
-    SELECT * FROM songs
-    LEFT JOIN json USING (json_id)
-    ORDER BY title COLLATE NOCASE
-    `;
-
-    // Execute query
-    return this.cmdp("dbQuery", [query]);
+    let result = await this.cmdp("dbQuery", [query]);
+    return result[0]["COUNT (*)"];
   }
 
   // Returns a list of all albums, with an optional max song amount and offset
-  // TODO: Deal with two artists having the same name for an album
   getAllAlbums(limit = 0, offset = 0) {
     var query = `
         SELECT album, compilation, artist FROM
@@ -1041,6 +1111,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         AND songs.id = aux.id
         AND songs.album != ""
+        AND songs.has_merged is null
         LEFT JOIN json USING (json_id)
         GROUP BY album, compilation
         ORDER BY album COLLATE NOCASE
@@ -1062,6 +1133,7 @@ class ZeroApp extends ZeroFrame {
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
         INNER JOIN songs ON songs.date_added = aux.maxDate
         AND songs.id = aux.id
+        AND songs.has_merged is null
         LEFT JOIN json USING (json_id)
         ORDER BY artist COLLATE NOCASE
         `;
@@ -1084,6 +1156,7 @@ class ZeroApp extends ZeroFrame {
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
         INNER JOIN songs ON songs.date_added = aux.maxDate
         AND songs.id = aux.id
+        AND songs.has_merged is null
         AND artist="${artistName}"
         LEFT JOIN json USING (json_id)
         ORDER BY songs.album COLLATE NOCASE
@@ -1122,6 +1195,7 @@ class ZeroApp extends ZeroFrame {
         AND songs.id = aux.id
         AND songs.album = "${albumName}"
         AND songs.compilation = 1
+        AND songs.has_merged is null
         LEFT JOIN json USING (json_id)
         ORDER BY track_number
         `;
@@ -1145,6 +1219,7 @@ class ZeroApp extends ZeroFrame {
         AND songs.id = aux.id
         AND songs.album = "${albumName}"
         AND songs.artist = "${artistName}"
+        AND songs.has_merged is null
         LEFT JOIN json USING (json_id)
         ORDER BY track_number
         `;
@@ -1229,6 +1304,7 @@ class ZeroApp extends ZeroFrame {
       LEFT JOIN songs ON songs.id = playlist_songs.song_id
       WHERE playlist_songs.playlist_id="${id}"
       AND songs.date_added = aux.maxDate
+      AND songs.has_merged is null
       ORDER BY playlist_songs.playlist_index;
       `;
 

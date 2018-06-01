@@ -36,6 +36,7 @@
                 ["id", "TEXT"],
                 ["track_number", "INTEGER"],
                 ["filename", "TEXT"],
+                ["filesize", "INTEGER"],
                 ["path", "TEXT"],
                 ["title", "TEXT"],
                 ["artist", "TEXT"],
@@ -44,11 +45,12 @@
                 ["compilation", "INTEGER"],
                 ["year", "INTEGER"],
                 ["date_added", "INTEGER"],
+                ["has_merged", "INTEGER"],
                 ["is_edit", "INTEGER"],
                 ["json_id", "INTEGER REFERENCES json (json_id)"]
             ],
             "indexes": ["CREATE UNIQUE INDEX songs_id ON songs(json_id, id)"],
-            "schema_changed": 14
+            "schema_changed": 18
         },
         "genres": {
             "cols": [

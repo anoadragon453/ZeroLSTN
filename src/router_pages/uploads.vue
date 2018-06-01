@@ -54,25 +54,48 @@
         <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>
           Upload<span v-if="newSongs && newSongs.length != 0"> more</span> Songs
         </a>
-        <a id="publishsongs" v-if="newSongs && newSongs.length != 0" @click.prevent="checkForDuplicates()"
+        <a id="publishsongs" v-if="newSongs && newSongs.length != 0" @click.prevent="publishSongs()"
           :class="{ 'disabled' : publishing }" style="margin-right: 1em" class="btn waves-effect waves-light right">
           <i class="material-icons left">cloud_upload</i>
           Publish Songs
         </a>
       </div>
-      <div v-if="newSongs && newSongs.length != 0" class="row">
-        <h5>Ready to Upload</h5>
-        <ul class="collection">
-          <li v-for="(songObject, index) in newSongs" class="collection-item">
-            <a href="" @click.prevent="editNewSong(index)" class="teal-text">
-            {{ (songObject.song.track_number ? songObject.song.track_number : '?') + '. ' }}
-            {{ songObject.song.artist }} -
-            {{ songObject.song.album }} -
-            {{ songObject.song.title }}
-            </a>
-            <i @click.prevent="removeNewSong(index)" class="material-icons right">close</i>
-          </li>
-        </ul>
+      <div v-if="newSongs.length > 0 || duplicateSongsFile.length > 0 || duplicateSongsTags.length > 0" class="row">
+        <span v-if="newSongs.length > 0">
+          <h5>Ready to Upload</h5>
+          <ul class="collection">
+            <li v-for="(songObject, index) in newSongs" class="collection-item">
+              <a href="" @click.prevent="editNewSong(index)" class="teal-text">
+              {{ (songObject.song.track_number ? songObject.song.track_number : '?') + '. ' }}
+              {{ songObject.song.artist }} -
+              {{ songObject.song.album }} -
+              {{ songObject.song.title }}
+              </a>
+              <i @click.prevent="removeSongWithIndex(newSongs, index)" class="material-icons right">close</i>
+            </li>
+          </ul>
+        </span>
+        <span v-if="duplicateSongsTags.length > 0">
+          <h5>Song Tags Already Exist</h5>
+          <ul class="collection">
+            <li v-for="(songObject, index) in duplicateSongsTags" class="collection-item">
+              <a href="" @click.prevent="editNewSong(index)" class="teal-text">
+              {{ (songObject.track_number ? songObject.track_number : '?') + '. ' }}
+              {{ songObject.artist }} -
+              {{ songObject.album }} -
+              {{ songObject.title }}
+              </a>
+              <i @click.prevent="removeSongWithIndex(duplicateSongsTags, index)" class="material-icons right">close</i>
+            </li>
+          </ul>
+        </span>
+        <span v-if="duplicateSongsFile.length > 0">
+          <h5>Files Already Exist</h5>
+          <ul class="collection">
+            <li v-for="title in duplicateSongsFile" class="collection-item">{{title}}</li>
+            <i @click.prevent="removeSongWithIndex(duplicateSongsFile, index)" class="material-icons right">close</i>
+          </ul>
+        </span>
       </div>
       <div v-if="songs" class="row">
         <h5>Uploads</h5>
@@ -95,10 +118,10 @@
 </template>
 
 <script>
-  var Router = require('../libs/router.js');
-  var SongItem = require('../vue_components/song_item.vue');
+  let Router = require('../libs/router.js');
+  let SongItem = require('../vue_components/song_item.vue');
 
-  var jsmediatags = require('jsmediatags');
+  let jsmediatags = require('jsmediatags');
 
   module.exports = {
     components: {
@@ -110,12 +133,14 @@
       return {
         uploadModal: null,
         songs: null,
-        newSongs: null,
+        newSongs: [],
+        duplicateSongsFile: [],
+        duplicateSongsTags: [],
         doNotOverwrite: true,
         uploadingFile: false,
         publishing: false,
         publishCount: 0,
-        uploadBatchSize: 100
+        uploadBatchSize: 30
       }
     },
     beforeMount: function() {
@@ -126,12 +151,12 @@
     },
     mounted: function() {
       // Initialize floating button
-      var action = document.querySelector("a.btn-floating");
-      var instance = new M.FloatingActionButton(action, {});
+      let action = document.querySelector("a.btn-floating");
+      let instance = new M.FloatingActionButton(action, {});
 
       // Initialize modal view
-      var modal = document.querySelector(".modal");
-      var instance_modal = new M.Modal(modal, {});
+      let modal = document.querySelector(".modal");
+      let instance_modal = new M.Modal(modal, {});
       this.uploadModal = modal;
 
       // Get and show list of uploaded songs
@@ -145,7 +170,7 @@
       });
     },
     methods: {
-      // TODO: Figure out file dropping
+      // TODO: Figure out file/folder dropping
       filesDropped: function(event) {
         event.preventDefault();
         console.log("Dropped")
@@ -165,7 +190,7 @@
       },
       uploadClicked: function(type) {
         // Open file upload window
-        var uploadButton;
+        let uploadButton;
         if (type == "file") {
           uploadButton = document.getElementById('fileupload');
         } else {
@@ -174,71 +199,67 @@
         uploadButton.click();
 
         // Keep a reference to ourselves
-        var self = this;
+        let self = this;
 
         // Listen for when a file has been uploaded
-        uploadButton.addEventListener('change', function() {
-          // Prevent this method from running twice on a single file upload
-          if(self.uploadingFile) {
-            return;
-          }
-
+        uploadButton.onchange = function() {
           // Start uploading the files
           self.processUploadedFiles(this.files);
-        });
+        };
       },
-      processUploadedFiles: function(files) {
-        var self = this;
+      processUploadedFiles: async function(files) {
+        let self = this;
         self.uploadingFile = true;
 
         // Iterate through uploaded files and scrape tags
-        var newSongs = [];
-        var fullLength = files.length;
-        var skippedFiles = 0;
-        for (var i = 0; i < files.length; i++) {
-          var file = files[i];
+        let newSongs = [];
+        let incompatibleFiles = 0;
+        for (let i = 0; i < files.length; i++) {
+          console.log(i+1 + "/" + files.length)
+          let file = files[i];
+
           // Check if the file is one of approved filetype
           if (!file || typeof file !== "object" || !file.type.match("(audio|video)\/.*(mp3|flac|ogg|opus|m4a|mpeg|mp4|webm)")) {
             console.log(file.name, "Filetype not supported. Skipping...");
-            skippedFiles++;
-            fullLength--;
-            if (i == fullLength) { self.finishUploading(newSongs); }
+            incompatibleFiles++;
             continue;
           }
 
-          // Read the ID3 tags
-          self.readTags(file, {
-            onSuccess: function(loadedFile, tag) {
-              // Add the file with the tags into filesWithTags
-              // DEBUG: console.log("file is", filename)
-              newSongs.push({file: loadedFile, song: self.craftSongObject(loadedFile.name, tag.tags)});
+          // Check for duplicate by filename/filesize
+          if (await page.isDuplicateSongByNameSize(file)) {
+            self.duplicateSongsFile.push(file.name);
+            continue;
+          }
 
-              // Run this once all songs are scraped
-              console.log(newSongs.length, fullLength)
-              if (newSongs.length == fullLength) {
-                self.finishUploading(newSongs)
+          // Read the song's tags
+          await self.readTags(file, {
+            onSuccess: async function(loadedFile, tag) {
+              // Check if this song is already in the database
+              let songObj = self.craftSongObject(loadedFile.name, tag.tags);
+              if (await page.isDuplicateSongByTags(tag.tags)) {
+                console.log("Publish dup tags:", songObj)
+                self.duplicateSongsTags.push(songObj);
+              } else {
+                // Stage the song for upload
+                console.log("Adding:", loadedFile.name)
+                newSongs.push({file: loadedFile, song: songObj});
               }
             },
             onError: function(loadedFile, error) {
-              console.log("[jsmediatags]:", loadedFile.name, error.type, error.info);
-
+              console.log("[jsmediatags err]:", loadedFile.name, error.type, error.info);
               newSongs.push({file: loadedFile, song: self.craftSongObject(loadedFile.name, {})});
-
-              // Run this once all songs are scraped
-              // Last one may have had failed tag reading
-              console.log(newSongs.length, fullLength)
-              if (newSongs.length == fullLength) {
-                self.finishUploading(newSongs);
-              }
             }
           });
         }
 
+        self.finishUploading(newSongs);
+
         // Show a toast to warn users if any files weren't proper formats
-        if (skippedFiles > 0) {
-          M.toast({html: skippedFiles + ' with incorrect filetype.'});
+        if (incompatibleFiles > 0) {
+          M.toast({html: skippedFiles + ' songs with incompatible filetype.'});
         }
       },
+      
       finishUploading: function(newSongs) {
         console.log("Finishing upload...")
         // Add uploaded files to Vuex store to access later on edit page
@@ -256,7 +277,7 @@
       },
       craftSongObject: function(filename, tags) {
         // Create a song object with all relevant tags
-        var song = {};
+        let song = {};
 
         // Set song information
         song['id'] = Date.now();
@@ -280,9 +301,9 @@
 
         // Convert album art from uint8 array to base64
         if (tags.picture) {
-          var imageData = tags.picture.data;
-          var base64String = "";
-          for (var i = 0; i < imageData.length; i++) {
+          let imageData = tags.picture.data;
+          let base64String = "";
+          for (let i = 0; i < imageData.length; i++) {
             base64String += String.fromCharCode(imageData[i]);
           }
 
@@ -309,29 +330,6 @@
         // Head to edit page with index of new song
         Router.navigate('/edit/store/' + songIndex);
       },
-      checkForDuplicates: function() {
-        // See if any songs have already been uploaded
-        var duplicateSongs = 0;
-
-        // Read the file's contents for hashing
-        for (var i = 0; i < this.newSongs.length;) {
-          if (page.songExists(this.newSongs[i].song)) {
-            // Prevent the new song from being published
-            this.newSongs.splice(i, 1);
-
-            // Update the duplicate song counter
-            duplicateSongs++;
-          } else {
-            i++;
-          }
-        }
-
-        // TODO: Change to toast
-        if (duplicateSongs > 0) {
-          alert(duplicateSongs + " were duplicate songs");
-        }
-        this.publishSongs();
-      },
       publishSongs: function() {
         // Make sure user is signed in first
         if(!page.isUserSignedIn()) {
@@ -345,7 +343,7 @@
           return;
         }
 
-        var publishButton = document.getElementById("publishsongs");
+        let publishButton = document.getElementById("publishsongs");
         publishButton.innerHTML = "Publishing...";
 
         this.publishing = true;
@@ -356,62 +354,77 @@
       },
       runBatchPublish: function(offset) {
         // Upload a batch of songs
-        var totalSongs = this.newSongs.length;
-        var batchCount = totalSongs / this.uploadBatchSize;
-        var publishButton = document.getElementById("publishsongs");
+        let totalSongs = this.newSongs.length;
+        let batchCount = totalSongs / this.uploadBatchSize;
+        let publishButton = document.getElementById("publishsongs");
 
-        for (var i = offset; i < offset + this.uploadBatchSize && i < totalSongs; i++) {
+        for (let i = offset; i < offset + this.uploadBatchSize && i < totalSongs; i++) {
           // Upload each song file
-          var self = this;
-          console.log("Publishing", this.newSongs[i])
-          this.newSongs[i].song.filename = page.uploadSongBigFile(this.newSongs[i].song.year, this.newSongs[i].file, function() {
-              // Count the progress we've made in uploading
-              self.publishCount++;
+          let self = this;
+          console.log("Publishing:", i)
+          this.newSongs[i].song.filesize = this.newSongs[i].file.size;
+          this.newSongs[i].song.filename = page.uploadSongBigFile(this.newSongs[i].song.year, this.newSongs[i].file, i, function(index) {
+            console.log("Nullifying index:", index)
+            self.newSongs[index].file = null;
 
-              // Show progress in publish button
-              publishButton.innerHTML = "Publishing... (" + self.publishCount + "/" + totalSongs + ")";
+            // Count the progress we've made in uploading
+            self.publishCount++;
 
-              // Once we've published all songs, hide publish button
-              if (self.publishCount == totalSongs){
-                console.log("Done publishing all batches.");
+            // Show progress in publish button
+            publishButton.innerHTML = "Publishing... (" + self.publishCount + "/" + totalSongs + ")";
 
-                // Add the published songs to the list of uploaded songs
-                if (!self.songs) { self.songs = []; }
+            // Once we've published all songs, hide publish button
+            if (self.publishCount == totalSongs){
+              console.log("Done publishing all batches");
 
-                // Extract songs from newSongs array
-                var songObjs = self.newSongs.map(a => a.song);
-                self.songs.push.apply(self.songs, songObjs);
+              // Add the published songs to the list of uploaded songs
+              if (!self.songs) { self.songs = []; }
 
-                // Publish the new list of songs in the user's data.json
-                page.createSongObjects(songObjs, false);
+              // Extract songs from newSongs array
+              let songObjs = self.newSongs.map(a => a.song);
+              self.songs.push.apply(self.songs, songObjs);
 
-                // Clear newSongs array
-                self.newSongs = null;
-                self.newSongs = [];
-                page.store.commit('clearNewSongs');
+              // Publish the new list of songs in the user's data.json
+              page.createSongObjects(songObjs, false);
 
-                self.publishing = false;
+              // Clear array of new songs
+              self.newSongs = [];
+              page.store.commit('clearNewSongs');
 
-                publishButton.innerHTML = "Publish Songs";
-              } else if (self.publishCount == offset + self.uploadBatchSize) {
-                // We still need to publish another batch
-                console.log("Done publishing batch, moving to next one...")
-                self.runBatchPublish(offset + self.uploadBatchSize);
-              }
+              // Clear array of duplicate songs
+              self.duplicateSongs = [];
+              // TODO: Keep duplicateSongs list in store as well
+              // Prevent user from clearing list when navigating away
+
+              self.publishing = false;
+              publishButton.innerHTML = "Publish Songs";
+            } else if (self.publishCount == offset + self.uploadBatchSize) {
+              // We still need to publish another batch
+              console.log("Done publishing batch, moving to next one...")
+              self.runBatchPublish(offset + self.uploadBatchSize);
+            }
           });
         }
       },
       // Wrapper function for jsmediatags. We need to link the file object to
       // the tags for BigFile uploading, and this wrapper allows us to do so.
       readTags: function(file, func) {
-        jsmediatags.read(file, {
-          onSuccess: func.onSuccess.bind(this, file),
-          onError: func.onError.bind(this, file)
-        });
+        return new Promise((resolve, reject) => {
+          jsmediatags.read(file, {
+            onSuccess: async function(tags) {
+              await func.onSuccess(file, tags);
+              resolve();
+            },
+            onError: async function(error) {
+              await func.onError(file, error);
+              resolve();
+            }
+          });
+        })
       },
       // Remove specified song from newSongs array
-      removeNewSong: function(index) {
-        this.newSongs.splice(index, 1);
+      removeSongWithIndex: function(songArr, index) {
+        songArr.splice(index, 1);
       }
     }
   }

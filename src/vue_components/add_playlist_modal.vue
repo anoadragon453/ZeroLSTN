@@ -60,7 +60,7 @@
       // Pop up modal when someone calls addToPlaylist
       page.bus.$on("addToPlaylist", function(songs) {
         // Show the modal
-        self.addToPlaylistModal.M_Modal.open()
+        self.addToPlaylistModal.M_Modal.open();
 
         // Save desired songs
         console.log("Adding to playlist:", songs)
@@ -69,7 +69,7 @@
 
       page.bus.$on("addToPlaylistArtist", function(artist) {
         // Show the modal
-        self.addToPlaylistModal.M_Modal.open()
+        self.addToPlaylistModal.M_Modal.open();
         console.log("Adding artist's worth of songs!")
 
         // Save desired from artist
