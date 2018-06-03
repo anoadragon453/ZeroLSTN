@@ -30,14 +30,6 @@
             </div>
             <input type="file" id="folderupload" style="display: none" required multiple webkitdirectory directory>
           </div>
-          <div class="row no-margin-bottom">
-            <p>
-              <label>
-                <input type="checkbox" class="filled-in" checked="checked" v-model="doNotOverwrite"/>
-                <span>Do not overwrite existing songs.</span>
-              </label>
-            </p>
-          </div>
         </span>
         <div v-else class="row center">
           <p>Reading song info...</p>
@@ -140,7 +132,6 @@
         newSongs: [],
         duplicateSongsFile: [],
         duplicateSongsTags: [],
-        doNotOverwrite: true,
         uploadingFile: false,
         publishing: false,
         publishCount: 0,
