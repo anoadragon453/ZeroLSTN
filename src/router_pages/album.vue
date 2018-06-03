@@ -12,6 +12,7 @@
           <div class="col s12">
             <ul class="collection with-header">
               <li class="collection-header">
+                <!-- TODO: Get this working
                 <popper v-if="downloaded" trigger="hover" :options="{placement: 'bottom'}">
                   <div class="popper">Remove Album</div>
                   <i slot="reference" @click.prevent="removeAlbum()" class="material-icons tooltip right">cloud_done</i>
@@ -20,6 +21,7 @@
                   <div class="popper">Download Album</div>
                   <i slot="reference" @click.prevent="downloadAlbum()" class="material-icons tooltip right">cloud_download</i>
                 </popper>
+                -->
                 <popper trigger="hover" :options="{placement: 'bottom'}">
                   <div class="popper">Queue Album</div>
                   <i slot="reference" @click.prevent="queueAlbum()" class="material-icons tooltip right">playlist_add</i>

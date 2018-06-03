@@ -17,7 +17,8 @@
             <span v-else><i>Blank</i></span>
           </a>
         </ul>
-        <p v-else class="center">No artists found.</p>
+        <p v-else-if="loading" class="center">Loading content...</p>
+        <p v-else class="center">No artists found. Add sites and refresh.</p>
       </div>
       <div id="albums" class="col s12">
         <ul v-if="albums.length != 0" class="collection with-header">
@@ -26,7 +27,8 @@
             {{album.album}}
           </a>
         </ul>
-        <p v-else class="center">No albums found.</p>
+        <p v-else-if="loading" class="center">Loading content...</p>
+        <p v-else class="center">No albums found. Add sites and refresh.</p>
       </div>
       <div id="years" class="col s12">
         <ul v-if="decades.length != 0" class="collection with-header">
@@ -62,6 +64,7 @@
       // Get all known albums
       page.getAllAlbums(limit=20, offset=0)
       .then((albums) => {
+        self.loading = false; // Assume it's going to take longer to load albums than artists
         self.albums = albums;
       });
     },
@@ -95,7 +98,8 @@
         ],
         artists: [],
         albums: [],
-        decades: []
+        decades: [],
+        loading: true
       }
     },
     methods: {

@@ -11,14 +11,16 @@
         <div class="row">
           <ul class="collection with-header">
             <li class="collection-header">
+              <!-- TODO: Get this working
               <popper v-if="!downloaded" trigger="hover" :options="{placement: 'bottom'}">
                 <div class="popper">Download Artist</div>
                 <i slot="reference" @click.prevent="downloadArtist()" class="material-icons tooltip right">cloud_download</i>
               </popper>
               <popper v-if="downloaded == 1" trigger="hover" :options="{placement: 'bottom'}">
                 <div class="popper">Remove Artist</div>
-                <i slot="reference" @click.prevent="removeAlbum()" class="material-icons tooltip right">cloud_done</i>
+                <i slot="reference" @click.prevent="removeArtist()" class="material-icons tooltip right">cloud_done</i>
               </popper>
+              -->
               <popper trigger="hover" :options="{placement: 'bottom'}">
                 <div class="popper">Queue Artist</div>
                 <i slot="reference" @click.prevent="queueArtist()" class="material-icons tooltip right">playlist_add</i>
