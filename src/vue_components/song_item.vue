@@ -72,7 +72,7 @@
     methods: {
       editSong: function(song) {
         if (!page.isUserSignedIn()) {
-          page.cmd("certSelect", { accepted_domains: ["zeroid.bit", "kaffie.bit", "cryptoid.bit"] });
+          page.cmd("certSelect", { accepted_domains: ["zeroid.bit"] });
           return;
         }
 

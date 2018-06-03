@@ -233,7 +233,7 @@ class ZeroApp extends ZeroFrame {
   }}
 
   selectUser() {
-    return this.cmdp("certSelect", { accepted_domains: ["zeroid.bit", "kaffie.bit", "cryptoid.bit"] });
+    return this.cmdp("certSelect", { accepted_domains: ["zeroid.bit"] });
   }
 
   signout() {
