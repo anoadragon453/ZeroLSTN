@@ -546,9 +546,9 @@ class ZeroApp extends ZeroFrame {
         console.log("Working on decade:", decadeAddress)
 
         // Get the user's data file on this merger site
-        var user_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address;
-        var data_inner_path = user_path + "/data.json";
-        var content_inner_path = user_path + "/content.json";
+        var user_path = decadeAddress + "/data/users/" + app.siteInfo.auth_address;
+        var data_inner_path = "merged-ZeroLSTN2/" + user_path + "/data.json";
+        var content_inner_path = "merged-ZeroLSTN2/" + user_path + "/content.json";
         return self.cmdp("fileGet", { "inner_path": data_inner_path, "required": false }).then(data => {
           // Parse user's data into JS object if exists
           data = (data ? JSON.parse(data) : {});
