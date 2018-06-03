@@ -4,28 +4,24 @@ ZeroNet Music Streaming Site - http://127.0.0.1:43110/ZeroLSTN.bit
 
 ## Setting up
 
-Install npm.
+Install node and npm.
+
+Install gulp.
 
 ```
-sudo apt install npm
-```
-
-Install yarn and gulp.
-
-```
-sudo npm install -g yarn gulp
+# npm install -g gulp
 ```
 
 In the project's root folder, install all needed dependencies.
 
 ```
-yarn
+$ npm i
 ```
 
 ## Compiling
 
-Simply run:
+Simply run the following to compile everything:
 
 ```
-gulp #Compile all html/js/css
+$ gulp
 ```
