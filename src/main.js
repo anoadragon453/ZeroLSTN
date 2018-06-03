@@ -209,9 +209,6 @@ class ZeroApp extends ZeroFrame {
     return page.cmdp("siteInfo", {}).then(() => {
       return page.cmdp("wrapperGetLocalStorage", {}).then((storage) => {
         app.localStorage = storage ? storage[0] || {} : {};
-        console.log("siteInfo:", app.siteInfo)
-        console.log("localStorage:", app.localStorage)
-        console.log("storage:", storage)
         return self.newPromise(app.localStorage[key]);
       });
     });
@@ -303,16 +300,14 @@ class ZeroApp extends ZeroFrame {
   // Uploads a file using the BigFile API. Returns new filename.
   uploadSongBigFile(year, file, index, f = null) {
     var yearAddress = page.getAddressFromYear(year);
-    var date_added = Date.now();
-    var orig_filename_list = file.name.split(".");
-    var filename = orig_filename_list[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + orig_filename_list[orig_filename_list.length - 1];
-    var self = this;
+    var filename = this.makeUniqueFilename(file.name);
     filename = this.cleanFilename(filename);
 
     var filepath = "merged-ZeroLSTN2/" + yearAddress + "/data/users/" + app.siteInfo.auth_address + "/" + filename;
     console.log("Uploading:", filepath)
 
     // Make sure big file is set as optional
+    var self = this;
     page.checkOptional(yearAddress, false, function() {
       self.cmd("bigfileUploadInit", [filepath, file.size], (init_res) => {
         var formdata = new FormData();
@@ -616,8 +611,6 @@ class ZeroApp extends ZeroFrame {
             }
           }
 
-          console.log("Data afterwards:", data)
-
           // Write values back to JSON string and the data.json
           return unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
         }).then(json_raw => {
@@ -902,7 +895,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
         WHERE title LIKE "%${searchTerm}%"
-        AND song.has_merged is null
+        AND has_merged is null
         ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
@@ -914,7 +907,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
         WHERE album LIKE "%${searchTerm}%"
-        AND song.has_merged is null
+        AND has_merged is null
         ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
@@ -926,7 +919,7 @@ class ZeroApp extends ZeroFrame {
         INNER JOIN songs ON songs.date_added = aux.maxDate
         LEFT JOIN json USING (json_id)
         WHERE artist LIKE "%${searchTerm}%"
-        AND song.has_merged is null
+        AND has_merged is null
         ${extraParams}
         ORDER BY title COLLATE NOCASE
         `;
@@ -1083,24 +1076,35 @@ class ZeroApp extends ZeroFrame {
 
     // Return true if there is at least one hash already in the DB
     let result = await this.cmdp("dbQuery", [query]);
-    return result[0]["COUNT (*)"];
+    return result[0]["COUNT (*)"] != 0;
   }
 
+  // Returns a list of all song IDs that have the same filename and filesize as
+  // the given song
   async isDuplicateSongByNameSize(fileObj) {
     let filename = fileObj.name;
     let filesize = fileObj.size;
 
-    // TODO: Figure out how to check filename when having timestamp
+    // Grab the filename extension
+    let extensionRegex = /(?:\.([^.]+))?$/;
+    let extension = extensionRegex.exec(filename)[1] || "";
+
+    // Cut off the extension of the filename
+    filename = filename.replace(/\.[^/.]+$/, "")
+    filename = filename.replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "");
+    filename = this.cleanFilename(filename);
+
+    // Search for the filename + timestamp + extension, and filesize
     var query = `
-    SELECT COUNT (*) FROM songs
-    WHERE filename="${filename}"
+    SELECT id FROM songs
+    WHERE filename LIKE "${filename}-_____________.${extension}"
     AND filesize="${filesize}"
     AND has_merged is null
     LIMIT 1
     `;
 
     let result = await this.cmdp("dbQuery", [query]);
-    return result[0]["COUNT (*)"];
+    return result;
   }
 
   // Returns a list of all albums, with an optional max song amount and offset
@@ -1758,6 +1762,9 @@ class ZeroApp extends ZeroFrame {
 
   // Escape any quotes in a song title, album name, or artist name
   preprocessQuotes(str) {
+    if (!str) {
+      return "";
+    }
     str = this.replaceAll(str, '"', '""');
     str = this.replaceAll(str, "'", "''");
     str = this.replaceAll(str, "`", "``");
@@ -1771,6 +1778,13 @@ class ZeroApp extends ZeroFrame {
 
   escapeRegExp(str) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+  }
+
+  // Cleans and attaches a timestamp to a filename
+  makeUniqueFilename(filename) {
+    var date_added = Date.now();
+    let originalFilenameList = filename.split(".");
+    return originalFilenameList[0].replace(/\s/g, "_").replace(/[^\x00-\x7F]/g, "").replace(/\'/g, "").replace(/\"/g, "") + "-" + date_added + "." + originalFilenameList[originalFilenameList.length - 1];
   }
 
   // Remove any non-allowed characters in a filename
@@ -1792,21 +1806,48 @@ const store = new Vuex.Store({
     newSongs: [], // Used to temporarily store songs that haven't been published yet
     downloadState: {notdownloaded: 0, downloaded: 1, unknown: -1}, // enum for download icons
     loop: 0, // 0: not looping, 1: looping playqueue, 2: looping song
-    shuffle: false
+    shuffle: false,
+    duplicateSongsTags: [], // Used to temporarily store songs that the user tried to upload, but whose metadata is already in the database
+    duplicateSongsFile: []  // Used to temporarily store songs that the user tried to upload, but the file was already in the database
   },
   mutations: {
+    addDuplicateSongsTags (state, duplicateSongsTags) {
+      // Add list of duplicate songs to state.duplicateSongs
+      state.duplicateSongsTags = duplicateSongsTags;
+    },
+    addDuplicateSongsFile (state, duplicateSongsFile) {
+      // Add list of duplicate songs to state.duplicateSongs
+      state.duplicateSongsFile = duplicateSongsFile;
+    },
     addNewSongs (state, newSongs) {
       // Add list of songs to state.newSongs
-      state.newSongs.push.apply(state.newSongs, newSongs);
+      state.newSongs = newSongs;
+    },
+    saveDuplicateSongTags (state, payload) {
+      // Overwrite a song at a certain index in the duplicate songs array
+      state.duplicateSongsTags[payload.index].song = payload.song;
+    },
+    saveDuplicateSongFile (state, payload) {
+      // Overwrite a song at a certain index in the duplicate songs array
+      state.duplicateSongsFile[payload.index] = payload.song;
     },
     saveSong (state, payload) {
       // Overwrite a song at a certain index
-      console.log(payload.song, payload.index)
       state.newSongs[payload.index].song = payload.song;
     },
     removeNewSong (state, songToRemove) {
       // Remove a song from newSongs
       state.newSongs.remove(songToRemove);
+    },
+    clearDuplicateSongsTags (state) {
+      // Clear tags-based duplicate songs
+      // Done after uploading complete
+      state.duplicateSongsTags = [];
+    },
+    clearDuplicateSongsFile (state) {
+      // Clear file-based duplicate songs
+      // Done after uploading complete
+      state.duplicateSongsFile = [];
     },
     clearNewSongs (state) {
       // Clear all new songs
@@ -1838,6 +1879,7 @@ var Playlist = require("./router_pages/playlist.vue");
 
 VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "uploads", component: Uploads },
+  { route: "edit/existingStore/:dupindex", component: Edit },
   { route: "edit/store/:index", component: Edit },
   { route: "edit/:songID", component: Edit },
   { route: "artist/:artist", component: Artist },

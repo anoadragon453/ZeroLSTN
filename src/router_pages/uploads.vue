@@ -61,6 +61,31 @@
         </a>
       </div>
       <div v-if="newSongs.length > 0 || duplicateSongsFile.length > 0 || duplicateSongsTags.length > 0" class="row">
+        <span v-if="duplicateSongsTags.length > 0">
+          <h5>Song Tags That Already Exist</h5>
+          <ul class="collection">
+            <li v-for="(duplicateSong, index) in duplicateSongsTags" class="collection-item">
+              <a href="" @click.prevent="editExistingTagsSong(index)" class="teal-text">
+              {{ (duplicateSong.song.track_number ? duplicateSong.song.track_number : '?') + '. ' }}
+              {{ duplicateSong.song.artist }} -
+              {{ duplicateSong.song.album }} -
+              {{ duplicateSong.song.title }}
+              </a>
+              <i @click.prevent="removeSongWithIndex(duplicateSongsTags, index)" class="material-icons right">close</i>
+            </li>
+          </ul>
+        </span>
+        <span v-if="duplicateSongsFile.length > 0">
+          <h5>Song Files That Already Exist</h5>
+          <ul class="collection">
+            <li v-for="(duplicateSong, index) in duplicateSongsFile" class="collection-item">
+              <a href="" @click.prevent="navigateToSongID(duplicateSong.existingSongID)" class="teal-text">
+              {{ duplicateSong.title }}
+              </a>
+              <i @click.prevent="removeSongWithIndex(duplicateSongsFile, index)" class="material-icons right">close</i>
+            </li>
+          </ul>
+        </span>
         <span v-if="newSongs.length > 0">
           <h5>Ready to Upload</h5>
           <ul class="collection">
@@ -73,27 +98,6 @@
               </a>
               <i @click.prevent="removeSongWithIndex(newSongs, index)" class="material-icons right">close</i>
             </li>
-          </ul>
-        </span>
-        <span v-if="duplicateSongsTags.length > 0">
-          <h5>Song Tags Already Exist</h5>
-          <ul class="collection">
-            <li v-for="(songObject, index) in duplicateSongsTags" class="collection-item">
-              <a href="" @click.prevent="editNewSong(index)" class="teal-text">
-              {{ (songObject.track_number ? songObject.track_number : '?') + '. ' }}
-              {{ songObject.artist }} -
-              {{ songObject.album }} -
-              {{ songObject.title }}
-              </a>
-              <i @click.prevent="removeSongWithIndex(duplicateSongsTags, index)" class="material-icons right">close</i>
-            </li>
-          </ul>
-        </span>
-        <span v-if="duplicateSongsFile.length > 0">
-          <h5>Files Already Exist</h5>
-          <ul class="collection">
-            <li v-for="title in duplicateSongsFile" class="collection-item">{{title}}</li>
-            <i @click.prevent="removeSongWithIndex(duplicateSongsFile, index)" class="material-icons right">close</i>
           </ul>
         </span>
       </div>
@@ -143,10 +147,47 @@
         uploadBatchSize: 30
       }
     },
-    beforeMount: function() {
+    beforeMount: async function() {
       // Show "Ready to Upload" songs if they are available in the store
       if (page.store.state.newSongs.length != 0) {
+        // We need to check on load if the metadata has now changed to something that does already exist
         this.newSongs = page.store.state.newSongs;
+        for (let i = 0; i < this.newSongs.length; i++) {
+          if (await page.isDuplicateSongByTags(this.newSongs[i].song)) {
+            // If this is now a duplicate song, add it to the duplicate songs array
+            this.duplicateSongsTags.push(this.newSongs[i]);
+            // And remove it from the newSongs array
+            this.newSongs.splice(i, 1);
+            i--;
+          }
+        }
+
+        // Update state
+        page.store.commit('addNewSongs', this.newSongs);
+      }
+
+      // Show duplicated tags songs if they are available in the store
+      if (page.store.state.duplicateSongsTags.length != 0) {
+        // We need to check on load if the metadata has now changed to something that doesn't exist
+        this.duplicateSongsTags = page.store.state.duplicateSongsTags;
+        for (let i = 0; i < this.duplicateSongsTags.length; i++) {
+          if (!(await page.isDuplicateSongByTags(this.duplicateSongsTags[i].song))) {
+            // If this is no longer a duplicate song, add it to the new songs array
+            this.newSongs.push(this.duplicateSongsTags[i]);
+
+            // And remove it from the duplicate songs array
+            this.duplicateSongsTags.splice(i, 1);
+            i--;
+          }
+        }
+
+        // Update state
+        page.store.commit('addDuplicateSongsTags', this.duplicateSongsTags);
+      }
+
+      // Show duplicated filename/size songs if they are available in the store
+      if (page.store.state.duplicateSongsFile.length != 0) {
+        this.duplicateSongsFile = page.store.state.duplicateSongsFile;
       }
     },
     mounted: function() {
@@ -226,8 +267,11 @@
           }
 
           // Check for duplicate by filename/filesize
-          if (await page.isDuplicateSongByNameSize(file)) {
-            self.duplicateSongsFile.push(file.name);
+          let dupSongIDs = await page.isDuplicateSongByNameSize(file);
+          if (dupSongIDs.length > 0) {
+            // Store the ID of the song that shares this file on the songObj,
+            // so that we can later link to it
+            self.duplicateSongsFile.push({title: file.name, existingSongID: dupSongIDs[0].id});
             continue;
           }
 
@@ -236,12 +280,12 @@
             onSuccess: async function(loadedFile, tag) {
               // Check if this song is already in the database
               let songObj = self.craftSongObject(loadedFile.name, tag.tags);
+              
               if (await page.isDuplicateSongByTags(tag.tags)) {
-                console.log("Publish dup tags:", songObj)
-                self.duplicateSongsTags.push(songObj);
+                // Was a duplicate, add to the duplicate pile
+                self.duplicateSongsTags.push({file: loadedFile, song: songObj});
               } else {
                 // Stage the song for upload
-                console.log("Adding:", loadedFile.name)
                 newSongs.push({file: loadedFile, song: songObj});
               }
             },
@@ -256,7 +300,7 @@
 
         // Show a toast to warn users if any files weren't proper formats
         if (incompatibleFiles > 0) {
-          M.toast({html: skippedFiles + ' songs with incompatible filetype.'});
+          M.toast({html: incompatibleFiles + ' songs with incompatible filetype.'});
         }
       },
       
@@ -265,6 +309,9 @@
         // Add uploaded files to Vuex store to access later on edit page
         page.store.commit('addNewSongs', newSongs);
         this.newSongs = page.store.state.newSongs;
+
+        page.store.commit('addDuplicateSongsTags', this.duplicateSongsTags);
+        page.store.commit('addDuplicateSongsFile', this.duplicateSongsFile);
 
         // Sort songs by track/album
         this.newSongs.sort(function(a, b) {
@@ -330,6 +377,11 @@
         // Head to edit page with index of new song
         Router.navigate('/edit/store/' + songIndex);
       },
+      editExistingTagsSong: function(songIndex) {
+        // Head to edit page with index of a song detected as having duplicate tags
+        // Allow to user to edit tags to make them different
+        Router.navigate('/edit/existingStore/' + songIndex);
+      },
       publishSongs: function() {
         // Make sure user is signed in first
         if(!page.isUserSignedIn()) {
@@ -391,11 +443,6 @@
               self.newSongs = [];
               page.store.commit('clearNewSongs');
 
-              // Clear array of duplicate songs
-              self.duplicateSongs = [];
-              // TODO: Keep duplicateSongs list in store as well
-              // Prevent user from clearing list when navigating away
-
               self.publishing = false;
               publishButton.innerHTML = "Publish Songs";
             } else if (self.publishCount == offset + self.uploadBatchSize) {
@@ -425,6 +472,10 @@
       // Remove specified song from newSongs array
       removeSongWithIndex: function(songArr, index) {
         songArr.splice(index, 1);
+      },
+      // Navigate to a songID
+      navigateToSongID: function(id) {
+        Router.navigate('/edit/'+id);
       }
     }
   }

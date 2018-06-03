@@ -161,6 +161,31 @@
           });
         });
         self.presentSongData();
+      } // If we're editing a not-yet-uploaded song, whose tags were considered a duplicate of an existing song
+      else if (Router.currentParams['dupindex']) {
+        // Make a deep copy so v-model doesn't change the state
+        self.song = Object.assign({}, page.store.state.duplicateSongsTags[Router.currentParams['dupindex']].song);
+        page.getAllGenres().then((allGenresResult) => {
+          // Organize all known genres for autocompletion
+          var allGenres = {}
+          for (var i in allGenresResult) {
+            allGenres[allGenresResult[i].genre] = null
+          }
+
+          // Get autodetected genre from song tags if present
+          var genres = self.song.genre ? [{tag: self.song.genre}] : [];
+
+          // Initialize autocompletion of genres
+          var elem = document.querySelector('.chips');
+          self.genres = M.Chips.init(elem, {
+            data: genres,
+            autocompleteOptions: {
+              data: allGenres
+            },
+            placeholder: "Genres"
+          });
+        });
+        self.presentSongData();
       } else {
         // Get already uploaded song info from the DB
         page.retrieveSongInfo(Router.currentParams['songID']).then((song) => {
@@ -241,6 +266,9 @@
         // If we're editing a non-uploaded-yet song, save details to the store
         if (Router.currentParams['index']) {
           page.store.commit('saveSong', {"song": this.song, "index": parseInt(Router.currentParams['index'])});
+          history.back();
+        } else if(Router.currentParams['dupindex']) {
+          page.store.commit('saveDuplicateSongTags', {"song": this.song, "index": parseInt(Router.currentParams['dupindex'])});
           history.back();
         } else {
           console.log("Uploading edit of song:", this.song)
