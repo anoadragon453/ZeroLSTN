@@ -1053,6 +1053,7 @@ class ZeroApp extends ZeroFrame {
     LEFT JOIN json USING (json_id)
     WHERE directory="data/users/${userAuthAddress}"
     AND songs.has_merged is null
+    AND songs.is_edit = false
     ORDER BY album COLLATE NOCASE, track_number
     `;
 
