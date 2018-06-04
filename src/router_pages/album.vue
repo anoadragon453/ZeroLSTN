@@ -12,7 +12,6 @@
           <div class="col s12">
             <ul class="collection with-header">
               <li class="collection-header">
-                <!-- TODO: Get this working
                 <popper v-if="downloaded" trigger="hover" :options="{placement: 'bottom'}">
                   <div class="popper">Remove Album</div>
                   <i slot="reference" @click.prevent="removeAlbum()" class="material-icons tooltip right">cloud_done</i>
@@ -21,7 +20,6 @@
                   <div class="popper">Download Album</div>
                   <i slot="reference" @click.prevent="downloadAlbum()" class="material-icons tooltip right">cloud_download</i>
                 </popper>
-                -->
                 <popper trigger="hover" :options="{placement: 'bottom'}">
                   <div class="popper">Queue Album</div>
                   <i slot="reference" @click.prevent="queueAlbum()" class="material-icons tooltip right">playlist_add</i>
@@ -130,6 +128,7 @@
         page.bus.$emit("addToPlaylist", this.songs);
       },
       downloadAlbum: function() {
+        M.toast({html: "Downloading album..."});
         this.downloadAlbumBySongOffset(this.songs, 0);
       },
       removeAlbum: function() {
@@ -171,7 +170,7 @@
         // Don't try to redownload a song we already have
         if (songs[offset].info && !songs[offset].info.is_downloaded) {
           // Do donwload if we don't have it already
-          var filepath = "merged-music/" + songs[offset].site + "/" + songs[offset].directory + "/" + songs[offset].filename + "|all";
+          var filepath = "merged-ZeroLSTN2/" + songs[offset].path + "/" + songs[offset].filename + "|all";
           page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
         }
         this.downloadAlbumBySongOffset(songs, ++offset);

@@ -1300,27 +1300,33 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Returns a playlist's songs given a playlistID
-  getPlaylistSongsByID(id) {
+  async getPlaylistSongsByID(id) {
     // TODO: Prevent users from being able to add to other's playlists
     // Need to know auth address of user who created playlist at querytime
+    // TODO: Convert back to one query
     var query = `
-      SELECT * FROM playlist_songs,
-      (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
-      LEFT JOIN songs ON songs.id = playlist_songs.song_id
+      SELECT song_id FROM playlist_songs
       WHERE playlist_songs.playlist_id="${id}"
-      AND songs.date_added = aux.maxDate
-      AND songs.has_merged is null
       ORDER BY playlist_songs.playlist_index;
       `;
 
-    return this.cmdp("dbQuery", [query]);
+    let songIDs = await this.cmdp("dbQuery", [query]);
+    songIDs = songIDs.map(a => a.song_id);
+    console.log("songIDs:", songIDs)
+
+    query = `
+      SELECT songs.* FROM
+      (SELECT MAX(date_added) AS maxDate, * FROM songs GROUP BY id) AS songs
+      WHERE songs.id IN :songIDs
+      `;
+    return await this.cmdp("dbQuery", [query, {songIDs: songIDs}]);
   }
 
   // Adds the specified songs to the specified playlist
   addSongsToPlaylist(songs, id, f=null) {
     // Get current length of playlist
     var query = `
-      SELECT COUNT(*) FROM songs, playlist_songs
+      SELECT COUNT (*) FROM songs, playlist_songs
       WHERE playlist_songs.playlist_id="${id}"
       `;
 
@@ -1426,15 +1432,26 @@ class ZeroApp extends ZeroFrame {
         data = JSON.parse(data);
       }
 
-      // No playlists to delete, just return
-      if (!data["playlists"]) { return; }
+      // No playlists or songs to delete, just return
+      if (!data["playlists"] && !data["playlist_songs"]) { return; }
 
       // Remove playlist from user's playlists
-      for (var i = 0; i < data["playlists"].length; i++) {
-        var list = data["playlists"][i];
-        if(list.id == id) {
-          data["playlists"].splice(i, 1);
-          break;
+      if (data["playlists"]) {
+        for (let i = 0; i < data["playlists"].length; i++) {
+          let list = data["playlists"][i];
+          if(list.id == id) {
+            data["playlists"].splice(i, 1);
+            break;
+          }
+        }
+      }
+      if (data["playlist_songs"]) {
+        for (let i = 0; i < data["playlist_songs"].length; i++) {
+          let song = data["playlist_songs"][i];
+          if(song.playlist_id == id) {
+            data["playlist_songs"].splice(i, 1);
+            i--;
+          }
         }
       }
 

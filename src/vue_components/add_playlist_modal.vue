@@ -72,14 +72,17 @@
         self.addToPlaylistModal.M_Modal.open();
         console.log("Adding artist's worth of songs!")
 
+        // Clear the playlist_songs array
+        self.playlist_songs.length = 0;
+
         // Save desired from artist
         page.getAlbumsByArtist(artist)
         .then((albums) => {
           albums.forEach((album) => {
             page.getSongsInAlbumByArtist(album, artist)
             .then((songs) => {
-              self.playlist_songs = self.playlist_songs.concat(songs);
-              console.log("Adding artist", self.playlist_songs)
+              self.playlist_songs.push.apply(self.playlist_songs, songs);
+              console.log("Adding artist with songs:", self.playlist_songs)
             });
           });
         });
@@ -91,7 +94,7 @@
 
         // Add selected song id(s) to chosen playlist
         page.addSongsToPlaylist(this.playlist_songs, id, function() {
-          // Clear the songs array
+          // Clear the playlist_songs array
           self.playlist_songs.length = 0;
 
           // Close the modal

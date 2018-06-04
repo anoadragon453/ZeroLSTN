@@ -102,8 +102,11 @@
         });
       },
       downloadSong: function(song) {
+        // Show a confirmation
+        M.toast({html: "Downloading..."});
+
         // Download this song to the user's disk
-        var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
+        var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename + "|all";
         page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 }).then((res) => {
           if (res === "ok") {
             self.downloaded = true;
