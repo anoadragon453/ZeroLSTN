@@ -883,9 +883,6 @@ class ZeroApp extends ZeroFrame {
       searchTerm = searchTerm.substring(0, genreKeywordValueIndex - 1) + searchTerm.substring(end + 1);
     }
 
-    // Convert quotes to double quotes for DB
-    searchTerm = this.preprocessQuotes(searchTerm);
-
     var query = "";
     switch (type) {
       case 'song':
@@ -1154,8 +1151,6 @@ class ZeroApp extends ZeroFrame {
 
   // Returns an array of album titles, made by the given artist
   getAlbumsByArtist(artistName) {
-    artistName = this.preprocessQuotes(artistName);
-
     var query = `
         SELECT DISTINCT songs.album FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1191,8 +1186,6 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given compilation album
   getSongsInCompilationAlbum(albumName) {
-    albumName = this.preprocessQuotes(albumName);
-
     var query = `
         SELECT songs.* FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1214,9 +1207,6 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given artist's album
   getSongsInAlbumByArtist(albumName, artistName) {
-    albumName = this.preprocessQuotes(albumName);
-    artistName = this.preprocessQuotes(artistName);
-
     var query = `
         SELECT songs.* FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
