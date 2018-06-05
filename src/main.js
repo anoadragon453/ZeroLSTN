@@ -1050,7 +1050,7 @@ class ZeroApp extends ZeroFrame {
     LEFT JOIN json USING (json_id)
     WHERE directory="data/users/${userAuthAddress}"
     AND songs.has_merged is null
-    AND songs.is_edit = false
+    AND (songs.is_edit is null OR songs.is_edit = false)
     ORDER BY album COLLATE NOCASE, track_number
     `;
 
@@ -1799,6 +1799,7 @@ class ZeroApp extends ZeroFrame {
   cleanFilename(str) {
     str = this.replaceAll(str, '|', '_');
     str = this.replaceAll(str, ':', '_');
+    str = this.replaceAll(str, '&', '_');
     return str;
   }
 }
