@@ -1800,6 +1800,7 @@ class ZeroApp extends ZeroFrame {
     str = this.replaceAll(str, '|', '_');
     str = this.replaceAll(str, ':', '_');
     str = this.replaceAll(str, '&', '_');
+    str = this.replaceAll(str, '!', '_');
     return str;
   }
 }
