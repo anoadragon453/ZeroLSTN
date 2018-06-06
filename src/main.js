@@ -14,7 +14,7 @@ var Vuex = require("vuex");
 var VueZeroFrameRouter = require("./libs/vue-zeroframe-router.js");
 var AsyncComputed = require('vue-async-computed');
 
-var { sanitizeStringForUrl, sanitizeStringForUrl_SQL, html_substr, sanitizeHtmlForDb } = require("./util.js");
+var { sanitizeStringForUrl, sanitizeStringForUrl_SQL, html_substr, sanitizeHtmlForDb, replaceDiacritics } = require("./util.js");
 
 // Initial Vue plugins
 Vue.use(VueZeroFrameRouter.VueZeroFrameRouter);
@@ -1801,6 +1801,9 @@ class ZeroApp extends ZeroFrame {
     str = this.replaceAll(str, ':', '_');
     str = this.replaceAll(str, '&', '_');
     str = this.replaceAll(str, '!', '_');
+
+    // Replace all accented characters with their ascii equivalent
+    str = replaceDiacritics(str);
     return str;
   }
 }
