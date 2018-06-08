@@ -91,6 +91,9 @@
       },
       goToAlbum: function(album) {
         // Go to album's page
+
+        // Account for blank artist in URL
+        this.artist = this.artist != "" ? this.artist : "Blank";
         Router.navigate('/album/'+this.artist+'/'+(album !== '' ? album : 'Blank'));
       },
       playArtist: function() {
