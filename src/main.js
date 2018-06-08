@@ -1174,9 +1174,9 @@ class ZeroApp extends ZeroFrame {
   // Get and attach file info to song object
   getInfoForSongs(songs) {
     return new Promise((resolve, reject) => {
-      songs.forEach(function(song) {
+      songs.forEach(async function(song) {
         // Get the info for each song
-        song.info = page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + song.path + "/" + song.filename]);
+        song.info = await page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + song.path + "/" + song.filename]);
       });
 
       // Return the list of songs
@@ -1466,10 +1466,35 @@ class ZeroApp extends ZeroFrame {
   // ------------- Play Queue Operations -------------- //
 
   // Play a music file
-  playSongFile(filepath) {
+  playSongFile(filepath, song) {
     // Tell all we're loading the current song
     page.bus.$emit("songLoading");
     console.log("Song loading...")
+
+    // Invalidate existing song timers if any
+    if (page.store.state.shortTimeout) {
+      clearTimeout(page.store.state.shortTimeout);
+    }
+    if (page.store.state.longTimeout) {
+      clearTimeout(page.store.state.longTimeout);
+    }
+
+    // Timeout for 5s. Check if any seeds. If not, skip.
+    page.store.state.shortTimeout = setTimeout(async function() {
+      let songsWithInfo = await page.getInfoForSongs([song]);
+      console.log("Info is:", songsWithInfo[0].info)
+      if (songsWithInfo[0].info &&
+          (!songsWithInfo[0].info.peer_seed || songsWithInfo[0].info.peer_seed == 0)) {
+        M.Toast({html: "Skipped song with 0 peers."})
+        page.nextSong();
+      }
+    }, 5000)
+
+    // Timeout for 15s. Skip song.
+    page.store.state.longTimeout = setTimeout(function() {
+      M.Toast({html: "Skipped slow-loading song."})
+      page.nextSong();
+    }, 15000)
 
     // If audioObject already exists, change its source
     if(app.audioObject) {
@@ -1482,6 +1507,14 @@ class ZeroApp extends ZeroFrame {
       app.audioObject.addEventListener('loadedmetadata', function() {
         console.log("Updating with duration: " + app.audioObject.duration);
         app.$emit("updateSongDuration", app.audioObject.duration);
+      });
+
+      // Event listener for when the song has started playing
+      app.audioObject.addEventListener('canplay', function() {
+        // Disable the auto-skip feature if the song loaded
+        console.log("Clearing timeout!")
+        clearTimeout(page.store.state.shortTimeout);
+        clearTimeout(page.store.state.longTimeout);
       });
 
       // Add event listener for when song finishes, so we can either move to the next song,
@@ -1540,10 +1573,11 @@ class ZeroApp extends ZeroFrame {
 
   // Play a given song object
   playSong(song) {
+    console.log("Song Info:")
     var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
 
     // Play the song
-    this.playSongFile(filepath);
+    this.playSongFile(filepath, song);
 
     // Allow Vue components to access the current playing song
     app.currentSong = song;
@@ -1820,19 +1854,33 @@ const store = new Vuex.Store({
     downloadState: {notdownloaded: 0, downloaded: 1, unknown: -1}, // enum for download icons
     loop: 0, // 0: not looping, 1: looping playqueue, 2: looping song
     shuffle: false,
+    shortTimeout: null,
+    longTimeout: null,
     duplicateSongsTags: [], // Used to temporarily store songs that the user tried to upload, but whose metadata is already in the database
     duplicateSongsFile: []  // Used to temporarily store songs that the user tried to upload, but the file was already in the database
   },
   mutations: {
     addDuplicateSongsTags (state, duplicateSongsTags) {
-      // Add list of duplicate songs to state.duplicateSongs
-      state.duplicateSongsTags = duplicateSongsTags;
+      // Add list of duplicate songs to state.duplicateSongsTags
+      state.duplicateSongsTags.push.apply(state.duplicateSongsTags, duplicateSongsTags);
     },
     addDuplicateSongsFile (state, duplicateSongsFile) {
-      // Add list of duplicate songs to state.duplicateSongs
-      state.duplicateSongsFile = duplicateSongsFile;
+      // Add list of duplicate songs to state.duplicateSongsFile
+      state.duplicateSongsFile.push.apply(state.duplicateSongsFile, duplicateSongsFile);
     },
     addNewSongs (state, newSongs) {
+      // Add list of songs to state.newSongs
+      state.newSongs.push.apply(state.newSongs, newSongs);
+    },
+    setDuplicateSongsTags (state, duplicateSongsTags) {
+      // Add list of duplicate songs to state.duplicateSongsTags
+      state.duplicateSongsTags = duplicateSongsTags;
+    },
+    setDuplicateSongsFile (state, duplicateSongsFile) {
+      // Add list of duplicate songs to state.duplicateSongsFile
+      state.duplicateSongsFile = duplicateSongsFile;
+    },
+    setNewSongs (state, newSongs) {
       // Add list of songs to state.newSongs
       state.newSongs = newSongs;
     },

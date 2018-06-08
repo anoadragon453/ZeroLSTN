@@ -154,7 +154,7 @@
         }
 
         // Update state
-        page.store.commit('addNewSongs', this.newSongs);
+        page.store.commit('setNewSongs', this.newSongs);
       }
 
       // Show duplicated tags songs if they are available in the store
@@ -173,7 +173,7 @@
         }
 
         // Update state
-        page.store.commit('addDuplicateSongsTags', this.duplicateSongsTags);
+        page.store.commit('setDuplicateSongsTags', this.duplicateSongsTags);
       }
 
       // Show duplicated filename/size songs if they are available in the store
@@ -291,7 +291,7 @@
 
         // Show a toast to warn users if any files weren't proper formats
         if (incompatibleFiles > 0) {
-          M.toast({html: incompatibleFiles + ' songs with incompatible filetype.'});
+          M.toast({html: incompatibleFiles + ' files with incompatible filetype.'});
         }
       },
       
