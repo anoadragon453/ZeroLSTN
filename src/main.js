@@ -1,4 +1,4 @@
-version = "2.0.0";
+version = "2.0.1";
 var playlistAddress = "1ListsNz9zbKVm163PToico2dqEqU98eAp";
 
 // Hashing
