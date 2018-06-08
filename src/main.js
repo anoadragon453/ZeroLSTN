@@ -1470,6 +1470,9 @@ class ZeroApp extends ZeroFrame {
     // Tell all we're loading the current song
     page.bus.$emit("songLoading");
     console.log("Song loading...")
+    
+    // Show song information in the title
+    page.cmd("wrapperSetTitle", song.title + (song.artist != "" ? " by " + song.artist : ""), null)
 
     // Invalidate existing song timers if any
     if (page.store.state.shortTimeout) {
@@ -1688,6 +1691,7 @@ class ZeroApp extends ZeroFrame {
 
   stopPlaying() {
     console.log("Stopping playback.");
+
     // Stop playing all songs
     app.audioObject.currentTime = 0;
     this.pauseCurrentSong();
@@ -1697,6 +1701,9 @@ class ZeroApp extends ZeroFrame {
 
     // Update footer with no song duration
     app.$emit("updateSongDuration", 0);
+
+    // Reset the site title
+    page.cmd("wrapperSetTitle", "ZeroLSTN", null)
   }
 
   // Skip to the next song
