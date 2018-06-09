@@ -1519,7 +1519,6 @@ class ZeroApp extends ZeroFrame {
       // Event listener for when the song has started playing
       app.audioObject.addEventListener('canplay', function() {
         // Disable the auto-skip feature if the song loaded
-        console.log("Clearing timeout!")
         clearTimeout(page.store.state.shortTimeout);
         clearTimeout(page.store.state.longTimeout);
       });
@@ -1593,8 +1592,8 @@ class ZeroApp extends ZeroFrame {
   // Called when the current song ends
   songEnded() {
     console.log("Song ended. Current index: " + app.queueIndex);
-    // Check if this is the same song in the queue
-    if (app.queueIndex == app.playQueue.length - 1){
+    // Check if this is the last song in the queue. Stop if not looping
+    if (app.queueIndex == app.playQueue.length - 1 && page.store.state.loop == 0){
       return;
     }
 
@@ -1714,14 +1713,10 @@ class ZeroApp extends ZeroFrame {
   nextSong() {
     console.log("Going to next song. Index: " + app.queueIndex);
 
-    // TODO: Check if song isn't downloaded and has no seeders,
-    // if so, just skip over it. Prefetch next song to actually
-    // check seeder number and to speed up playback.
-
     // TODO: Prevent repeating songs when shuffling
     // Create array of random numbers on shuffle click
     // from 1 - queue length and run through them
-    //
+
     // If looping on one song, repeat song
     if (page.store.state.loop == 2) {
       // Don't change current queue index
