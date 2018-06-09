@@ -1778,7 +1778,11 @@ class ZeroApp extends ZeroFrame {
 
   // Sets the current track time
   setTime(time) {
-    app.audioObject.currentTime = time;
+    // It's alright if we don't have an audio object yet, just disregard
+    // request
+    if(app.audioObject){
+      app.audioObject.currentTime = time;
+    }
   }
 
   // -------------------------------------------------- //
