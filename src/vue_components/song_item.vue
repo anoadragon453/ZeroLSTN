@@ -8,7 +8,7 @@
       - <a href="" @click.prevent="goToArtist(song)">{{ song.artist }}</a>
       - <a href="" @click.prevent="goToAlbum(song)">{{ song.album }}</a>
       <br>
-      Year: {{ song.year }}
+      {{ song.year ? song.year : "" }}
     </p>
     <a class="secondary-content s2">
       <popper trigger="hover" :options="{placement: 'auto'}">
