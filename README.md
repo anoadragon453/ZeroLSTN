@@ -9,7 +9,7 @@ Install node and npm.
 Install gulp.
 
 ```
-# npm install -g gulp
+# npm install -g gulp-cli
 ```
 
 In the project's root folder, install all needed dependencies.

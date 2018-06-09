@@ -1,18 +1,17 @@
-//var fs = require("fs");
 var vueify = require("vueify");
 
 var gulp = require("gulp");
 var browserify = require("browserify");
 var source = require("vinyl-source-stream");
-// var uglify = require("gulp-uglify");
-// var gutil = require("gulp-util");
 var sourcemaps = require("gulp-sourcemaps");
 var buffer = require("vinyl-buffer");
-// var prefix = require("gulp-autoprefixer");
 
 var sass = require("gulp-sass");
 var minify = require("gulp-minify-css");
+// var prefix = require("gulp-autoprefixer");
 // var concat = require("gulp-concat");
+// var uglify = require("gulp-uglify");
+// var gutil = require("gulp-util");
 
 var paths = {
     pages: ["src/**/*.html"],
@@ -62,4 +61,4 @@ gulp.task("watch", function() {
     gulp.watch(paths.pages, ["html"]);
 });
 
-gulp.task("default", ["scripts", "styles", "html"]);
+gulp.task("default", gulp.series("scripts", "styles", "html"));
