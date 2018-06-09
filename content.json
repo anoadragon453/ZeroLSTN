@@ -9,8 +9,8 @@
  "favicon": "img/favicon.png",
  "files": {
   "README.md": {
-   "sha512": "50f77d005a3120128e2e50916ce9435b5345c406b78f0e5419ff719150106a5e",
-   "size": 327
+   "sha512": "dc757d259daf9836f0af89c3c8f3fba1c058eda6db8f87d76d7dc0723ec29c53",
+   "size": 474
   },
   "css/dark.css": {
    "sha512": "8db4e29a64f8fb51e67ce5605e9d5ffb8e4a12c382a5071dbbc47c6ee84dc9fd",
@@ -27,6 +27,10 @@
   "decades.json": {
    "sha512": "d322e7f1aa0d5d0e472d00e300aeff8204f6f8d82a16ea4b7dd26c47af82d37e",
    "size": 1013
+  },
+  "docs/translations.md": {
+   "sha512": "f3a9efe82c772ee01749faec7013ea9cca8a7699b04f151de46595c0e03ac6ca",
+   "size": 978
   },
   "fonts/material-icons/MaterialIcons-Regular.eot": {
    "sha512": "5022976817b89349a71e0438b573f53dc5b743acc865163102d6d657cc3fbeff",
@@ -119,11 +123,11 @@
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1528560299,
+ "modified": 1528564603,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G59NZkma0eUulGhvIC34LINHHK6s5b39vwccD6fc+1nBHvPgsPjSR7PVNpD6tNcE8UPkiA6WCZWujDkrqPNdVlY="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "GzjWC82Rpr7xkVXc9/6ueAgjPJEDwoNQaJLq2GXP076fTJNW9gItavXWZektU0I/hOYPrs7KPQxpqBml/H49F2E="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",
