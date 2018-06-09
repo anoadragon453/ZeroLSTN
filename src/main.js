@@ -1067,13 +1067,13 @@ class ZeroApp extends ZeroFrame {
     var album = this.preprocessQuotes(tags.album);
     var artist = this.preprocessQuotes(tags.artist);
 
+    // LIKE for case-insensitive searching
     var query = `
     SELECT COUNT (*) FROM songs
-    WHERE title="${title}"
-    AND album="${album}"
-    AND artist="${artist}"
+    WHERE title LIKE "${title}"
+    AND album LIKE "${album}"
+    AND artist LIKE "${artist}"
     AND has_merged is null
-    COLLATE NOCASE
     LIMIT 1
     `;
 
