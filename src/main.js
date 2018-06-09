@@ -47,7 +47,7 @@ var app = new Vue({
     decadeAddresses: [],            // List of all merger Zites (decades) we know of
     playQueue: [],                  // Play Queue itself
     queueIndex: 0,                  // Current index in the play queue of song we're playing
-    audioVolume: 80,                // Current audio volume
+    audioVolume: 100,               // Current audio volume
     audioObject: null,              // Object housing JS audio object (play, pause, etc)
     audioPlaying: false,            // Track whether audio is currently playing
     queueJustCleared: false,        // Skip to first song in queue if it was just cleared
@@ -90,6 +90,8 @@ class ZeroApp extends ZeroFrame {
         // Get localstorage for site
         page.cmd("wrapperGetLocalStorage", {}, (localStorage) => {
           app.localStorage = localStorage ? localStorage[0] || {} : {};
+
+          // Set volume to desired value if exists
 
           // Import all decade merger sites
           page.cmd("fileGet", { "inner_path": "decades.json", "required": false }, (decades) => {
@@ -200,6 +202,8 @@ class ZeroApp extends ZeroFrame {
   getLocalStorage(key) {
     var self = this;
 
+    console.log("Retrieving from local storage:", key)
+
     // Attempt to return cached value
     if (app.localStorage) {
       return self.newPromise(app.localStorage[key]);
@@ -221,7 +225,7 @@ class ZeroApp extends ZeroFrame {
     if (app.localStorage) {
       app.localStorage[key] = value;
 
-      console.log("Writing:", app.localStorage)
+      console.log("Writing to local storage:", key, ":", value)
       return page.cmdp("wrapperSetLocalStorage", [app.localStorage], null);
     } else {
       return page.cmdp("wrapperGetLocalStorage", {}).then((storage) => {

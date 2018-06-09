@@ -20,7 +20,7 @@
       </div>
       <div class="col hide-on-small-only m2 l2">
         <div class="range-field center">
-          <input type="range" v-model="volume" id="volume-slider" min="0" max="100" />
+          <input type="range" v-model="volume" id="volume-slider" @input="volumeChanged" @mouseup="volumeFinishedChanging" min="0" max="100" />
         </div>
       </div>
       <div class="col s1 m1 l1">
@@ -57,15 +57,19 @@
     mounted: function() {
       var self = this;
 
-      // Initialize slider
-      var volumeSlider = document.getElementById("volume-slider");
-      //var instance = new M.Slider(slider, {});
-
-      // Listen for user input
-      volumeSlider.addEventListener("input", this.volumeChanged);
-
-      // Catch song duration updates
+      // Catch and act on events from the site
       this.$parent.$on("updateSongDuration", this.updateSongDuration);
+
+      // Check if volume preferences are saved
+      setTimeout(function() {
+        page.getLocalStorage("volume").then((volume) => {
+          // Update music volume if stored
+          if (volume) {
+            self.volume = volume;
+            page.setVolume(volume);
+          }
+        });
+      }, 50); // Have to delay due to page not being available immediately
 
       // Listen for keyboard presses
       document.addEventListener("keydown", function(ev) {
@@ -135,8 +139,11 @@
         this.isLooping = page.store.state.loop;
       },
       volumeChanged: function() {
-        var volume = document.getElementById("volume-slider").value;
-        page.setVolume(volume);
+        page.setVolume(this.volume);
+      },
+      volumeFinishedChanging: function() {
+        // Save volume preferences to localstorage
+        page.setLocalStorage("volume", this.volume);
       },
       // Runs every second, updating song progress
       updateSongProgress: function() {
