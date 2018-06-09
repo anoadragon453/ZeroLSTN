@@ -5,7 +5,8 @@
     <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
     <span class="title">{{ song.track_number ? song.track_number + '.' : '' }} {{ song.title }}</span>
     <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
-      - {{ song.artist }} - {{ song.album }}
+      - <a href="" @click.prevent="goToArtist(song)">{{ song.artist }}</a>
+      - <a href="" @click.prevent="goToAlbum(song)">{{ song.album }}</a>
       <br>
       Year: {{ song.year }}
     </p>
@@ -114,8 +115,17 @@
         });
       },
       removeSongParent: function(song) {
-      // Calls a method on the parent object relating to removing a song
+        // Calls a method on the parent object relating to removing a song
         this.$parent.removeSong(song);
+      },
+      goToArtist: function(song) {
+        let url = "/artist/" + (song.artist != "" ? song.artist : "Blank");
+        Router.navigate(url);
+      },
+      goToAlbum: function(song) {
+        let artist = (song.artist != "" ? song.artist : "Blank") + "/";
+        let url = (!song.compilation ? "/album/" + artist : "/compilation/") + (song.album != "" ? song.album : "Blank");
+        Router.navigate(url);
       }
     }
   }

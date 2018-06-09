@@ -118,7 +118,7 @@
       goToAlbum: function(album) {
         // Go to the specified album page
         if (album.compilation) {
-          Router.navigate('/album/compilation' + '/' + (album.album !== '' ? album.album : 'Blank'));
+          Router.navigate('/compilation' + '/' + (album.album !== '' ? album.album : 'Blank'));
         } else {
           Router.navigate('/album/' + (album.artist !== '' ? album.artist : 'Blank') + '/' + (album.album !== '' ? album.album : 'Blank'));
         }

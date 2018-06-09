@@ -1951,7 +1951,7 @@ VueZeroFrameRouter.VueZeroFrameRouter_Init(Router, app, [
   { route: "edit/store/:index", component: Edit },
   { route: "edit/:songID", component: Edit },
   { route: "artist/:artist", component: Artist },
-  { route: "album/compilation/:album", component: Album },
+  { route: "compilation/:album", component: Album },
   { route: "album/:artist/:album", component: Album },
   { route: "nowplaying", component: NowPlaying },
   { route: "search/:searchText", component: Search },
