@@ -564,12 +564,10 @@ class ZeroApp extends ZeroFrame {
 
           // Push new song values
           var songsInDecade = songsByDecade[decadeAddress];
-          console.log(decadeAddress)
           console.log('songsInDecade:', songsInDecade)
           for (var i in songsInDecade) {
             var song = songsInDecade[i];
 
-            console.log("Inserting song:", song)
             // Create a new songID if it doesn't exist
             if(song.id == null) { song.id = Date.now().toString(); }
 
@@ -578,6 +576,11 @@ class ZeroApp extends ZeroFrame {
               song.art = self.saveAlbumArt(song, decadeAddress);
             }
 
+            // Trim song details
+            song.title = song.title.trim();
+            song.album = song.album.trim();
+            song.artist = song.artist.trim();
+
             // Append new song information
             data["songs"].push({
               id: song.id.toString(),
@@ -585,10 +588,10 @@ class ZeroApp extends ZeroFrame {
               filename: song.filename,
               filesize: song.filesize,
               path: isEdit ? song.path : user_path,
-              title: song.title.trim(),
-              album: song.album.trim(),
-              artist: song.artist.trim(),
-              year: song.year.trim(),
+              title: song.title,
+              album: song.album,
+              artist: song.artist,
+              year: song.year,
               art: song.art,
               compilation: song.compilation,
               date_added: Date.now(),
@@ -642,6 +645,9 @@ class ZeroApp extends ZeroFrame {
     upload.then(() => {
       console.log("done signing... Now publishing...")
 
+      // Call callback function
+      if (f !== null && typeof f === "function") { f(); }
+
       let publishes = Object.keys(songsByDecade).map((decadeAddress) => {
         return new Promise((resolve) => {
           var content_inner_path = "merged-ZeroLSTN2/" + decadeAddress + "/data/users/" + app.siteInfo.auth_address + "/content.json";
@@ -651,9 +657,6 @@ class ZeroApp extends ZeroFrame {
 
       Promise.all(publishes).then(() => console.log("Done with publishing."));
     });
-
-    // Call callback function
-    if (f !== null && typeof f === "function") { f(); }
   }
 
   // Saves base64 album art to a file and sets the "art" attribute of the
