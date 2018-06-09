@@ -64,6 +64,7 @@
               {{ duplicateSong.song.title }}
               </a>
               <i @click.prevent="removeSongWithIndex(duplicateSongsTags, index)" class="material-icons right">close</i>
+              <i @click.prevent="allowDuplicateSong('setDuplicateSongsTags', duplicateSongsTags, index)" class="material-icons right">check</i>
             </li>
           </ul>
         </span>
@@ -72,9 +73,10 @@
           <ul class="collection">
             <li v-for="(duplicateSong, index) in duplicateSongsFile" class="collection-item">
               <a href="" @click.prevent="navigateToSongID(duplicateSong.existingSongID)" class="teal-text">
-              {{ duplicateSong.title }}
+              {{ duplicateSong.file.name }}
               </a>
               <i @click.prevent="removeSongWithIndex(duplicateSongsFile, index)" class="material-icons right">close</i>
+              <i @click.prevent="allowDuplicateSong('setDuplicateSongsFile', duplicateSongsFile, index)" class="material-icons right">check</i>
             </li>
           </ul>
         </span>
@@ -144,7 +146,7 @@
         // We need to check on load if the metadata has now changed to something that does already exist
         this.newSongs = page.store.state.newSongs;
         for (let i = 0; i < this.newSongs.length; i++) {
-          if (await page.isDuplicateSongByTags(this.newSongs[i].song)) {
+          if (!this.newSongs[i].overrode && await page.isDuplicateSongByTags(this.newSongs[i].song)) {
             // If this is now a duplicate song, add it to the duplicate songs array
             this.duplicateSongsTags.push(this.newSongs[i]);
             // And remove it from the newSongs array
@@ -257,22 +259,18 @@
             continue;
           }
 
-          // Check for duplicate by filename/filesize
-          let dupSongIDs = await page.isDuplicateSongByNameSize(file);
-          if (dupSongIDs.length > 0) {
-            // Store the ID of the song that shares this file on the songObj,
-            // so that we can later link to it
-            self.duplicateSongsFile.push({title: file.name, existingSongID: dupSongIDs[0].id});
-            continue;
-          }
-
           // Read the song's tags
           await self.readTags(file, {
             onSuccess: async function(loadedFile, tag) {
               // Check if this song is already in the database
               let songObj = self.craftSongObject(loadedFile.name, tag.tags);
               
-              if (await page.isDuplicateSongByTags(tag.tags)) {
+              let dupSongIDs = await page.isDuplicateSongByNameSize(loadedFile);
+              if (dupSongIDs.length > 0) {
+                // Store the ID of the song that shares this file on the songObj,
+                // so that we can later link to it
+                self.duplicateSongsFile.push({file: file, song: songObj, existingSongID: dupSongIDs[0].id});
+              } else if (await page.isDuplicateSongByTags(tag.tags)) {
                 // Was a duplicate, add to the duplicate pile
                 self.duplicateSongsTags.push({file: loadedFile, song: songObj});
               } else {
@@ -463,6 +461,22 @@
       // Remove specified song from newSongs array
       removeSongWithIndex: function(songArr, index) {
         songArr.splice(index, 1);
+      },
+      // Allow a duplicated song to be uploaded
+      allowDuplicateSong: async function(setFunction, songArr, index) {
+        let allowed = await page.cmdp("wrapperConfirm", ["Are you sure? This could cause duplicate metadata.", "I confirm"])
+        if (allowed) {
+          // Set an overridden flag
+          songArr[index].overrode = true;
+
+          // Move song to newSongs array
+          this.newSongs.push(songArr[index]);
+          songArr.splice(index, 1);
+
+          // Update state
+          page.store.commit(setFunction, songArr);
+          page.store.commit('setNewSongs', this.newSongs);
+        }
       },
       // Navigate to a songID
       navigateToSongID: function(id) {

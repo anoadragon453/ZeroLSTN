@@ -1073,6 +1073,7 @@ class ZeroApp extends ZeroFrame {
     AND album="${album}"
     AND artist="${artist}"
     AND has_merged is null
+    COLLATE NOCASE
     LIMIT 1
     `;
 
@@ -1105,8 +1106,7 @@ class ZeroApp extends ZeroFrame {
     LIMIT 1
     `;
 
-    let result = await this.cmdp("dbQuery", [query]);
-    return result;
+    return await this.cmdp("dbQuery", [query]);
   }
 
   // Returns a list of all albums, with an optional max song amount and offset
