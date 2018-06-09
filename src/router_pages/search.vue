@@ -133,6 +133,9 @@
         onShow: self.tabClicked
       });
 
+      // Focus on search input field
+      document.getElementById('searchField').focus();
+
       // Catch when user stops typing in search field
       var self = this;
       var keystoppedDelay = 600;
