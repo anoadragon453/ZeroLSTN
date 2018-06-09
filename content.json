@@ -9,15 +9,15 @@
  "favicon": "img/favicon.png",
  "files": {
   "README.md": {
-   "sha512": "811fef42ba9a0c16bf713d91f691400fc92a877bcb30608e45a0845382921ee8",
-   "size": 323
+   "sha512": "50f77d005a3120128e2e50916ce9435b5345c406b78f0e5419ff719150106a5e",
+   "size": 327
   },
   "css/dark.css": {
-   "sha512": "1c52eb1f73852f0301df5f3baf4481c014e73ec0ff27db8854c52fcb2e6952b4",
+   "sha512": "8db4e29a64f8fb51e67ce5605e9d5ffb8e4a12c382a5071dbbc47c6ee84dc9fd",
    "size": 124186
   },
   "css/main.css": {
-   "sha512": "8a99781032a0f48eb38b009d1d1b62e6dfc1333ddf977d6f4705f4febc3b32f3",
+   "sha512": "7b045c37e3bfbb18ffeca1ffb4a51a3843425ee068f486b5ed045361993410be",
    "size": 124123
   },
   "dbschema.json": {
@@ -60,14 +60,6 @@
    "sha512": "5e876f06ab8538594b2adba59e792fb449b1a5d96cc68789030169e777017844",
    "size": 64800
   },
-  "fonts/roboto/Roboto-Light.woff": {
-   "sha512": "665301f37b91f3b484e3cca70a9d0b7afa40cda17bc5fea69bbaa816b2a8aeec",
-   "size": 89672
-  },
-  "fonts/roboto/Roboto-Light.woff2": {
-   "sha512": "710584464ab3ea37b1fe10588d1580dd5c2a1e1b6f389dedc93bfbd553235708",
-   "size": 64268
-  },
   "fonts/roboto/Roboto-Medium.woff": {
    "sha512": "5c50975116364e37d4e75e92c00a74a5b2322221b5ceb9e162251138750fe1cb",
    "size": 90560
@@ -84,17 +76,9 @@
    "sha512": "0c2e0f6f5d6938ccbdcdd56f8dae7a3e6b845d63d3c6152c69331779dea87313",
    "size": 64832
   },
-  "fonts/roboto/Roboto-Thin.woff": {
-   "sha512": "2b23f3e4ce1b9be6fc13145b966ba55877d3e4379c772d4fdc686b0563c47367",
-   "size": 88132
-  },
-  "fonts/roboto/Roboto-Thin.woff2": {
-   "sha512": "f78d8fc0980cc6809949a5f16f64c9c921d70b65f19c11e717d7b0280de0c959",
-   "size": 63056
-  },
   "gulpfile.js": {
-   "sha512": "7fd27954bb65744da548d15c82ec3aa9af459504ab644663cebef35ba0db0985",
-   "size": 1676
+   "sha512": "54d6e7d69d2f968474f9f5ac301b41abe107aaf077887d0e4507e11ac04e187d",
+   "size": 1661
   },
   "img/favicon.png": {
    "sha512": "66806865bcfd61ba6c40696e5a10c789cafd89a02f90d3ec55c1a9222912b41c",
@@ -104,25 +88,25 @@
    "sha512": "2ae0beb2523a3e4c156f789173eec9065bb903cc2f73ec4e5bbcb130e050078e",
    "size": 2221
   },
-  "index.html": {
-   "sha512": "23fb2d65ea79496d4172285ef4bd5a7a7d485740a4c9067588624457ee7838b7",
-   "size": 732
-  },
-  "js/bundle.js": {
-   "sha512": "1e0beaf50c591a5713b38b9af96ac7f19d06940c5b481ea971eb90a1e186cec4",
-   "size": 2075840
-  },
-  "js/bundle.js.map": {
-   "sha512": "e3be1e636c4e1787f598602531d95da4b4777f6c7f7688849d1ce40e18280bbd",
-   "size": 5545012
-  },
-  "logo.png": {
+  "img/logo.png": {
    "sha512": "a05f698dbe70e850afbe59ef5cf2e2c6cabea6f0d5e370afdb5381c1a81ca005",
    "size": 82247
   },
-  "merged-ZeroLSTN/ZeroLSTN.db": {
-   "sha512": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce",
-   "size": 0
+  "index.html": {
+   "sha512": "165970eedfc9cdf84c09affa79f0857b632cf13f227a139ae857734b6db6d65b",
+   "size": 732
+  },
+  "js/bundle.js": {
+   "sha512": "d9ec5282aa934481a288f8a8f21ac7a79b288de771651b68398156d82a6e9414",
+   "size": 2076936
+  },
+  "js/bundle.js.map": {
+   "sha512": "e5763edb2e990ef30b1cf47c4b2b045d3df60e4955f5c9568c052344a37a80f2",
+   "size": 5547562
+  },
+  "languages/es.json": {
+   "sha512": "64ca79cb68959d87d6d709bbdf8cac696338b32547e523a0b48303547ecbd9da",
+   "size": 52
   },
   "scripts/cleantags/README.md": {
    "sha512": "f9d088ef89402a63771fa62f9f858b2475548f06036a9bf3da9f9feae8b47b1b",
@@ -135,14 +119,14 @@
  },
  "ignore": "(.*lock|package.json|node_modules/.*|src/.*|.git|disabled/.*)",
  "inner_path": "content.json",
- "modified": 1528542541,
+ "modified": 1528560299,
  "postmessage_nonce_security": true,
  "signers_sign": "HJU5bna/wgW0ucWQxBilhAxeU4PFJJ2E0Gh5iP3G+L6RdizA6H1Q9k2Qzqk0LB7UZOa7vV97PICazYI8YNgS+oQ=",
  "signs": {
-  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "Gz4jr+9a0runoB1nomSgaY7EnrpmrEivG10ZExK/2zlJGoZ37cSFf8YYO38WOqccAls7jJZZqmrYGtHquAEfK1Q="
+  "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3": "G59NZkma0eUulGhvIC34LINHHK6s5b39vwccD6fc+1nBHvPgsPjSR7PVNpD6tNcE8UPkiA6WCZWujDkrqPNdVlY="
  },
  "signs_required": 1,
  "title": "ZeroLSTN",
- "translate": ["js/all.js"],
+ "translate": ["js/bundle.js", "js/bundle.js.map"],
  "zeronet_version": "0.6.2"
 }
