@@ -4,7 +4,9 @@
     @click.prevent="pauseSong(song)" class="material-icons circle blue darken-1">pause</i>
     <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
     <span class="title">{{ song.track_number ? song.track_number + '.' : '' }} {{ song.title }}</span>
-    <p>{{songInfo ? songInfo.peer_seed : '?' }} {{ songInfo && songInfo.peer_seed != 1 ? 'seeds' : 'seed' }}
+    <p>{{songInfo ? songInfo.peer_seed : '?' }}
+      <span v-if="songInfo && songInfo.peer_seed != 1">seeds</span>
+      <span v-else>seed</span>
       - <a href="" @click.prevent="goToArtist(song)">{{ song.artist }}</a>
       - <a href="" @click.prevent="goToAlbum(song)">{{ song.album }}</a>
       <br>

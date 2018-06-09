@@ -11,7 +11,7 @@
             <div class="card-content">
               <div class="input-field">
                 <i class="material-icons prefix">search</i>
-                <input placeholder="Search Artists, Albums, Songs..." id="searchField" type="text" class="" autofocus>
+                <input placeholder="Search artists, albums, songs..." id="searchField" type="text" class="" autofocus>
               </div>
             </div>
             <div class="card-tabs">
@@ -115,21 +115,22 @@
     name: "search",
     data: () => {
       return {
-        lastTab: "",              // Keep track of last tab, to not search again if clicked
-        lastSearch: "",           // Keep track of last search term, to not search again if clicked // TODO: Store this in Vuex
-        allSongs: [],             // Songs that appear on the All tab
-        allAlbums: [],            // Albums that appear on the All tab
-        allArtists: [],           // Artists that appear on the All tab
-        songs: [],                // Songs that appear on the Songs tab
-        albums: [],               // Albums that appear on the Albums tab
-        artists: []               // Artists that appear on the Artists tab
+        tabSwitcher: null, // The tab switcher object, useful to know current tab
+        lastTab: "",       // Keep track of last tab, to not search again if clicked
+        lastSearch: "",    // Keep track of last search term, to not search again if clicked
+        allSongs: [],      // Songs that appear on the All tab
+        allAlbums: [],     // Albums that appear on the All tab
+        allArtists: [],    // Artists that appear on the All tab
+        songs: [],         // Songs that appear on the Songs tab
+        albums: [],        // Albums that appear on the Albums tab
+        artists: []        // Artists that appear on the Artists tab
       }
     },
     mounted: function() {
       // Initialize tabs
       var self = this;
       var tabs = document.querySelector("ul.tabs");
-      var instance = new M.Tabs(tabs, {
+      this.tabSwitcher = new M.Tabs(tabs, {
         onShow: self.tabClicked
       });
 
@@ -176,13 +177,10 @@
           return;
         }
 
-        // Get current tab
-        console.log("currentTab:", this.currentTab());
-
         // Search based on current tab
         var self = this;
-        switch (this.currentTab()) {
-          case 'All':
+        switch (this.tabSwitcher.index) {
+          case 0:
             // Search songs
             page.search(searchText, "song").then((songs) => {
               self.allSongs = songs;
@@ -199,19 +197,19 @@
               self.allArtists = artists;
             });
             break;
-          case 'Songs':
+          case 1:
             // Search songs
             page.search(searchText, "song").then((songs) => {
               self.songs = songs;
             });
             break;
-          case 'Albums':
+          case 2:
             // Search albums
             page.search(searchText, "album").then((albums) => {
               self.albums = albums;
             });
             break;
-          case 'Artists':
+          case 3:
             // Search artists
             page.search(searchText, "artist").then((artists) => {
               self.artists = artists;

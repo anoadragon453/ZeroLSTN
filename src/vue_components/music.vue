@@ -4,9 +4,9 @@
     <div class="row">
       <div class="col s12">
         <ul class="tabs tabs-fixed-width z-depth-1">
-          <li v-for="tab in tabs" class="tab col s3">
-            <a :href="'#' + tab.name.toLowerCase()">{{ tab.name }}</a>
-          </li>
+          <li class="tab"><a href="#artists">Artists</a></li>
+          <li class="tab"><a href="#albums">Albums</a></li>
+          <li class="tab"><a href="#years">Years</a></li>
         </ul>
       </div>
       <div id="artists" class="col s12">
@@ -79,7 +79,7 @@
 
       // If there's a tab in the URL, switch to that
       page.bus.$on("currentTab", function(currentTab) {
-        self.tabSwitcher.select(currentTab.toLowerCase());
+        self.tabSwitcher.select(currentTab);
       });
 
       // Get decades
@@ -91,11 +91,7 @@
     data: () => {
       return {
         tabSwitcher: null,
-        tabs: [
-          { name: "Artists", icon: "people", active: false },
-          { name: "Albums", icon: "album", active: false },
-          { name: "Years", icon: "library_music", active: false }
-        ],
+        tabs: ["artists", "albums", "years"],
         artists: [],
         albums: [],
         decades: [],
@@ -104,7 +100,7 @@
     },
     methods: {
       switchedTab: function() {
-        var currentTab = this.tabs[this.tabSwitcher.index].name;
+        let currentTab = this.tabs[this.tabSwitcher.index];
         Router.navigate('/tab/' + currentTab);
       },
       goToArtist: function(artist) {

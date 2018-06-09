@@ -23,7 +23,7 @@
         <input pattern="\d+" id="track_number" type="number" min="1"
           onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
           class="validate" v-model="song.track_number">
-        <label id="track_number-label" for="track_number">Track #</label>
+        <label id="track_number-label" for="track_number">Track Number</label>
         <span class="helper-text" data-error="Must be > 0" data-success=""></span>
       </div>
       <div class="input-field col s10">
@@ -96,7 +96,7 @@
         <a @click="mergeClicked()" class="left btn-flat">Merge Song</a>
       </div>
       <div class="col s6">
-        <a class="right btn-flat">Song ID: {{song.id}}</a>
+        <a class="right btn-flat">Song ID:<span> {{ song.id }}</span></a>
       </div>
     </div>
     <div class="row"></div>

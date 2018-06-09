@@ -44,7 +44,8 @@
       <div class="row"></div>
       <div class="row">
         <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>
-          Upload<span v-if="newSongs && newSongs.length != 0"> more</span> Songs
+          <span v-if="newSongs && newSongs.length != 0">Upload More Songs</span>
+          <span v-else>Upload Songs</span>
         </a>
         <a id="publishsongs" v-if="newSongs && newSongs.length != 0" @click.prevent="publishSongs()"
           :class="{ 'disabled' : publishing }" style="margin-right: 1em" class="btn waves-effect waves-light right">
