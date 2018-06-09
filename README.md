@@ -25,3 +25,7 @@ Simply run the following to compile everything:
 ```
 $ gulp
 ```
+
+## Translating
+
+If you would like to help translate ZeroLSTN into your language, please see the [Translation instructions](docs/translations.md).
