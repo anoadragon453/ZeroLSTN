@@ -61,7 +61,6 @@
           info.peer_seed = info.peer;
         }
 
-        console.log('[got info]', info)
         self.songInfo = info;
         self.downloaded = info.is_downloaded;
       });
