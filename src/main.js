@@ -1158,6 +1158,7 @@ class ZeroApp extends ZeroFrame {
 
   // Returns an array of album titles, made by the given artist
   getAlbumsByArtist(artistName) {
+    artistName = this.preprocessDoubleQuotes(artistName);
     var query = `
         SELECT DISTINCT songs.album FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1193,6 +1194,7 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given compilation album
   getSongsInCompilationAlbum(albumName) {
+    albumName = this.preprocessDoubleQuotes(albumName);
     var query = `
         SELECT songs.* FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1214,6 +1216,8 @@ class ZeroApp extends ZeroFrame {
 
   // Returns all songs in a given artist's album
   getSongsInAlbumByArtist(albumName, artistName) {
+    albumName = this.preprocessDoubleQuotes(albumName);
+    artistName = this.preprocessDoubleQuotes(artistName);
     var query = `
         SELECT songs.* FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1586,9 +1590,21 @@ class ZeroApp extends ZeroFrame {
     app.audioPlaying = false;
   }
 
+  preloadSong(song) {
+    console.log("Preloading", song.title)
+    var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
+    this.cmdp("fileGet", {"inner_path": filepath, "required": true}).then((res) => {
+      console.log("Preload result:", res)
+    });
+  }
+
   // Play a given song object
   playSong(song) {
-    console.log("Song Info:")
+    // Preload the next song if there is one
+    if (app.queueIndex < app.playQueue.length - 1) {
+      page.preloadSong(app.playQueue[app.queueIndex + 1]);
+    }
+
     var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
 
     // Play the song
@@ -1831,6 +1847,17 @@ class ZeroApp extends ZeroFrame {
     str = this.replaceAll(str, "`", "``");
     return str;
   }
+
+  // Escape any quotes in a song title, album name, or artist name
+  // Only processes double quotes
+  preprocessDoubleQuotes(str) {
+    if (!str) {
+      return "";
+    }
+    str = this.replaceAll(str, '"', '""');
+    return str;
+  }
+
 
   // Replaces all occurrances of a substring in a string
   replaceAll(str, find, replace) {
