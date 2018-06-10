@@ -105,9 +105,6 @@
         // Add songs to playQueue
         page.queueSongs(this.playlist_songs);
 
-        // Clear the songs array
-        this.playlist_songs.length = 0;
-
         // Close the modal
         this.addToPlaylistModal.M_Modal.close()
       },
