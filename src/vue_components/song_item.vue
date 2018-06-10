@@ -97,12 +97,16 @@
       deleteSong: function(song) {
         page.deleteSong(song);
       },
-      removeDownload: function(song) {
+      removeDownload: async function(song) {
         // Remove this song from the user's disk
-        var self = this;
-        page.removeDownload(song).then(() => {
-          self.downloaded = false;
-        });
+        let res = await page.removeDownload(song);
+
+        if (res == "ok") {
+          M.toast({html: "Download removed"})
+          this.downloaded = false;
+        } else {
+          M.toast({html: "Error: " + res})
+        }
       },
       downloadSong: function(song) {
         // Show a confirmation

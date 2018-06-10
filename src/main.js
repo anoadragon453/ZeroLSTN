@@ -693,7 +693,7 @@ class ZeroApp extends ZeroFrame {
 
   removeDownload(song) {
     // Delete a downloaded song
-    console.log(song)
+    console.log("Deleting", song.title)
     let songFilepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
     return this.cmdp("fileDelete", { "inner_path": songFilepath });
   }
@@ -1495,15 +1495,21 @@ class ZeroApp extends ZeroFrame {
       console.log("Info is:", songsWithInfo[0].info)
       if (songsWithInfo[0].info &&
           (!songsWithInfo[0].info.peer_seed || songsWithInfo[0].info.peer_seed == 0)) {
-        M.Toast({html: "Skipped song with 0 peers."})
-        page.nextSong();
+        // Check if this is the last song in the play queue and don't skip if so
+        if (app.queueIndex != app.playQueue.length - 1) {
+          M.toast({html: "Skipped song with 0 peers."})
+          page.nextSong();
+        }
       }
     }, 5000)
 
     // Timeout for 15s. Skip song.
     page.store.state.longTimeout = setTimeout(function() {
-      M.Toast({html: "Skipped slow-loading song."})
-      page.nextSong();
+      // Check if this is the last song in the play queue and don't skip if so
+      if (app.queueIndex != app.playQueue.length - 1) {
+        M.toast({html: "Skipped slow-loading song."})
+        page.nextSong();
+      }
     }, 15000)
 
     // If audioObject already exists, change its source
