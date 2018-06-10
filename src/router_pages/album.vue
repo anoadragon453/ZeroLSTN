@@ -30,7 +30,7 @@
                 </popper>
                 <h4 v-if="album !== ''">{{ album }}</h4>
                 <h4 v-else><i>Blank</i></h4>
-                <span v-if="artist">By <a @click.prevent="goToArtist(artist)">{{ artist }}</a></span>
+                <span v-if="artist">By <a href="#" @click.prevent="goToArtist(artist)">{{ artist }}</a></span>
                 <span v-else>Compilation Album</span>
               </li>
               <songitem  v-for="song in songs" :editable="false" :song="song" :current-song="currentSong" :audio-playing="audioPlaying"></songitem>
