@@ -1590,12 +1590,11 @@ class ZeroApp extends ZeroFrame {
     app.audioPlaying = false;
   }
 
+  // Predownload a song file
   preloadSong(song) {
     console.log("Preloading", song.title)
-    var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename;
-    this.cmdp("fileGet", {"inner_path": filepath, "required": true}).then((res) => {
-      console.log("Preload result:", res)
-    });
+    var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename + "|all";
+    this.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
   }
 
   // Play a given song object
