@@ -1,5 +1,6 @@
 version = "2.0.2";
-var playlistAddress = "1ListsNz9zbKVm163PToico2dqEqU98eAp";
+const playlistAddress = "1ListsNz9zbKVm163PToico2dqEqU98eAp";
+const siteAddress = "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3";
 
 // Hashing
 var sha512 = require("js-sha512").sha512;
@@ -183,8 +184,9 @@ class ZeroApp extends ZeroFrame {
   // Needed for ZeroRouter to work properly
   onRequest(cmd, message) {
     Router.listenForBack(cmd, message);
-    if (cmd === "setSiteInfo") {
-      if (message.params.address === "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3") {
+    
+    // Only accept site info from the current zite, not mergers
+    if (cmd === "setSiteInfo" && message.params.address === siteAddress) {
         this.siteInfo = message.params;
         app.siteInfo = message.params;
         app.getUserInfo();
