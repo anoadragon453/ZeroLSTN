@@ -184,9 +184,11 @@ class ZeroApp extends ZeroFrame {
   onRequest(cmd, message) {
     Router.listenForBack(cmd, message);
     if (cmd === "setSiteInfo") {
-      this.siteInfo = message.params;
-      app.siteInfo = message.params;
-      app.getUserInfo();
+      if (message.params.address === "1MQveQ3RPpimXX2wjW2geAGkNJ1GdXkvJ3") {
+        this.siteInfo = message.params;
+        app.siteInfo = message.params;
+        app.getUserInfo();
+      }
     }
 
     if (message.params.event && message.params.event[0] === "file_done") {
