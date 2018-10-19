@@ -190,7 +190,6 @@ class ZeroApp extends ZeroFrame {
         this.siteInfo = message.params;
         app.siteInfo = message.params;
         app.getUserInfo();
-      }
     }
 
     if (message.params.event && message.params.event[0] === "file_done") {
