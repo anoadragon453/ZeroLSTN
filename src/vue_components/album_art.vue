@@ -6,10 +6,10 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  
-  module.exports = {
-    props: ["currentSong"],
-    name: "albumart",
-  }
+import Router from '../libs/router.js';
+
+export default {
+  props: ['currentSong'],
+  name: 'albumart',
+};
 </script>

@@ -14,13 +14,13 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
+import Router from '../libs/router.js';
 
-  module.exports = {
-    props: ["currentSong"],
-    name: "songdetails",
-    mounted: function() {
+export default {
+  props: ['currentSong'],
+  name: 'songdetails',
+  mounted() {
 
-    }
-  }
+  },
+};
 </script>

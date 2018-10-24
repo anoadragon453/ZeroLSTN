@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "patch-package"
+    "serve": "vue-cli-service serve",
+    "build": "webpack",
+    "lint": "vue-cli-service lint"
   },
   "repository": {
     "type": "git",
@@ -17,45 +18,30 @@
     "url": "https://github.com/anoadragon453/ZeroLSTN/issues"
   },
   "homepage": "https://github.com/anoadragon453/ZeroLSTN#readme",
-  "description": "",
-  "devDependencies": {
-    "browserify": "^14.4.0",
-    "browserify-shim": "^3.8.14",
-    "gulp": "^4.0.0",
-    "gulp-autoprefixer": "^4.1.0",
-    "gulp-minify-css": "^1.2.4",
-    "gulp-sass": "^4.0.1",
-    "gulp-sourcemaps": "^2.6.4",
-    "patch-package": "^4.0.0",
-    "vinyl-buffer": "^1.0.1",
-    "vinyl-source-stream": "^2.0.0",
-    "watchify": "^3.11.0"
-  },
+  "description": "Music streaming for all!",
   "dependencies": {
     "animejs": "^2.2.0",
     "js-sha512": "^0.7.1",
     "jsmediatags": "^3.8.1",
     "markdown-it": "^8.4.1",
-    "materialize-css": "^1.0.0-rc.1",
-    "node-sass": "^4.9.0",
+    "materialize-css": "^1.0.0",
     "sanitize-html": "^1.18.2",
-    "vue": "^2.5.16",
+    "vue": "^2.5.17",
+    "vue-animejs": "^1.0.1",
     "vue-async-computed": "^3.3.1",
-    "vue-hot-reload-api": "^2.3.0",
     "vue-popperjs": "^1.3.0",
-    "vue-template-compiler": "^2.5.16",
-    "vueify": "^9.4.1",
     "vuex": "^3.0.1"
   },
-  "browser": {
-    "vue": "vue/dist/vue.common.js"
-  },
-  "browserify-shim": {
-    "jquery": "$"
-  },
-  "browserify": {
-    "transform": [
-      "browserify-shim"
-    ]
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.0.5",
+    "@vue/cli-plugin-eslint": "^3.0.5",
+    "@vue/cli-service": "^3.0.5",
+    "@vue/eslint-config-airbnb": "^3.0.5",
+    "mini-css-extract-plugin": "^0.4.4",
+    "node-sass": "^4.9.0",
+    "sass-loader": "^7.0.1",
+    "vue-loader": "^15.4.2",
+    "vue-template-compiler": "2.5.17",
+    "webpack-cli": "^3.1.2"
   }
 }

@@ -33,7 +33,7 @@
               <h4 v-else><i>Blank</i></h4>
               <p>Artist</p>
             </li>
-            <a href="#" v-for="album in albums" class="collection-item" @click.prevent="goToAlbum(album)">
+            <a href="#" v-for="album in albums" :key="album.album" class="collection-item" @click.prevent="goToAlbum(album)">
               <span v-if="album !== ''"><b>{{ album }}</b></span>
               <span v-else><b><i>Blank</i></b></span>
             </a>
@@ -48,100 +48,98 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  var Popper = require("vue-popperjs");
-  var SongItem = require("../vue_components/song_item.vue");
-  var PlayQueue = require("../vue_components/play_queue.vue");
-  var addToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
+import Router from '../libs/router.js';
+import Popper from 'vue-popperjs';
+import SongItem from '../vue_components/song_item.vue';
+import PlayQueue from '../vue_components/play_queue.vue';
+import addToPlaylistModal from '../vue_components/add_playlist_modal.vue';
 
-  module.exports = {
-    components: {
-      songitem: SongItem,
-      playQueue: PlayQueue,
-      popper: Popper,
-      addtoplaylistmodal: addToPlaylistModal
+export default {
+  components: {
+    songitem: SongItem,
+    playQueue: PlayQueue,
+    popper: Popper,
+    addtoplaylistmodal: addToPlaylistModal,
+  },
+  props: ['playQueueObj', 'queueIndex', 'currentSong', 'audioPlaying'],
+  name: 'artist',
+  data: () => ({
+    artist: '',
+    albums: [],
+    downloaded: window.page.store.state.downloadState.unknown,
+  }),
+  beforeMount() {
+    // Get artist from URL
+    this.artist = decodeURI(Router.currentParams.artist);
+    if (this.artist === 'Blank') { this.artist = ''; } // Account for blank artists
+    console.log('Artist:', this.artist);
+  },
+  mounted() {
+    // Load albums
+    const self = this;
+    window.page.getAlbumsByArtist(this.artist).then((albums) => {
+      console.log(albums);
+      self.albums = albums;
+    });
+  },
+  methods: {
+    goBack() {
+      // Hit the 'back' button
+      window.history.go(-1);
     },
-    props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
-    name: "artist",
-    data: () => {
-      return {
-        artist: "",
-        albums: [],
-        downloaded: page.store.state.downloadState.unknown
-      }
-    },
-    beforeMount: function() {
-      // Get artist from URL
-      this.artist = decodeURI(Router.currentParams["artist"]);
-      if (this.artist === "Blank") { this.artist = "" }; // Account for blank artists
-      console.log("Artist:", this.artist)
-    },
-    mounted: function() {
-      // Load albums
-      var self = this;
-      page.getAlbumsByArtist(this.artist).then((albums) => {
-        console.log(albums)
-        self.albums = albums;
-      });
-    },
-    methods: {
-      goBack: function() {
-        // Hit the 'back' button
-        window.history.go(-1);
-      },
-      goToAlbum: function(album) {
-        // Go to album's page
+    goToAlbum(album) {
+      // Go to album's page
 
-        // Account for blank artist in URL
-        this.artist = this.artist != "" ? this.artist : "Blank";
-        Router.navigate('/album/'+this.artist+'/'+(album !== '' ? album : 'Blank'));
-      },
-      playArtist: function() {
-        var self = this;
+      // Account for blank artist in URL
+      this.artist = this.artist != '' ? this.artist : 'Blank';
+      Router.navigate(`/album/${this.artist}/${album !== '' ? album : 'Blank'}`);
+    },
+    playArtist() {
+      const self = this;
 
-        // Queue songs and play the first one of the first album
-        var queueLength = page.getQueueLength();
-        var queueIndex = page.getQueueIndex();
+      // Queue songs and play the first one of the first album
+      const queueLength = window.page.getQueueLength();
+      const queueIndex = window.page.getQueueIndex();
 
-        var songs = [];
-        this.albums.forEach((album) => {
-          page.getSongsInAlbumByArtist(album, self.artist)
+      const songs = [];
+      this.albums.forEach((album) => {
+        window.page.getSongsInAlbumByArtist(album, self.artist)
           .then((songs) => {
             // Queue songs
-            console.log("[queuing]", songs)
-            page.queueSongs(songs);
+            console.log('[queuing]', songs);
+            window.page.queueSongs(songs);
 
             // Figure out where in the play queue to jump to
             if (queueLength == 0) {
-              page.playSongAtQueueIndex(queueIndex);
+              window.page.playSongAtQueueIndex(queueIndex);
             } else {
-              page.playSongAtQueueIndex(queueLength);
+              window.page.playSongAtQueueIndex(queueLength);
             }
           });
-        });
-      },
-      queueArtist: function() {
-        var self = this;
+      });
+    },
+    queueArtist() {
+      const self = this;
 
-        // Queue every album and song by this artist
-        page.bus.$emit("addToPlaylistArtist", this.artist);
-      },
-      downloadArtist: function() {
-        var self = this;
-        page.getAlbumsByArtist(this.artist)
+      // Queue every album and song by this artist
+      window.page.bus.$emit('addToPlaylistArtist', this.artist);
+    },
+    downloadArtist() {
+      const self = this;
+      window.page.getAlbumsByArtist(this.artist)
         .then((albums) => {
-          var songs = [];
+          const songs = [];
           albums.forEach((album) => {
-            page.getSongsInAlbumByArtist(album, self.artist)
-            .then((songs) => {
-              songs.forEach((song) => {
-                var filepath = "merged-ZeroLSTN2/" + song.site + "/" + song.directory + "/" + song.filename + "|all";
-                page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 });
+            window.page.getSongsInAlbumByArtist(album, self.artist)
+              .then((songs) => {
+                songs.forEach((song) => {
+                  const filepath = `merged-ZeroLSTN2/${song.site}/${song.directory}/${song.filename}|all`;
+                  window.page.cmdp('fileNeed', { inner_path: filepath, timeout: 30 });
+                });
               });
-            });
           });
         });
-      }
-    }
-  }
+    },
+  },
+};
 </script>

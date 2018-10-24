@@ -33,77 +33,72 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
+import Router from '../libs/router.js';
 
-  module.exports = {
-    props: ["userInfo", "ziteVersion"],
-    name: "navbar",
-    data: () => {
-        return {
-            ZiteName: "ZeroLSTN",
-            downloadedOnly: false,
-            siteTheme: "light",
-            sidebar: null
+export default {
+  props: ['userInfo', 'ziteVersion'],
+  name: 'navbar',
+  data: () => ({
+    ZiteName: 'ZeroLSTN',
+    downloadedOnly: false,
+    siteTheme: 'light',
+    sidebar: null,
+  }),
+  mounted() {
+    const self = this;
+    const elem = document.querySelector('.sidenav');
+    this.sidebar = new M.Sidenav(elem, {
+      edge: 'left',
+      draggable: true,
+    });
+
+    // Check if dark theme is enabled
+    setTimeout(() => {
+      window.page.getLocalStorage('theme').then((theme) => {
+        // Change to theme if it's set already
+        if (theme) {
+          self.siteTheme = theme;
+          self.setTheme();
         }
-    },
-    mounted: function() {
-      var self = this;
-      var elem = document.querySelector('.sidenav');
-      this.sidebar = new M.Sidenav(elem, {
-        edge: "left",
-        draggable: true
       });
-
-      // Check if dark theme is enabled
-      setTimeout(function() {
-        page.getLocalStorage("theme").then((theme) =>{
-          // Change to theme if it's set already
-          if (theme) {
-            self.siteTheme = theme;
-            self.setTheme();
-          }
-        });
-      }, 50); // Have to delay due to page not being available immediately
+    }, 50); // Have to delay due to page not being available immediately
+  },
+  computed: {
+    isLoggedIn() {
+      if (this.userInfo == null) return false;
+      return this.userInfo.cert_user_id != null;
     },
-    computed: {
-      isLoggedIn: function() {
-        if (this.userInfo == null) return false;
-        return this.userInfo.cert_user_id != null;
+  },
+  methods: {
+    goto(to) {
+      // Hide sidebar by "clicking" the overlay
+      const sidenavOverlay = document.querySelector('.sidenav-overlay');
+      sidenavOverlay.click();
+
+      // Go to specified page
+      Router.navigate(to);
+    },
+    login() {
+      window.page.selectUser();
+      return false;
+    },
+    toggleDarkTheme() {
+      if (this.siteTheme == 'light') { this.siteTheme = 'dark'; } else { this.siteTheme = 'light'; }
+
+      this.setTheme();
+    },
+    setTheme() {
+      switch (this.siteTheme) {
+        case 'dark':
+          window.page.setLocalStorage('theme', 'dark');
+          document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');
+          break;
+        default: // light theme
+          window.page.setLocalStorage('theme', 'light');
+          document.getElementById('mainstylesheet').setAttribute('href', 'css/main.css');
+          break;
       }
     },
-    methods: {
-      goto: function(to) {
-        // Hide sidebar by "clicking" the overlay
-        var sidenavOverlay = document.querySelector(".sidenav-overlay");
-        sidenavOverlay.click();
-
-        // Go to specified page
-        Router.navigate(to);
-      },
-      login: function() {
-        page.selectUser();
-        return false;
-      },
-      toggleDarkTheme: function() {
-        if (this.siteTheme == "light")
-          this.siteTheme = "dark";
-        else
-          this.siteTheme = "light";
-
-        this.setTheme();
-      },
-      setTheme: function() {
-        switch (this.siteTheme) {
-          case "dark":
-            page.setLocalStorage("theme", "dark");
-            document.getElementById('mainstylesheet').setAttribute("href", "css/dark.css");
-            break;
-          default: // light theme
-            page.setLocalStorage("theme", "light");
-            document.getElementById('mainstylesheet').setAttribute("href", "css/main.css");
-            break;
-        }
-      },
-    }
-  }
+  },
+};
 </script>
