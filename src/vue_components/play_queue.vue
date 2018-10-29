@@ -9,7 +9,7 @@
           </li>
           <li class="collection-item" v-if="!playQueueObj || playQueueObj.length == 0">No songs in queue.</li>
           <!-- TODO: Add remove-from-queue buttons and swipe to delete on mobile -->
-          <li class="collection-item" v-else v-for="(song, index) in playQueueObj">
+          <li class="collection-item" v-else v-for="(song, index) in playQueueObj" :key="song.id">
             <a href="#" @click.prevent="playSongAtIndex(index)">
               <span v-if="index == queueIndex"><b>{{ song.title }}</b></span>
               <span v-else>{{ song.title }}</span>
@@ -27,27 +27,28 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  module.exports = {
-    props: ["playQueueObj", "queueIndex"],
-    name: "playqueuecomponent",
-    methods: {
-      goto: function(to) {
-        // Go to specified page
-        Router.navigate(to);
-      },
-      playSongAtIndex: function(index) {
-        // Skip to clicked play queue song index
-        page.playSongAtQueueIndex(index);
-      },
-      removeFromQueue: function(index) {
-        // Remove a single song from the PlayQueue
-        page.removeSongFromQueue(index);
-      },
-      clearPlayQueue: function() {
-        // Remove all the songs in the play queue
-        page.clearPlayQueue();
-      }
-    }
-  }
+import Router from '../libs/router.js';
+
+export default {
+  props: ['playQueueObj', 'queueIndex'],
+  name: 'playqueuecomponent',
+  methods: {
+    goto(to) {
+      // Go to specified page
+      Router.navigate(to);
+    },
+    playSongAtIndex(index) {
+      // Skip to clicked play queue song index
+      window.page.playSongAtQueueIndex(index);
+    },
+    removeFromQueue(index) {
+      // Remove a single song from the PlayQueue
+      window.page.removeSongFromQueue(index);
+    },
+    clearPlayQueue() {
+      // Remove all the songs in the play queue
+      window.page.clearPlayQueue();
+    },
+  },
+};
 </script>

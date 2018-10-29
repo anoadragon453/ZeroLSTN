@@ -1,6 +1,6 @@
 <template>
   <li class="collection-item avatar left-align">
-    <i v-if="audioPlaying && currentSong && (currentSong.filename === song.filename)" 
+    <i v-if="audioPlaying && currentSong && (currentSong.filename === song.filename)"
     @click.prevent="pauseSong(song)" class="material-icons circle blue darken-1">pause</i>
     <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
     <span class="title">{{ song.track_number ? song.track_number + '.' : '' }} {{ song.title }}</span>
@@ -38,19 +38,19 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  var Popper = require("vue-popperjs");
+import Router from '../libs/router.js';
+import Popper from 'vue-popperjs';
 
-  module.exports = {
-    components: {
-      popper: Popper,
-    },
-    props: ["editable", "deletable", "song", "currentSong", "audioPlaying"],
-    name: "songitem",
-    mounted: function() {
-      var self = this;
-      console.log("Getting info for song")
-      page.cmdp("optionalFileInfo", ["merged-ZeroLSTN2/" + this.song.path + "/" + this.song.filename])
+export default {
+  components: {
+    popper: Popper,
+  },
+  props: ['editable', 'deletable', 'song', 'currentSong', 'audioPlaying'],
+  name: 'songitem',
+  mounted() {
+    const self = this;
+    console.log('Getting info for song');
+    window.page.cmdp('optionalFileInfo', [`merged-ZeroLSTN2/${this.song.path}/${this.song.filename}`])
       .then((info) => {
         if (!info) {
           return null;
@@ -64,74 +64,72 @@
         self.songInfo = info;
         self.downloaded = info.is_downloaded;
       });
+  },
+  data: () => ({
+    songInfo: null,
+    downloaded: false,
+  }),
+  methods: {
+    editSong(song) {
+      if (!window.page.isUserSignedIn()) {
+        window.page.cmd('certSelect', { accepted_domains: ['zeroid.bit'] });
+        return;
+      }
+
+      // Navigate to edit page with correct data
+      Router.navigate(`edit/${song.id}`);
     },
-    data: () => {
-      return {
-        songInfo: null,
-        downloaded: false
+    playSong(song) {
+      // Immediately play song
+      window.page.playSongImmediately(song);
+    },
+    pauseSong(song) {
+      // Pause this song
+      window.page.pauseCurrentSong(song);
+    },
+    queueSong(song) {
+      // Add song to playlist
+      window.page.bus.$emit('addToPlaylist', [song]);
+    },
+    deleteSong(song) {
+      window.page.deleteSong(song);
+    },
+    async removeDownload(song) {
+      // Remove this song from the user's disk
+      const res = await window.page.removeDownload(song);
+
+      if (res == 'ok') {
+        M.toast({ html: 'Download removed' });
+        this.downloaded = false;
+      } else {
+        M.toast({ html: `Error: ${res}` });
       }
     },
-    methods: {
-      editSong: function(song) {
-        if (!page.isUserSignedIn()) {
-          page.cmd("certSelect", { accepted_domains: ["zeroid.bit"] });
-          return;
+    downloadSong(song) {
+      // Show a confirmation
+      M.toast({ html: 'Downloading...' });
+
+      // Download this song to the user's disk
+      const filepath = `merged-ZeroLSTN2/${song.path}/${song.filename}|all`;
+      window.page.cmdp('fileNeed', { inner_path: filepath, timeout: 30 }).then((res) => {
+        if (res === 'ok') {
+          self.downloaded = true;
         }
-
-        // Navigate to edit page with correct data
-        Router.navigate('edit/'+song.id);
-      },
-      playSong: function(song) {
-        // Immediately play song
-        page.playSongImmediately(song);
-      },
-      pauseSong: function(song) {
-        // Pause this song
-        page.pauseCurrentSong(song);
-      },
-      queueSong: function(song) {
-        // Add song to playlist
-        page.bus.$emit("addToPlaylist", [song]);
-      },
-      deleteSong: function(song) {
-        page.deleteSong(song);
-      },
-      removeDownload: async function(song) {
-        // Remove this song from the user's disk
-        let res = await page.removeDownload(song);
-
-        if (res == "ok") {
-          M.toast({html: "Download removed"})
-          this.downloaded = false;
-        } else {
-          M.toast({html: "Error: " + res})
-        }
-      },
-      downloadSong: function(song) {
-        // Show a confirmation
-        M.toast({html: "Downloading..."});
-
-        // Download this song to the user's disk
-        var filepath = "merged-ZeroLSTN2/" + song.path + "/" + song.filename + "|all";
-        page.cmdp("fileNeed", { inner_path: filepath, timeout: 30 }).then((res) => {
-          if (res === "ok") {
-            self.downloaded = true;
-          }
-        });
-      },
-      removeSongParent: function(song) {
-        // Calls a method on the parent object relating to removing a song
-        this.$parent.removeSong(song);
-      },
-      goToArtist: function(song) {
-        let url = "/artist/" + (song.artist != "" ? song.artist : "Blank");
-        Router.navigate(url);
-      },
-      goToAlbum: function(song) {
-        let artist = (song.artist != "" ? song.artist : "Blank") + "/";
-        let url = (!song.compilation ? "/album/" + artist : "/compilation/") + (song.album != "" ? song.album : "Blank");
-        Router.navigate(url);
-      }
-    }
-  }
+      });
+    },
+    removeSongParent(song) {
+      // Calls a method on the parent object relating to removing a song
+      this.$parent.removeSong(song);
+    },
+    goToArtist(song) {
+      const url = `/artist/${song.artist != '' ? song.artist : 'Blank'}`;
+      Router.navigate(url);
+    },
+    goToAlbum(song) {
+      const artist = `${song.artist != '' ? song.artist : 'Blank'}/`;
+      const url = (!song.compilation ? `/album/${artist}` : '/compilation/') + (song.album != '' ? song.album : 'Blank');
+      Router.navigate(url);
+    },
+  },
+};
 </script>

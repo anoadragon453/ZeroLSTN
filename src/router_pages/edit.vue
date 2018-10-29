@@ -108,242 +108,240 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
+import Router from '../libs/router.js';
 
-  module.exports = {
-    props: [],
-    name: "edit",
-    data: () => {
-      return {
-        song: {},
-        genres: null,
-        uploadingFile: false,
-        mergeSongModal: null,
-        otherSongID: ""
-      }
-    },
-    mounted: function() {
-      var self = this;
+export default {
+  props: [],
+  name: 'edit',
+  data: () => ({
+    song: {},
+    genres: null,
+    uploadingFile: false,
+    mergeSongModal: null,
+    otherSongID: '',
+  }),
+  mounted() {
+    const self = this;
 
-      // Initialize modal view
-      var modal = document.getElementById("mergesongmodal");
-      var instance_modal = new M.Modal(modal, {
-        onCloseEnd: function() {
-          // Fix scrolling after modal closes
-          // https://github.com/Dogfalo/materialize/issues/4622
-          document.querySelector('body').style.overflow = 'visible';
+    // Initialize modal view
+    const modal = document.getElementById('mergesongmodal');
+    const instance_modal = new M.Modal(modal, {
+      onCloseEnd() {
+        // Fix scrolling after modal closes
+        // https://github.com/Dogfalo/materialize/issues/4622
+        document.querySelector('body').style.overflow = 'visible';
+      },
+    });
+    this.mergeSongModal = modal;
+
+    // If we're editing a not-yet-uploaded song, present data from its index in the store
+    if (Router.currentParams.index) {
+      // Make a deep copy so v-model doesn't change the state
+      self.song = Object.assign({}, window.page.store.state.newSongs[Router.currentParams.index].song);
+      window.page.getAllGenres().then((allGenresResult) => {
+        // Organize all known genres for autocompletion
+        const allGenres = {};
+        for (const i in allGenresResult) {
+          allGenres[allGenresResult[i].genre] = null;
         }
+
+        // Get autodetected genre from song tags if present
+        const genres = self.song.genre ? [{ tag: self.song.genre }] : [];
+
+        // Initialize autocompletion of genres
+        const elem = document.querySelector('.chips');
+        self.genres = M.Chips.init(elem, {
+          data: genres,
+          autocompleteOptions: {
+            data: allGenres,
+          },
+          placeholder: 'Genres',
+        });
       });
-      this.mergeSongModal = modal;
+      self.presentSongData();
+    } // If we're editing a not-yet-uploaded song, whose tags were considered a duplicate of an existing song
+    else if (Router.currentParams.dupindex) {
+      // Make a deep copy so v-model doesn't change the state
+      self.song = Object.assign({}, window.page.store.state.duplicateSongsTags[Router.currentParams.dupindex].song);
+      window.page.getAllGenres().then((allGenresResult) => {
+        // Organize all known genres for autocompletion
+        const allGenres = {};
+        for (const i in allGenresResult) {
+          allGenres[allGenresResult[i].genre] = null;
+        }
 
-      // If we're editing a not-yet-uploaded song, present data from its index in the store
-      if (Router.currentParams['index']) {
-        // Make a deep copy so v-model doesn't change the state
-        self.song = Object.assign({}, page.store.state.newSongs[Router.currentParams['index']].song);
-        page.getAllGenres().then((allGenresResult) => {
+        // Get autodetected genre from song tags if present
+        const genres = self.song.genre ? [{ tag: self.song.genre }] : [];
+
+        // Initialize autocompletion of genres
+        const elem = document.querySelector('.chips');
+        self.genres = M.Chips.init(elem, {
+          data: genres,
+          autocompleteOptions: {
+            data: allGenres,
+          },
+          placeholder: 'Genres',
+        });
+      });
+      self.presentSongData();
+    } else {
+      // Get already uploaded song info from the DB
+      window.page.retrieveSongInfo(Router.currentParams.songID).then((song) => {
+        if (!song) {
+          console.log('Unable to retrieve song from DB.');
+          return;
+        }
+
+        self.song = song;
+        self.presentSongData();
+      });
+
+      // Retrieve genres
+      window.page.getGenresFromSong(Router.currentParams.songID).then((genresResult) => {
+        console.log('[songGenres]', genresResult);
+
+        // Organize genres returned from DB for display
+        self.song.genres = [];
+        for (const i in genresResult) {
+          self.song.genres.push({ tag: genresResult[i].genre });
+        }
+
+        window.page.getAllGenres().then((allGenresResult) => {
           // Organize all known genres for autocompletion
-          var allGenres = {}
-          for (var i in allGenresResult) {
-            allGenres[allGenresResult[i].genre] = null
+          const allGenres = {};
+          for (const i in allGenresResult) {
+            allGenres[allGenresResult[i].genre] = null;
           }
 
-          // Get autodetected genre from song tags if present
-          var genres = self.song.genre ? [{tag: self.song.genre}] : [];
-
           // Initialize autocompletion of genres
-          var elem = document.querySelector('.chips');
+          const elem = document.querySelector('.chips');
           self.genres = M.Chips.init(elem, {
-            data: genres,
+            data: self.song.genres,
             autocompleteOptions: {
-              data: allGenres
+              data: allGenres,
             },
-            placeholder: "Genres"
+            placeholder: 'Genres',
           });
         });
-        self.presentSongData();
-      } // If we're editing a not-yet-uploaded song, whose tags were considered a duplicate of an existing song
-      else if (Router.currentParams['dupindex']) {
-        // Make a deep copy so v-model doesn't change the state
-        self.song = Object.assign({}, page.store.state.duplicateSongsTags[Router.currentParams['dupindex']].song);
-        page.getAllGenres().then((allGenresResult) => {
-          // Organize all known genres for autocompletion
-          var allGenres = {}
-          for (var i in allGenresResult) {
-            allGenres[allGenresResult[i].genre] = null
-          }
+      });
+    }
+  },
+  methods: {
+    presentSongData() {
+      console.log('Editing song:', this.song);
+      if (this.song.art) {
+        // Show img tag only if album art exists
+        document.getElementById('albumArtRow').style.display = '';
+      }
 
-          // Get autodetected genre from song tags if present
-          var genres = self.song.genre ? [{tag: self.song.genre}] : [];
+      // Make labels active so they don't cover the text.
+      if (this.song.year != '') {
+        document.getElementById('year').classList.add('valid');
+        document.getElementById('year-label').classList.add('active');
+      }
+      if (this.song.track_number != '') {
+        document.getElementById('track_number').classList.add('valid');
+        document.getElementById('track_number-label').classList.add('active');
+      }
+      if (this.song.title != '') {
+        document.getElementById('title').classList.add('valid');
+        document.getElementById('title-label').classList.add('active');
+      }
+      if (this.song.album != '') {
+        document.getElementById('album').classList.add('valid');
+        document.getElementById('album-label').classList.add('active');
+      }
+      if (this.song.artist != '') {
+        document.getElementById('artist').classList.add('valid');
+        document.getElementById('artist-label').classList.add('active');
+      }
+    },
+    saveClicked() {
+      // Save song details
+      // Save genre information
+      this.song.genres = this.genres.chipsData;
 
-          // Initialize autocompletion of genres
-          var elem = document.querySelector('.chips');
-          self.genres = M.Chips.init(elem, {
-            data: genres,
-            autocompleteOptions: {
-              data: allGenres
-            },
-            placeholder: "Genres"
-          });
-        });
-        self.presentSongData();
+      // If we're editing a non-uploaded-yet song, save details to the store
+      if (Router.currentParams.index) {
+        window.page.store.commit('saveSong', { song: this.song, index: parseInt(Router.currentParams.index) });
+        history.back();
+      } else if (Router.currentParams.dupindex) {
+        window.page.store.commit('saveDuplicateSongTags', { song: this.song, index: parseInt(Router.currentParams.dupindex) });
+        history.back();
       } else {
-        // Get already uploaded song info from the DB
-        page.retrieveSongInfo(Router.currentParams['songID']).then((song) => {
-          if (!song) {
-            console.log('Unable to retrieve song from DB.');
-            return;
-          }
-
-          self.song = song;
-          self.presentSongData();
-        });
-
-        // Retrieve genres
-        page.getGenresFromSong(Router.currentParams['songID']).then((genresResult) => {
-          console.log("[songGenres]", genresResult)
-
-          // Organize genres returned from DB for display
-          self.song.genres = [];
-          for (var i in genresResult) {
-            self.song.genres.push({"tag": genresResult[i].genre});
-          }
-
-          page.getAllGenres().then((allGenresResult) => {
-            // Organize all known genres for autocompletion
-            var allGenres = {}
-            for (var i in allGenresResult) {
-              allGenres[allGenresResult[i].genre] = null
-            }
-
-            // Initialize autocompletion of genres
-            var elem = document.querySelector('.chips');
-            self.genres = M.Chips.init(elem, {
-              data: self.song.genres,
-              autocompleteOptions: {
-                data: allGenres
-              },
-              placeholder: "Genres"
-            });
-          });
+        console.log('Uploading edit of song:', this.song);
+        // Otherwise, edit the already uploaded song
+        window.page.createSongObjects([this.song], true, () => {
+          // Head back to the previous page
+          history.back();
         });
       }
     },
-    methods: {
-      presentSongData: function() {
-        console.log("Editing song:", this.song)
-        if (this.song.art) {
-          // Show img tag only if album art exists
-          document.getElementById("albumArtRow").style.display = "";
+    cancelClicked() {
+      // Go back to the previous page if they hit cancel
+      history.back();
+    },
+    deleteImage() {
+      // Delete the image from the filesystem
+      window.page.deleteImage(Router.currentParams.mergerAddress, this.song.art);
+
+      // Hide the image view
+      document.getElementById('albumArtRow').style.display = 'none';
+      this.song.art = '';
+    },
+    uploadAlbumArt() {
+      // Run when Upload Art button is clicked
+      // Open file upload window
+      const fileUploadButton = document.getElementById('artUpload');
+      fileUploadButton.click();
+
+      // Listen for when a file has been uploaded
+      const self = this;
+      fileUploadButton.addEventListener('change', function () {
+        // Prevent this method from running twice on a single file upload
+        if (self.uploadingFile) {
+          return;
+        }
+        self.uploadingFile = true;
+
+        // Return if no files were uploaded
+        if (!this.files || !this.files[0]) {
+          this.uploadingFile = false;
+          return;
         }
 
-        // Make labels active so they don't cover the text.
-        if (this.song.year != "") {
-          document.getElementById("year").classList.add('valid');
-          document.getElementById("year-label").classList.add('active');
-        }
-        if (this.song.track_number != "") {
-          document.getElementById("track_number").classList.add('valid');
-          document.getElementById("track_number-label").classList.add('active');
-        }
-        if (this.song.title != "") {
-          document.getElementById("title").classList.add('valid');
-          document.getElementById("title-label").classList.add('active');
-        }
-        if (this.song.album != "") {
-          document.getElementById("album").classList.add('valid');
-          document.getElementById("album-label").classList.add('active');
-        }
-        if (this.song.artist != "") {
-          document.getElementById("artist").classList.add('valid');
-          document.getElementById("artist-label").classList.add('active');
-        }
-      },
-      saveClicked: function() {
-        // Save song details
-        // Save genre information
-        this.song.genres = this.genres.chipsData;
+        // Get selected user file
+        const file = this.files[0];
 
-        // If we're editing a non-uploaded-yet song, save details to the store
-        if (Router.currentParams['index']) {
-          page.store.commit('saveSong', {"song": this.song, "index": parseInt(Router.currentParams['index'])});
-          history.back();
-        } else if(Router.currentParams['dupindex']) {
-          page.store.commit('saveDuplicateSongTags', {"song": this.song, "index": parseInt(Router.currentParams['dupindex'])});
-          history.back();
-        } else {
-          console.log("Uploading edit of song:", this.song)
-          // Otherwise, edit the already uploaded song
-          page.createSongObjects([this.song], true, function() {
-            // Head back to the previous page
-            history.back();
-          });
+        // Check if the file is one of approved filetype
+        if (!file || typeof file !== 'object' || !file.type.match('(image)\/.*(jpeg|png)')) {
+          window.page.cmd('wrapperNotification', ['error', `File type ${file.type} does not match jpeg/jpg/png.`]);
+          return;
         }
-      },
-      cancelClicked: function() {
-        // Go back to the previous page if they hit cancel
-        history.back();
-      },
-      deleteImage: function() {
-        // Delete the image from the filesystem
-        page.deleteImage(Router.currentParams["mergerAddress"], this.song.art);
 
-        // Hide the image view
-        document.getElementById("albumArtRow").style.display = "none";
-        this.song.art = "";
-      },
-      uploadAlbumArt: function() {
-        // Run when Upload Art button is clicked
-        // Open file upload window
-        var fileUploadButton = document.getElementById('artUpload');
-        fileUploadButton.click();
+        // "Upload" the file to the user's 'artwork' folder
 
-         // Listen for when a file has been uploaded
-        var self = this;
-        fileUploadButton.addEventListener('change', function() {
-          // Prevent this method from running twice on a single file upload
-          if(self.uploadingFile) {
-            return;
-          }
-          self.uploadingFile = true;
+        // Create an object to read the file's data
+        const reader = new FileReader();
 
-          // Return if no files were uploaded
-          if (!this.files || !this.files[0]) {
-            this.uploadingFile = false;
+        // Set what happens once file reading is complete
+        reader.onload = function (event) {
+          const filedata = btoa(event.target.result);
+          const mergerAddress = Router.currentParams.index ? window.page.getAddressFromYear(self.song.year) : self.song.site;
+
+          if (Router.currentParams.index) {
+            // This is a yet-to-be-uploaded song, just set the art property to the filedata
+            // We'l actually upload this later
+            self.song.art = `data:image/jpeg;base64,${filedata}`;
             return;
           }
 
-          // Get selected user file
-          var file = this.files[0];
-
-          // Check if the file is one of approved filetype
-          if (!file || typeof file !== "object" || !file.type.match("(image)\/.*(jpeg|png)")) {
-            page.cmd("wrapperNotification", ["error", "File type " + file.type + " does not match jpeg/jpg/png."]);
-            return;
-          }
-
-          // "Upload" the file to the user's 'artwork' folder
-
-          // Create an object to read the file's data
-          let reader = new FileReader();
-
-          // Set what happens once file reading is complete
-          reader.onload = function(event) {
-            var filedata = btoa(event.target.result);
-            var mergerAddress = Router.currentParams["index"] ? page.getAddressFromYear(self.song.year) : self.song.site;
-
-            if (Router.currentParams["index"]) {
-              // This is a yet-to-be-uploaded song, just set the art property to the filedata
-              // We'l actually upload this later
-              self.song.art = "data:image/jpeg;base64," + filedata;
-              return;
-            }
-
-            // Copy and set image as optional file
-            page.uploadImage(file, filedata, mergerAddress)
+          // Copy and set image as optional file
+          window.page.uploadImage(file, filedata, mergerAddress)
             .then((uploadURL) => {
-              console.log("[URL]", uploadURL)
+              console.log('[URL]', uploadURL);
               // Display it on the page
-              document.getElementById("albumArtRow").style.display = "";
+              document.getElementById('albumArtRow').style.display = '';
 
               // Attach to song
               self.song.art = uploadURL;
@@ -351,36 +349,36 @@
               // Allow uploading further files
               self.uploadingFile = false;
             });
-          }
+        };
 
-          // Read the file's data
-          reader.readAsBinaryString(file);
-        });
-      },
-      mergeClicked: function() {
-        // Open the merge modal
-        this.mergeSongModal.M_Modal.open();
-      },
-      mergeSong: async function() {
-        // Merge the current song and the foreign song
-        if (this.song.id == this.otherSongID) {
-          M.toast({html: "Can't merge song into itself."});
-          return;
-        }
-
-        console.log("Merging song", this.song.id, "into song", this.otherSongID);
-        res = await page.mergeSongs(this.song, this.otherSongID);
-        if (res !== "ok") {
-          M.toast({html: res});
-          return;
-        }
-
-        // Close the modal
-        this.mergeSongModal.M_Modal.close();
-
-        // Come out from song
-        history.back();
+        // Read the file's data
+        reader.readAsBinaryString(file);
+      });
+    },
+    mergeClicked() {
+      // Open the merge modal
+      this.mergeSongModal.M_Modal.open();
+    },
+    async mergeSong() {
+      // Merge the current song and the foreign song
+      if (this.song.id == this.otherSongID) {
+        M.toast({ html: "Can't merge song into itself." });
+        return;
       }
-    }
-  }
+
+      console.log('Merging song', this.song.id, 'into song', this.otherSongID);
+      res = await window.page.mergeSongs(this.song, this.otherSongID);
+      if (res !== 'ok') {
+        M.toast({ html: res });
+        return;
+      }
+
+      // Close the modal
+      this.mergeSongModal.M_Modal.close();
+
+      // Come out from song
+      history.back();
+    },
+  },
+};
 </script>

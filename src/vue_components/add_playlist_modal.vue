@@ -10,7 +10,7 @@
           <!-- Close on selecting playlist -->
           <ul class="collection with-header">
             <a href="#" class="collection-item" @click.prevent="addToPlayQueue()"><b><i>Current Queue</i></b></a>
-            <a href="#" v-for="playlist in playlists" class="collection-item" @click.prevent="addToPlaylist(playlist.id)">
+            <a href="#" v-for="playlist in playlists" :key="playlist.id" class="collection-item" @click.prevent="addToPlaylist(playlist.id)">
               <span v-if="playlist !== ''"><b>{{ playlist.name }}</b></span>
               <span v-else><b><i>Untitled</i></b></span>
             </a>
@@ -23,94 +23,92 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
+import Router from '../libs/router.js';
 
-  module.exports = {
-    name: "addplaylistmodal",
-    data: () => {
-      return {
-        addToPlaylistModal: null,
-        playlists: [],
-        playlist_songs: []
-      }
-    },
-    mounted: function() {
-      var self = this;
+export default {
+  name: 'addplaylistmodal',
+  data: () => ({
+    addToPlaylistModal: null,
+    playlists: [],
+    playlist_songs: [],
+  }),
+  mounted() {
+    const self = this;
 
-      // Initialize modal view
-      var modal = document.getElementById("playlistmodal");
-      var instance_modal = new M.Modal(modal, {
-        onCloseEnd: function() {
-          // Fix scrolling after modal closes
-          // https://github.com/Dogfalo/materialize/issues/4622
-          document.querySelector('body').style.overflow = 'visible';
-        }
-      });
-      this.addToPlaylistModal = modal;
+    // Initialize modal view
+    const modal = document.getElementById('playlistmodal');
+    const instance_modal = new M.Modal(modal, {
+      onCloseEnd() {
+        // Fix scrolling after modal closes
+        // https://github.com/Dogfalo/materialize/issues/4622
+        document.querySelector('body').style.overflow = 'visible';
+      },
+    });
+    this.addToPlaylistModal = modal;
 
-      // Get playlists of the current user
-      page.cmdp("siteInfo", {})
+    // Get playlists of the current user
+    window.page.cmdp('siteInfo', {})
       .then((siteInfo) => {
-        page.getPlaylistsByUser(siteInfo.auth_address).then((playlists) => {
-          console.log("[user playlists]", playlists)
+        window.page.getPlaylistsByUser(siteInfo.auth_address).then((playlists) => {
+          console.log('[user playlists]', playlists);
           self.playlists = playlists;
         });
       });
 
-      // Pop up modal when someone calls addToPlaylist
-      page.bus.$on("addToPlaylist", function(songs) {
-        // Show the modal
-        self.addToPlaylistModal.M_Modal.open();
+    // Pop up modal when someone calls addToPlaylist
+    window.page.bus.$on('addToPlaylist', (songs) => {
+      // Show the modal
+      self.addToPlaylistModal.M_Modal.open();
 
-        // Save desired songs
-        console.log("Adding to playlist:", songs)
-        self.playlist_songs = songs;
-      });
+      // Save desired songs
+      console.log('Adding to playlist:', songs);
+      self.playlist_songs = songs;
+    });
 
-      page.bus.$on("addToPlaylistArtist", function(artist) {
-        // Show the modal
-        self.addToPlaylistModal.M_Modal.open();
-        console.log("Adding artist's worth of songs!")
+    window.page.bus.$on('addToPlaylistArtist', (artist) => {
+      // Show the modal
+      self.addToPlaylistModal.M_Modal.open();
+      console.log("Adding artist's worth of songs!");
 
+      // Clear the playlist_songs array
+      self.playlist_songs.length = 0;
+
+      // Save desired from artist
+      window.page.getAlbumsByArtist(artist)
+        .then((albums) => {
+          albums.forEach((album) => {
+            window.page.getSongsInAlbumByArtist(album, artist)
+              .then((songs) => {
+                self.playlist_songs.push(...self.playlist_songs, ...songs);
+                console.log('Adding artist with songs:', self.playlist_songs);
+              });
+          });
+        });
+    });
+  },
+  methods: {
+    addToPlaylist(id) {
+      const self = this;
+
+      // Add selected song id(s) to chosen playlist
+      window.page.addSongsToPlaylist(this.playlist_songs, id, () => {
         // Clear the playlist_songs array
         self.playlist_songs.length = 0;
 
-        // Save desired from artist
-        page.getAlbumsByArtist(artist)
-        .then((albums) => {
-          albums.forEach((album) => {
-            page.getSongsInAlbumByArtist(album, artist)
-            .then((songs) => {
-              self.playlist_songs.push.apply(self.playlist_songs, songs);
-              console.log("Adding artist with songs:", self.playlist_songs)
-            });
-          });
-        });
+        // Close the modal
+        self.addToPlaylistModal.M_Modal.close();
       });
     },
-    methods: {
-      addToPlaylist: function(id) {
-        var self = this;
+    addToPlayQueue() {
+      // Add songs to playQueue
+      window.page.queueSongs(this.playlist_songs);
 
-        // Add selected song id(s) to chosen playlist
-        page.addSongsToPlaylist(this.playlist_songs, id, function() {
-          // Clear the playlist_songs array
-          self.playlist_songs.length = 0;
-
-          // Close the modal
-          self.addToPlaylistModal.M_Modal.close()
-        });
-      },
-      addToPlayQueue: function() {
-        // Add songs to playQueue
-        page.queueSongs(this.playlist_songs);
-
-        // Close the modal
-        this.addToPlaylistModal.M_Modal.close()
-      },
-      goToPlaylists: function() {
-        Router.navigate("/playlists");
-      }
-    }
-  }
+      // Close the modal
+      this.addToPlaylistModal.M_Modal.close();
+    },
+    goToPlaylists() {
+      Router.navigate('/playlists');
+    },
+  },
+};
 </script>

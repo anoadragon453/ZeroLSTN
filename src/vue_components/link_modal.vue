@@ -23,63 +23,61 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
+import Router from '../libs/router.js';
 
-  module.exports = {
-    name: "linkmodal",
-    data: () => {
-      return {
-        linkModal: null,
-        url: ""
+export default {
+  name: 'linkmodal',
+  data: () => ({
+    linkModal: null,
+    url: '',
+  }),
+  mounted() {
+    const self = this;
+
+    // Initialize modal view
+    const modal = document.getElementById('urlmodal');
+    const instance_modal = new M.Modal(modal, {
+      onCloseEnd() {
+        // Fix scrolling after modal closes
+        // https://github.com/Dogfalo/materialize/issues/4622
+        document.querySelector('body').style.overflow = 'visible';
+      },
+    });
+
+    this.linkModal = modal;
+
+    // Pop up modal when someone calls copyLink
+    window.page.bus.$on('copyLink', (url) => {
+      // Show the modal
+      self.url = url;
+      self.linkModal.M_Modal.open();
+
+      self.selectURL();
+    });
+  },
+  methods: {
+    copyURL() {
+      // Copy URL to user's clipboard
+      this.selectURL();
+
+      try {
+        // Copy to clipboard
+        document.execCommand('copy');
+        M.toast({ html: 'Copied!' });
+      } catch (err) {
+        M.toast({ html: 'Unable to copy. Please copy manually.' });
       }
     },
-    mounted: function() {
-      var self = this;
-
-      // Initialize modal view
-      var modal = document.getElementById("urlmodal");
-      var instance_modal = new M.Modal(modal, {
-        onCloseEnd: function() {
-          // Fix scrolling after modal closes
-          // https://github.com/Dogfalo/materialize/issues/4622
-          document.querySelector('body').style.overflow = 'visible';
-        }
-      });
-
-      this.linkModal = modal;
-
-      // Pop up modal when someone calls copyLink
-      page.bus.$on("copyLink", function(url) {
-        // Show the modal
-        self.url = url;
-        self.linkModal.M_Modal.open()
-
-        self.selectURL();
-      });
+    closeModal() {
+      this.linkModal.M_Modal.close();
     },
-    methods: {
-      copyURL: function() {
-        // Copy URL to user's clipboard
-        this.selectURL();
+    selectURL() {
+      const urlField = document.getElementById('copy_url');
 
-        try {
-          // Copy to clipboard
-          document.execCommand('copy');
-          M.toast({html: "Copied!"});
-        } catch (err) {
-          M.toast({html: "Unable to copy. Please copy manually."});
-        }
-      },
-      closeModal: function() {
-        this.linkModal.M_Modal.close();
-      },
-      selectURL: function() {
-        var urlField = document.getElementById('copy_url');
-
-        // Select the text
-        urlField.focus();
-        urlField.select();
-      }
-    }
-  }
+      // Select the text
+      urlField.focus();
+      urlField.select();
+    },
+  },
+};
 </script>

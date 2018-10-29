@@ -54,7 +54,7 @@
                 <!-- TODO: Go to user profile -->
                 <!--Created by <a @click.prevent="(artist)">{{ artist }}</a>-->
               </li>
-              <songitem v-for="song in songs" :editable="false" :deletable="true" :song="song" :current-song="currentSong" :audio-playing="audioPlaying"></songitem>
+              <songitem v-for="song in songs" :key="song.id" :editable="false" :deletable="true" :song="song" :current-song="currentSong" :audio-playing="audioPlaying"></songitem>
               <li v-if="songs.length === 0" class="collection-item">No songs here yet. Add some with the queue icon <i class="material-icons">playlist_add</i> as you browse.</li>
             </ul>
           </div>
@@ -68,106 +68,104 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  var Popper = require("vue-popperjs");
-  var SongItem = require("../vue_components/song_item.vue");
-  var PlayQueue = require("../vue_components/play_queue.vue");
-  var LinkModal = require("../vue_components/link_modal.vue");
-  var AddToPlaylistModal = require("../vue_components/add_playlist_modal.vue");
+import Router from '../libs/router.js';
+import Popper from 'vue-popperjs';
+import SongItem from '../vue_components/song_item.vue';
+import PlayQueue from '../vue_components/play_queue.vue';
+import LinkModal from '../vue_components/link_modal.vue';
+import AddToPlaylistModal from '../vue_components/add_playlist_modal.vue';
 
-  module.exports = {
-    components: {
-      songitem: SongItem,
-      playQueue: PlayQueue,
-      popper: Popper,
-      addtoplaylistmodal: AddToPlaylistModal,
-      linkmodal: LinkModal
+export default {
+  components: {
+    songitem: SongItem,
+    playQueue: PlayQueue,
+    popper: Popper,
+    addtoplaylistmodal: AddToPlaylistModal,
+    linkmodal: LinkModal,
+  },
+  props: ['playQueueObj', 'queueIndex', 'currentSong', 'audioPlaying'],
+  name: 'playlist',
+  data: () => ({
+    playlist: null,
+    songs: [],
+    playlistLink: '',
+  }),
+  mounted() {
+    const self = this;
+
+    // Get playlist information from playlistID in URL
+    window.page.getPlaylistByID(decodeURI(Router.currentParams.playlistID)).then((playlist) => {
+      // Playlist is a javascript object with some playlist metadata
+      console.log('[playlist]', playlist);
+      self.playlist = playlist;
+    });
+
+    // Save link to current playlist to display later
+    self.playlistLink = `http://127.0.0.1:43110/zerolstn.bit/playlist/${Router.currentParams.playlistID}`;
+
+    // Load songs of this playlist
+    this.loadSongs();
+  },
+  methods: {
+    goBack() {
+      // Go back to playlists
+      Router.navigate('/playlists');
     },
-    props: ["playQueueObj", "queueIndex", "currentSong", "audioPlaying"],
-    name: "playlist",
-    data: () => {
-      return {
-        playlist: null,
-        songs: [],
-        playlistLink: ""
-      }
-    },
-    mounted: function() {
-      var self = this;
-
-      // Get playlist information from playlistID in URL
-      page.getPlaylistByID(decodeURI(Router.currentParams["playlistID"])).then((playlist) => {
-        // Playlist is a javascript object with some playlist metadata
-        console.log("[playlist]", playlist)
-        self.playlist = playlist;
-      });
-
-      // Save link to current playlist to display later
-      self.playlistLink = "http://127.0.0.1:43110/zerolstn.bit/playlist/" + Router.currentParams["playlistID"];
+    loadSongs() {
+      const self = this;
 
       // Load songs of this playlist
-      this.loadSongs();
+      window.page.getPlaylistSongsByID(decodeURI(Router.currentParams.playlistID)).then((songs) => {
+        // Playlist is a javascript object filled with songs and some meta information
+        console.log('[playlist songs]', songs);
+        self.songs = songs;
+      });
     },
-    methods: {
-      goBack: function() {
-        // Go back to playlists
-        Router.navigate("/playlists");
-      },
-      loadSongs: function() {
-        var self = this;
+    playPlaylist() {
+      // Queue songs and play the first one of the album
+      const queueLength = window.page.getQueueLength();
+      const queueIndex = window.page.getQueueIndex();
 
-        // Load songs of this playlist
-        page.getPlaylistSongsByID(decodeURI(Router.currentParams["playlistID"])).then((songs) => {
-          // Playlist is a javascript object filled with songs and some meta information
-          console.log("[playlist songs]", songs)
-          self.songs = songs;
-        });
-      },
-      playPlaylist: function() {
-        // Queue songs and play the first one of the album
-        var queueLength = page.getQueueLength();
-        var queueIndex = page.getQueueIndex();
+      window.page.queueSongs(this.songs);
 
-        page.queueSongs(this.songs);
-
-        // Figure out where in the play queue to jump to
-        if (queueLength == 0) {
-          page.playSongAtQueueIndex(queueIndex);
-        } else {
-          page.playSongAtQueueIndex(queueLength);
-        }
-      },
-      queuePlaylist: function() {
-        // Queue songs
-        page.bus.$emit("addToPlaylist", this.songs);
-      },
-      downloadPlaylist: function() {
-        //this.downloadAlbumBySongOffset(this.songs, 0);
-      },
-      deletePlaylist: function() {
-        var self = this;
-
-        // Delete a user's playlist
-        page.deletePlaylistByID(this.playlist.id, function() {
-          // Show a toast message
-          M.toast({html: 'Playlist ' + self.playlist.name + ' deleted.'});
-
-          // Go back to playlists page
-          Router.navigate('/playlists');
-        });
-      },
-      removeSong: function(song) {
-        var self = this;
-
-        page.removeSongFromPlaylist(song, this.playlist.id, function() {
-          // Reload songs
-          self.loadSongs();
-        });
-      },
-      getLinkToPlaylist: function() {
-        // Open playlist URL copy modal
-        page.bus.$emit('copyLink', `http://127.0.0.1:43110/zerolstn.bit/?/playlist/${this.playlist.id}`);
+      // Figure out where in the play queue to jump to
+      if (queueLength == 0) {
+        window.page.playSongAtQueueIndex(queueIndex);
+      } else {
+        window.page.playSongAtQueueIndex(queueLength);
       }
-    }
-  }
+    },
+    queuePlaylist() {
+      // Queue songs
+      window.page.bus.$emit('addToPlaylist', this.songs);
+    },
+    downloadPlaylist() {
+      // this.downloadAlbumBySongOffset(this.songs, 0);
+    },
+    deletePlaylist() {
+      const self = this;
+
+      // Delete a user's playlist
+      window.page.deletePlaylistByID(this.playlist.id, () => {
+        // Show a toast message
+        M.toast({ html: `Playlist ${self.playlist.name} deleted.` });
+
+        // Go back to playlists page
+        Router.navigate('/playlists');
+      });
+    },
+    removeSong(song) {
+      const self = this;
+
+      window.page.removeSongFromPlaylist(song, this.playlist.id, () => {
+        // Reload songs
+        self.loadSongs();
+      });
+    },
+    getLinkToPlaylist() {
+      // Open playlist URL copy modal
+      window.page.bus.$emit('copyLink', `http://127.0.0.1:43110/zerolstn.bit/?/playlist/${this.playlist.id}`);
+    },
+  },
+};
 </script>

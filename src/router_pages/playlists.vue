@@ -33,7 +33,7 @@
                 </popper>
                 <h4>Playlists</h4>
               </li>
-              <a href="#" v-for="playlist in playlists" class="collection-item" @click.prevent="goToPlaylist(playlist.id)">
+              <a href="#" v-for="playlist in playlists" :key="playlist.id" class="collection-item" @click.prevent="goToPlaylist(playlist.id)">
                 <span v-if="playlist !== ''"><b>{{ playlist.name }}</b></span>
                 <span v-else><b><i>Untitled</i></b></span>
               </a>
@@ -50,79 +50,77 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
-  var Popper = require("vue-popperjs");
-  var PlayQueue = require("../vue_components/play_queue.vue");
+import Router from '../libs/router.js';
+import Popper from 'vue-popperjs';
+import PlayQueue from '../vue_components/play_queue.vue';
 
-  module.exports = {
-    components: {
-      playQueue: PlayQueue,
-      popper: Popper
-    },
-    props: ["playQueueObj", "queueIndex", "currentSong"],
-    name: "playlists",
-    data: () => {
-      return {
-        createPlaylistModal: null,
-        playlists: []
-      }
-    },
-    mounted: function() {
-      var self = this;
+export default {
+  components: {
+    playQueue: PlayQueue,
+    popper: Popper,
+  },
+  props: ['playQueueObj', 'queueIndex', 'currentSong'],
+  name: 'playlists',
+  data: () => ({
+    createPlaylistModal: null,
+    playlists: [],
+  }),
+  mounted() {
+    const self = this;
 
-      // Initialize modal view
-      var modal = document.querySelector(".modal");
-      var instance_modal = new M.Modal(modal, {});
-      this.createPlaylistModal = modal;
+    // Initialize modal view
+    const modal = document.querySelector('.modal');
+    const instance_modal = new M.Modal(modal, {});
+    this.createPlaylistModal = modal;
 
-      // Get playlists of the current user
-      page.cmdp("siteInfo", {})
+    // Get playlists of the current user
+    window.page.cmdp('siteInfo', {})
       .then((siteInfo) => {
-        page.getPlaylistsByUser(siteInfo.auth_address).then((playlists) => {
-          console.log("[playlists]", playlists)
+        window.page.getPlaylistsByUser(siteInfo.auth_address).then((playlists) => {
+          console.log('[playlists]', playlists);
+          self.playlists = playlists;
+        });
+      });
+  },
+  methods: {
+    createPlaylist() {
+      // Make sure user is signed in first
+      if (!window.page.isUserSignedIn()) {
+        // Show sign in prompt
+        window.page.selectUser();
+        return;
+      }
+
+      // Open create playlist modal
+      this.createPlaylistModal.M_Modal.open();
+
+      // Reinitialize text fields.
+      // Playlist name field gets stuck otherwise
+      M.updateTextFields();
+    },
+    createPlaylistModalClicked() {
+      const self = this;
+
+      const name = document.getElementById('name').value;
+      if (name == '') {
+        M.toast({ html: 'Please enter a name.' });
+        return;
+      }
+
+      // Close modal
+      this.createPlaylistModal.M_Modal.close();
+
+      // Save new playlist with desired name
+      window.page.createPlaylist(name, () => {
+        // Reload playlists from DB
+        window.page.getPlaylistsByUser().then((playlists) => {
           self.playlists = playlists;
         });
       });
     },
-    methods: {
-      createPlaylist: function() {
-        // Make sure user is signed in first
-        if(!page.isUserSignedIn()) {
-          // Show sign in prompt
-          page.selectUser();
-          return;
-        }
-
-        // Open create playlist modal
-        this.createPlaylistModal.M_Modal.open()
-
-        // Reinitialize text fields.
-        // Playlist name field gets stuck otherwise
-        M.updateTextFields();
-      },
-      createPlaylistModalClicked: function() {
-        var self = this;
-
-        var name = document.getElementById('name').value;
-        if (name == "") {
-          M.toast({html: "Please enter a name."});
-          return;
-        }
-
-        // Close modal
-        this.createPlaylistModal.M_Modal.close();
-
-        // Save new playlist with desired name
-        page.createPlaylist(name, function() {
-          // Reload playlists from DB
-          page.getPlaylistsByUser().then((playlists) => {
-            self.playlists = playlists;
-          });
-        });
-      },
-      goToPlaylist: function(playlistID) {
-        Router.navigate("/playlist/"+playlistID);
-      }
-    }
-  }
+    goToPlaylist(playlistID) {
+      Router.navigate(`/playlist/${playlistID}`);
+    },
+  },
+};
 </script>

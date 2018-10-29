@@ -12,26 +12,26 @@
 </template>
 
 <script>
-  var Router = require("../libs/router.js");
+import Router from '../libs/router.js';
 
-  // All the Vue components that make up the homepage
-  var Music = require("../vue_components/music.vue");
-  var PlayQueue = require("../vue_components/play_queue.vue");
+// All the Vue components that make up the homepage
+import Music from '../vue_components/music.vue';
+import PlayQueue from '../vue_components/play_queue.vue';
 
-  module.exports = {
-    components: {
-      music: Music,
-      playQueue: PlayQueue
-    },
-    props: ["playQueueObj", "queueIndex"], // TODO: Move to store
-    name: "home",
-    data: () => {},
-    mounted: function() {
-      // Tell the music component to switch to the right tab if it is
-      // specified in the URL
-      if (Router.currentParams['currentTab']) {
-        page.bus.$emit("currentTab", Router.currentParams['currentTab']);
-      }
+export default {
+  components: {
+    music: Music,
+    playQueue: PlayQueue,
+  },
+  props: ['playQueueObj', 'queueIndex'], // TODO: Move to store
+  name: 'home',
+  data: () => {},
+  mounted() {
+    // Tell the music component to switch to the right tab if it is
+    // specified in the URL
+    if (Router.currentParams.currentTab) {
+      window.page.bus.$emit('currentTab', Router.currentParams.currentTab);
     }
-  }
+  },
+};
 </script>
