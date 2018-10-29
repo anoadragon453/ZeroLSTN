@@ -53,14 +53,22 @@ export default {
     });
 
     // Check if dark theme is enabled
-    setTimeout(() => {
-      window.page.getLocalStorage('theme').then((theme) => {
-        // Change to theme if it's set already
-        if (theme) {
+    setTimeout(async () => {
+      let theme = await window.page.getLocalStorage('theme');
+
+      // Change to theme if it's set already
+      if (theme) {
+        self.siteTheme = theme;
+        self.setTheme();
+      } else {
+        // Try to query ZeroNet theme setting
+        let server_info = await window.page.cmdp("serverInfo", {});
+        console.log("Queried:", server_info)
+        if (server_info && server_info.user_settings && server_info.user_settings.theme) {
           self.siteTheme = theme;
           self.setTheme();
         }
-      });
+      }
     }, 50); // Have to delay due to page not being available immediately
   },
   computed: {
@@ -86,15 +94,25 @@ export default {
       if (this.siteTheme == 'light') { this.siteTheme = 'dark'; } else { this.siteTheme = 'light'; }
 
       this.setTheme();
+      this.setThemeSetting();
     },
-    setTheme() {
+    setThemeSetting() {
       switch (this.siteTheme) {
         case 'dark':
           window.page.setLocalStorage('theme', 'dark');
-          document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');
           break;
         default: // light theme
           window.page.setLocalStorage('theme', 'light');
+          break;
+      }
+    },
+    setTheme() {
+      console.log("Setting theme:", this.siteTheme)
+      switch (this.siteTheme) {
+        case 'dark':
+          document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');
+          break;
+        default: // light theme
           document.getElementById('mainstylesheet').setAttribute('href', 'css/main.css');
           break;
       }
