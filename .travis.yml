@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - "10.12.0"
+
+install:
+  - npm i -g yarn && yarn
+
+script:
+  - /bin/sh .travis.sh
