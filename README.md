@@ -9,7 +9,7 @@ Install yarn: https://yarnpkg.com/lang/en/docs/install/
 In the project's root folder, install all needed dependencies.
 
 ```
-$ yarn install
+$ yarn
 ```
 
 ## Compiling
