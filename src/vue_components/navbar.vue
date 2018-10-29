@@ -54,7 +54,7 @@ export default {
 
     // Check if dark theme is enabled
     setTimeout(async () => {
-      let theme = await window.page.getLocalStorage('theme');
+      const theme = await window.page.getLocalStorage('theme');
 
       // Change to theme if it's set already
       if (theme) {
@@ -62,8 +62,8 @@ export default {
         self.setTheme();
       } else {
         // Try to query ZeroNet theme setting
-        let server_info = await window.page.cmdp("serverInfo", {});
-        console.log("Queried:", server_info)
+        const server_info = await window.page.cmdp('serverInfo', {});
+        console.log('Queried:', server_info);
         if (server_info && server_info.user_settings && server_info.user_settings.theme) {
           self.siteTheme = theme;
           self.setTheme();
@@ -107,7 +107,7 @@ export default {
       }
     },
     setTheme() {
-      console.log("Setting theme:", this.siteTheme)
+      console.log('Setting theme:', this.siteTheme);
       switch (this.siteTheme) {
         case 'dark':
           document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');

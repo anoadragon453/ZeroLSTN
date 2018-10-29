@@ -66,7 +66,7 @@ const VueZeroFrameRouterInit = (Router, vueInstance, routes) => {
   Router.vueInstance = vueInstance;
   Router.setView = (i, object) => {
     Router.vueInstance.currentView = object;
-    console.log("Set view to:", Router.vueInstance)
+    console.log('Set view to:', Router.vueInstance);
   };
   Router.init();
 };

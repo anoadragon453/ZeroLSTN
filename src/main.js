@@ -93,7 +93,7 @@ class ZeroApp extends ZeroFrame {
         app.getUserInfo();
 
         // Get localstorage for site
-        // TODO: Preferrably use this instead of page 
+        // TODO: Preferrably use this instead of page
         this.cmd('wrapperGetLocalStorage', {}, (localStorage) => {
           app.localStorage = localStorage ? localStorage[0] || {} : {};
 
@@ -641,7 +641,8 @@ class ZeroApp extends ZeroFrame {
             console.log('Wrote to data.json. Now signing', content_inner_path);
 
             return self.cmdp('siteSign', { inner_path: content_inner_path });
-          }).catch((err) => {
+          })
+            .catch((err) => {
               self.cmd('wrapperNotification', ['error signing:', err]);
             })
             .then(() => {
@@ -1092,7 +1093,7 @@ class ZeroApp extends ZeroFrame {
 
   // Returns a list of all song IDs that have the same filename and filesize as
   // the given song
-  async isDuplicateSongByNameSize(fileObj) {
+  isDuplicateSongByNameSize(fileObj) {
     let filename = fileObj.name;
     const filesize = fileObj.size;
 
@@ -1133,10 +1134,7 @@ class ZeroApp extends ZeroFrame {
     // TODO: WIP Need to not group together non-compilation albums
 
     // Execute query
-    return this.cmdp('dbQuery', [query])
-      .then(albumObjs =>
-        // Return array of { "album": "abc", "artist": "xyz"} objects
-        albumObjs);
+    return this.cmdp('dbQuery', [query]);
   }
 
   // Returns an array of all known artist names, with an optional max song amount and offset
@@ -1158,7 +1156,7 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Returns an array of album titles, made by the given artist
-  getAlbumsByArtist(artistName) {
+  async getAlbumsByArtist(artistName) {
     artistName = this.preprocessDoubleQuotes(artistName);
     const query = `
         SELECT DISTINCT songs.album FROM
@@ -1171,29 +1169,25 @@ class ZeroApp extends ZeroFrame {
         ORDER BY songs.album COLLATE NOCASE
         `;
 
-    return this.cmdp('dbQuery', [query])
-      .then(albumObjs =>
-        // Unpack "albums" string attribute into its own array of strings
-        new Promise((resolve, reject) => {
-          resolve(albumObjs.map(a => a.album));
-        }));
+    const albumObjs = await this.cmdp('dbQuery', [query]);
+
+    // Unpack "albums" string attribute into its own array of strings
+    return this.newPromise(albumObjs.map(a => a.album));
   }
 
   // Get and attach file info to song object
   getInfoForSongs(songs) {
-    return new Promise((resolve, reject) => {
-      songs.forEach(async (song) => {
-        // Get the info for each song
-        song.info = await this.cmdp('optionalFileInfo', [`merged-ZeroLSTN2/${song.path}/${song.filename}`]);
-      });
-
-      // Return the list of songs
-      resolve(songs);
+    songs.forEach(async (song) => {
+      // Get the info for each song
+      song.info = await this.cmdp('optionalFileInfo', [`merged-ZeroLSTN2/${song.path}/${song.filename}`]);
     });
+
+    // Return the list of songs
+    return this.newPromise(songs);
   }
 
   // Returns all songs in a given compilation album
-  getSongsInCompilationAlbum(albumName) {
+  async getSongsInCompilationAlbum(albumName) {
     albumName = this.preprocessDoubleQuotes(albumName);
     const query = `
         SELECT songs.* FROM
@@ -1207,15 +1201,13 @@ class ZeroApp extends ZeroFrame {
         ORDER BY track_number
         `;
 
-    return this.cmdp('dbQuery', [query])
-      .then((songs) => {
-        console.log('Compilation got songs:', songs);
-        return this.getInfoForSongs(songs);
-      });
+    const songs = await this.cmdp('dbQuery', [query]);
+    console.log('Compilation got songs:', songs);
+    return this.getInfoForSongs(songs);
   }
 
   // Returns all songs in a given artist's album
-  getSongsInAlbumByArtist(albumName, artistName) {
+  async getSongsInAlbumByArtist(albumName, artistName) {
     albumName = this.preprocessDoubleQuotes(albumName);
     artistName = this.preprocessDoubleQuotes(artistName);
     const query = `
@@ -1230,11 +1222,9 @@ class ZeroApp extends ZeroFrame {
         ORDER BY track_number
         `;
 
-    return this.cmdp('dbQuery', [query])
-      .then((songs) => {
-        console.log('Normal get songs:', songs);
-        return this.getInfoForSongs(songs);
-      });
+    const songs = await this.cmdp('dbQuery', [query]);
+    console.log('Normal get songs:', songs);
+    return this.getInfoForSongs(songs);
   }
 
   // -------------------------------------------------- //
