@@ -84,7 +84,7 @@ class ZeroFrame {
   }
 
   send(message, cb = null) {
-    console.log("Sending message:", message)
+    console.log('Sending message:', message);
     message.wrapper_nonce = this.wrapper_nonce;
     message.id = this.next_message_id;
     this.next_message_id++;

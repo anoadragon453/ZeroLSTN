@@ -21,7 +21,7 @@
     <div class="row">
       <div class="input-field col s2">
         <input pattern="\d+" id="track_number" type="number" min="1"
-          onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
+          onkeypress="return (event.charCode === 8 || event.charCode === 0 || event.charCode === 13) ? null : event.charCode >= 48 && event.charCode <= 57"
           class="validate" v-model="song.track_number">
         <label id="track_number-label" for="track_number">Track Number</label>
         <span class="helper-text" data-error="Must be > 0" data-success=""></span>
@@ -34,7 +34,7 @@
     <div class="row">
       <div class="input-field col s2">
         <input pattern="\d+" id="year" type="number" min="1"
-          onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"
+          onkeypress="return (event.charCode === 8 || event.charCode === 0 || event.charCode === 13) ? null : event.charCode >= 48 && event.charCode <= 57"
           class="validate" v-model="song.year">
         <label id="year-label" for="year">Year</label>
       </div>
@@ -108,7 +108,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 
 export default {
   props: [],
@@ -235,23 +235,23 @@ export default {
       }
 
       // Make labels active so they don't cover the text.
-      if (this.song.year != '') {
+      if (this.song.year !== '') {
         document.getElementById('year').classList.add('valid');
         document.getElementById('year-label').classList.add('active');
       }
-      if (this.song.track_number != '') {
+      if (this.song.track_number !== '') {
         document.getElementById('track_number').classList.add('valid');
         document.getElementById('track_number-label').classList.add('active');
       }
-      if (this.song.title != '') {
+      if (this.song.title !== '') {
         document.getElementById('title').classList.add('valid');
         document.getElementById('title-label').classList.add('active');
       }
-      if (this.song.album != '') {
+      if (this.song.album !== '') {
         document.getElementById('album').classList.add('valid');
         document.getElementById('album-label').classList.add('active');
       }
-      if (this.song.artist != '') {
+      if (this.song.artist !== '') {
         document.getElementById('artist').classList.add('valid');
         document.getElementById('artist-label').classList.add('active');
       }
@@ -361,7 +361,7 @@ export default {
     },
     async mergeSong() {
       // Merge the current song and the foreign song
-      if (this.song.id == this.otherSongID) {
+      if (this.song.id === this.otherSongID) {
         M.toast({ html: "Can't merge song into itself." });
         return;
       }

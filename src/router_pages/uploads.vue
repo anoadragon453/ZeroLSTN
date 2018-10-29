@@ -44,10 +44,10 @@
       <div class="row"></div>
       <div class="row">
         <a @click.prevent="showModal()" class="btn waves-effect waves-light right"><i class="material-icons left">add</i>
-          <span v-if="newSongs && newSongs.length != 0">Upload More Songs</span>
+          <span v-if="newSongs && newSongs.length !== 0">Upload More Songs</span>
           <span v-else>Upload Songs</span>
         </a>
-        <a id="publishsongs" v-if="newSongs && newSongs.length != 0" @click.prevent="publishSongs()"
+        <a id="publishsongs" v-if="newSongs && newSongs.length !== 0" @click.prevent="publishSongs()"
           :class="{ 'disabled' : publishing }" style="margin-right: 1em" class="btn waves-effect waves-light right">
           <i class="material-icons left">cloud_upload</i>
           Publish Songs
@@ -98,7 +98,7 @@
       </div>
       <div v-if="songs" class="row">
         <h5>Uploads</h5>
-        <ul v-if="songs.length != 0 || (newSongs && newSongs.length != 0)" class="collection">
+        <ul v-if="songs.length !== 0 || (newSongs && newSongs.length !== 0)" class="collection">
           <a href="#!" v-for="song in songs" :key="song.id" @click.prevent="editSong(song)" class="collection-item">
             {{ (song.track_number ? song.track_number : '?') + '. ' }}
             {{ song.artist }} -
@@ -117,7 +117,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 import SongItem from '../vue_components/song_item.vue';
 
 import jsmediatags from 'jsmediatags';
@@ -141,7 +141,7 @@ export default {
   }),
   async beforeMount() {
     // Show "Ready to Upload" songs if they are available in the store
-    if (window.page.store.state.newSongs.length != 0) {
+    if (window.page.store.state.newSongs.length !== 0) {
       // We need to check on load if the metadata has now changed to something that does already exist
       this.newSongs = window.page.store.state.newSongs;
       for (let i = 0; i < this.newSongs.length; i++) {
@@ -159,7 +159,7 @@ export default {
     }
 
     // Show duplicated tags songs if they are available in the store
-    if (window.page.store.state.duplicateSongsTags.length != 0) {
+    if (window.page.store.state.duplicateSongsTags.length !== 0) {
       // We need to check on load if the metadata has now changed to something that doesn't exist
       this.duplicateSongsTags = window.page.store.state.duplicateSongsTags;
       for (let i = 0; i < this.duplicateSongsTags.length; i++) {
@@ -178,7 +178,7 @@ export default {
     }
 
     // Show duplicated filename/size songs if they are available in the store
-    if (window.page.store.state.duplicateSongsFile.length != 0) {
+    if (window.page.store.state.duplicateSongsFile.length !== 0) {
       this.duplicateSongsFile = window.page.store.state.duplicateSongsFile;
     }
   },
@@ -224,7 +224,7 @@ export default {
     uploadClicked(type) {
       // Open file upload window
       let uploadButton;
-      if (type == 'file') {
+      if (type === 'file') {
         uploadButton = document.getElementById('fileupload');
       } else {
         uploadButton = document.getElementById('folderupload');
@@ -318,7 +318,7 @@ export default {
       song.album = tags.album ? tags.album : '';
       song.artist = tags.artist ? tags.artist : '';
       song.year = tags.year ? tags.year : '';
-      song.genre = tags.genre && tags.genre != 'Unknown Genre' ? tags.genre : '';
+      song.genre = tags.genre && tags.genre !== 'Unknown Genre' ? tags.genre : '';
 
       // Convert year to correct format
       song.year = (new Date(song.year)).getFullYear();
@@ -345,7 +345,7 @@ export default {
       }
 
       // Mark song as untagged if tags is null
-      if (Object.keys(tags).length == 0) {
+      if (Object.keys(tags).length === 0) {
         song.untagged = true;
         song.title = filename;
         song.artist = 'Unknown';
@@ -377,7 +377,7 @@ export default {
       }
 
       // All songs might've been duplicates. In that case, just return
-      if (this.newSongs.length == 0) {
+      if (this.newSongs.length === 0) {
         return;
       }
 
@@ -412,7 +412,7 @@ export default {
           publishButton.innerHTML = `Publishing... (${self.publishCount}/${totalSongs})`;
 
           // Once we've published all songs, hide publish button
-          if (self.publishCount == totalSongs) {
+          if (self.publishCount === totalSongs) {
             console.log('Done publishing all batches');
 
             // Add the published songs to the list of uploaded songs
@@ -431,7 +431,7 @@ export default {
 
             self.publishing = false;
             publishButton.innerHTML = 'Publish Songs';
-          } else if (self.publishCount == offset + self.uploadBatchSize) {
+          } else if (self.publishCount === offset + self.uploadBatchSize) {
             // We still need to publish another batch
             console.log('Done publishing batch, moving to next one...');
             self.runBatchPublish(offset + self.uploadBatchSize);

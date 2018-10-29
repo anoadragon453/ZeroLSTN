@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 
 // All the Vue components that make up the homepage
 import Music from '../vue_components/music.vue';

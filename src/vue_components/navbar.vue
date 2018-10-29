@@ -13,7 +13,7 @@
                     <li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
                     <li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons left">person</i>Login</a></li>
                     <li v-else><a @click.prevent="login()"><i class="material-icons left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
-                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons left">{{siteTheme == "light" ? "brightness_2" : "wb_sunny"}}</i></a></li>
+                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons left">{{siteTheme === "light" ? "brightness_2" : "wb_sunny"}}</i></a></li>
                 </ul>
                 <ul id="mobile-nav" class="sidenav">
                     <li><h2 class="center-align switch-color">{{ ZiteName }}</h2></li>
@@ -25,7 +25,7 @@
                     <li><a @click.prevent="goto('uploads')"><i class="material-icons switch-color left">cloud_upload</i>Uploads</a></li>
                     <li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons switch-color left">person</i>Login</a></li>
                     <li v-else><a @click.prevent="login()"><i class="material-icons switch-color left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
-                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons switch-color left">{{siteTheme == "light" ? "brightness_2" : "wb_sunny"}}</i>{{siteTheme == "light" ? "Dark Theme" : "Light Theme"}}</a></li>
+                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons switch-color left">{{siteTheme === "light" ? "brightness_2" : "wb_sunny"}}</i>{{siteTheme === "light" ? "Dark Theme" : "Light Theme"}}</a></li>
                 </ul>
             </div>
         </div>
@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 
 export default {
   props: ['userInfo', 'ziteVersion'],
@@ -53,20 +53,28 @@ export default {
     });
 
     // Check if dark theme is enabled
-    setTimeout(() => {
-      window.page.getLocalStorage('theme').then((theme) => {
-        // Change to theme if it's set already
-        if (theme) {
-          self.siteTheme = theme;
+    setTimeout(async () => {
+      const theme = await window.page.getLocalStorage('theme');
+
+      // Change to theme if it's set already
+      if (theme) {
+        self.siteTheme = theme;
+        self.setTheme();
+      } else {
+        // Try to query ZeroNet theme setting
+        const server_info = await window.page.cmdp('serverInfo', {});
+        console.log('Queried:', server_info);
+        if (server_info && server_info.user_settings && server_info.user_settings.theme) {
+          self.siteTheme = server_info.user_settings.theme;
           self.setTheme();
         }
-      });
+      }
     }, 50); // Have to delay due to page not being available immediately
   },
   computed: {
     isLoggedIn() {
-      if (this.userInfo == null) return false;
-      return this.userInfo.cert_user_id != null;
+      if (this.userInfo === null) return false;
+      return this.userInfo.cert_user_id !== null;
     },
   },
   methods: {
@@ -83,18 +91,29 @@ export default {
       return false;
     },
     toggleDarkTheme() {
-      if (this.siteTheme == 'light') { this.siteTheme = 'dark'; } else { this.siteTheme = 'light'; }
+      if (this.siteTheme === 'light') { this.siteTheme = 'dark'; } else { this.siteTheme = 'light'; }
 
       this.setTheme();
+      this.setThemeSetting();
     },
-    setTheme() {
+    setThemeSetting() {
+      console.log('Saving to local storage:', this.siteTheme);
       switch (this.siteTheme) {
         case 'dark':
           window.page.setLocalStorage('theme', 'dark');
-          document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');
           break;
         default: // light theme
           window.page.setLocalStorage('theme', 'light');
+          break;
+      }
+    },
+    setTheme() {
+      console.log("Setting site theme to:", this.siteTheme)
+      switch (this.siteTheme) {
+        case 'dark':
+          document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');
+          break;
+        default: // light theme
           document.getElementById('mainstylesheet').setAttribute('href', 'css/main.css');
           break;
       }

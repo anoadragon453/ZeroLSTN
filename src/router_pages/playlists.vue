@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 import Popper from 'vue-popperjs';
 import PlayQueue from '../vue_components/play_queue.vue';
 
@@ -102,7 +102,7 @@ export default {
       const self = this;
 
       const name = document.getElementById('name').value;
-      if (name == '') {
+      if (name === '') {
         M.toast({ html: 'Please enter a name.' });
         return;
       }

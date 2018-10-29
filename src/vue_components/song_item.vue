@@ -5,7 +5,7 @@
     <i v-else @click.prevent="playSong(song)" class="material-icons circle blue darken-1">play_arrow</i>
     <span class="title">{{ song.track_number ? song.track_number + '.' : '' }} {{ song.title }}</span>
     <p>{{songInfo ? songInfo.peer_seed : '?' }}
-      <span v-if="songInfo && songInfo.peer_seed != 1">seeds</span>
+      <span v-if="songInfo && songInfo.peer_seed !== 1">seeds</span>
       <span v-else>seed</span>
       - <a href="" @click.prevent="goToArtist(song)">{{ song.artist }}</a>
       - <a href="" @click.prevent="goToAlbum(song)">{{ song.album }}</a>
@@ -29,7 +29,7 @@
         <div class="popper">Remove Download</div>
         <a class="tooltip" slot="reference" @click.prevent="removeDownload(song)"><i class="material-icons switch-color">cloud_done</i></a>
       </popper>
-      <popper v-if="deletable && deletable == true" trigger="hover" :options="{placement: 'auto'}">
+      <popper v-if="deletable && deletable === true" trigger="hover" :options="{placement: 'auto'}">
         <div class="popper">Remove</div>
         <a class="tooltip" slot="reference" @click.prevent="removeSongParent(song)"><i class="material-icons switch-color">delete</i></a>
       </popper>
@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 import Popper from 'vue-popperjs';
 
 export default {
@@ -98,7 +98,7 @@ export default {
       // Remove this song from the user's disk
       const res = await window.page.removeDownload(song);
 
-      if (res == 'ok') {
+      if (res === 'ok') {
         M.toast({ html: 'Download removed' });
         this.downloaded = false;
       } else {
@@ -122,12 +122,12 @@ export default {
       this.$parent.removeSong(song);
     },
     goToArtist(song) {
-      const url = `/artist/${song.artist != '' ? song.artist : 'Blank'}`;
+      const url = `/artist/${song.artist !== '' ? song.artist : 'Blank'}`;
       Router.navigate(url);
     },
     goToAlbum(song) {
-      const artist = `${song.artist != '' ? song.artist : 'Blank'}/`;
-      const url = (!song.compilation ? `/album/${artist}` : '/compilation/') + (song.album != '' ? song.album : 'Blank');
+      const artist = `${song.artist !== '' ? song.artist : 'Blank'}/`;
+      const url = (!song.compilation ? `/album/${artist}` : '/compilation/') + (song.album !== '' ? song.album : 'Blank');
       Router.navigate(url);
     },
   },

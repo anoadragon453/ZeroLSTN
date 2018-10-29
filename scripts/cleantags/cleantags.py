@@ -33,17 +33,17 @@ def get_tag(audio, key):
 
     # If we're looking for the year and TYER tag doesn't exist,
     # determine year from the TDRC (date) tag
-    if (key == 'TYER' and 'TYER' not in audio):
+    if (key === 'TYER' and 'TYER' not in audio):
         try:
             return audio['TDRC'].text[0].text[0:4]
         except:
             return ""
-    if (key == 'TDRC'):
+    if (key === 'TDRC'):
         try:
             return audio['TDRC'].text[0].text
         except:
             return ""
-    if (key == 'APIC:'):
+    if (key === 'APIC:'):
         try:
             return audio['APIC:'].data
         except:
@@ -85,16 +85,16 @@ def clean_metadata(path):
     except ID3NoHeaderError:
         cleanfile = ID3()
 
-    if artist != "":    cleanfile.add(TPE1(encoding=3, text=artist))
-    if album != "":     cleanfile.add(TALB(encoding=3, text=album))
-    if title != "":     cleanfile.add(TIT2(encoding=3, text=title))
-    if genre != "":     cleanfile.add(TCON(encoding=3, text=genre))
-    if track_num != "": cleanfile.add(TRCK(encoding=3, text=track_num))
-    if date != "":      cleanfile.add(TDRC(encoding=3, text=date))
-    if year != "":      cleanfile.add(TYER(encoding=3, text=year))
-    if year != "":      cleanfile.add(TORY(encoding=3, text=year))
-    if lyrics != "":    cleanfile.add(USLT(encoding=3, text=lyrics))
-    if art != "":       cleanfile.add(APIC(encoding=3, mime='image/jpeg', type=3, desc=u'Cover', data=art))
+    if artist !== "":    cleanfile.add(TPE1(encoding=3, text=artist))
+    if album !== "":     cleanfile.add(TALB(encoding=3, text=album))
+    if title !== "":     cleanfile.add(TIT2(encoding=3, text=title))
+    if genre !== "":     cleanfile.add(TCON(encoding=3, text=genre))
+    if track_num !== "": cleanfile.add(TRCK(encoding=3, text=track_num))
+    if date !== "":      cleanfile.add(TDRC(encoding=3, text=date))
+    if year !== "":      cleanfile.add(TYER(encoding=3, text=year))
+    if year !== "":      cleanfile.add(TORY(encoding=3, text=year))
+    if lyrics !== "":    cleanfile.add(USLT(encoding=3, text=lyrics))
+    if art !== "":       cleanfile.add(APIC(encoding=3, mime='image/jpeg', type=3, desc=u'Cover', data=art))
     cleanfile.save(path, v2_version=3)
 
     # Delete old, dirty file
@@ -104,7 +104,7 @@ def convert_song(path):
     # Check if file is already mp3. If so, return
     filename, filetype = os.path.splitext(path)
     output_filename = filename + ".mp3"
-    if filetype.lower() == '.mp3':
+    if filetype.lower() === '.mp3':
         return output_filename
 
     # Convert song to mp3 file format
@@ -139,7 +139,7 @@ else:
                 # Add path to list if it is a file
                 files_to_process.append(filepath)
 
-if len(files_to_process) == 0:
+if len(files_to_process) === 0:
     print("No song files found.")
 
 # Iterate through files

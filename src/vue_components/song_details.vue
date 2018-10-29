@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 
 export default {
   props: ['currentSong'],
