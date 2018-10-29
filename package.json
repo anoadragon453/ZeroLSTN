@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "webpack",
+    "build": "webpack --config webpack.dev.js",
+    "build:prod": "webpack --config webpack.prod.js",
+    "deploy": "./deploy.sh",
     "lint": "vue-cli-service lint"
   },
   "repository": {
@@ -37,11 +38,15 @@
     "@vue/cli-plugin-eslint": "^3.0.5",
     "@vue/cli-service": "^3.0.5",
     "@vue/eslint-config-airbnb": "^3.0.5",
+    "babel-loader": "^8.0.4",
     "mini-css-extract-plugin": "^0.4.4",
     "node-sass": "^4.9.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
     "sass-loader": "^7.0.1",
+    "uglifyjs-webpack-plugin": "^2.0.1",
     "vue-loader": "^15.4.2",
     "vue-template-compiler": "2.5.17",
-    "webpack-cli": "^3.1.2"
+    "webpack-cli": "^3.1.2",
+    "webpack-merge": "^4.1.4"
   }
 }
