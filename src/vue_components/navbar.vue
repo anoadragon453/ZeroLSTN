@@ -65,7 +65,7 @@ export default {
         const server_info = await window.page.cmdp('serverInfo', {});
         console.log('Queried:', server_info);
         if (server_info && server_info.user_settings && server_info.user_settings.theme) {
-          self.siteTheme = theme;
+          self.siteTheme = server_info.user_settings.theme;
           self.setTheme();
         }
       }
@@ -97,6 +97,7 @@ export default {
       this.setThemeSetting();
     },
     setThemeSetting() {
+      console.log('Saving to local storage:', this.siteTheme);
       switch (this.siteTheme) {
         case 'dark':
           window.page.setLocalStorage('theme', 'dark');
@@ -107,7 +108,7 @@ export default {
       }
     },
     setTheme() {
-      console.log('Setting theme:', this.siteTheme);
+      console.log("Setting site theme to:", this.siteTheme)
       switch (this.siteTheme) {
         case 'dark':
           document.getElementById('mainstylesheet').setAttribute('href', 'css/dark.css');
