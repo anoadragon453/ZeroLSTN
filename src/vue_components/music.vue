@@ -10,10 +10,10 @@
         </ul>
       </div>
       <div id="artists" class="col s12">
-        <ul v-if="artists.length != 0" class="collection with-header">
+        <ul v-if="artists.length !== 0" class="collection with-header">
           <li class="collection-header"><h4>Artists</h4></li>
           <a href="#" v-for="artist in artists" :key="artist.artist" class="collection-item" @click.prevent="goToArtist(artist)">
-            <span v-if="artist != ''">{{artist}}</span>
+            <span v-if="artist !== ''">{{artist}}</span>
             <span v-else><i>Blank</i></span>
           </a>
         </ul>
@@ -21,7 +21,7 @@
         <p v-else class="center">No artists found. Add sites and refresh.</p>
       </div>
       <div id="albums" class="col s12">
-        <ul v-if="albums.length != 0" class="collection with-header">
+        <ul v-if="albums.length !== 0" class="collection with-header">
           <li class="collection-header"><h4>Albums</h4></li>
           <a href="#" v-for="album in albums" :key="album.album" class="collection-item" @click.prevent="goToAlbum(album)">
             {{album.album}}
@@ -31,7 +31,7 @@
         <p v-else class="center">No albums found. Add sites and refresh.</p>
       </div>
       <div id="years" class="col s12">
-        <ul v-if="decades.length != 0" class="collection with-header">
+        <ul v-if="decades.length !== 0" class="collection with-header">
           <li class="collection-header"><h4>Browse by Decade</h4></li>
           <a href="#" v-for="decade in decades" :key="decade.name" class="collection-item" @click.prevent="goToDecade(decade.name)">
             {{ decade.name }}

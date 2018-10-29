@@ -13,7 +13,7 @@
                     <li><a @click.prevent="goto('uploads')"><i class="material-icons left">cloud_upload</i>Uploads</a></li>
                     <li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons left">person</i>Login</a></li>
                     <li v-else><a @click.prevent="login()"><i class="material-icons left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
-                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons left">{{siteTheme == "light" ? "brightness_2" : "wb_sunny"}}</i></a></li>
+                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons left">{{siteTheme === "light" ? "brightness_2" : "wb_sunny"}}</i></a></li>
                 </ul>
                 <ul id="mobile-nav" class="sidenav">
                     <li><h2 class="center-align switch-color">{{ ZiteName }}</h2></li>
@@ -25,7 +25,7 @@
                     <li><a @click.prevent="goto('uploads')"><i class="material-icons switch-color left">cloud_upload</i>Uploads</a></li>
                     <li v-if="!isLoggedIn"><a @click.prevent="login()"><i class="material-icons switch-color left">person</i>Login</a></li>
                     <li v-else><a @click.prevent="login()"><i class="material-icons switch-color left">person</i>{{ userInfo ? userInfo.cert_user_id : "" }}</a></li>
-                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons switch-color left">{{siteTheme == "light" ? "brightness_2" : "wb_sunny"}}</i>{{siteTheme == "light" ? "Dark Theme" : "Light Theme"}}</a></li>
+                    <li><a @click.prevent="toggleDarkTheme()"><i class="material-icons switch-color left">{{siteTheme === "light" ? "brightness_2" : "wb_sunny"}}</i>{{siteTheme === "light" ? "Dark Theme" : "Light Theme"}}</a></li>
                 </ul>
             </div>
         </div>
@@ -73,8 +73,8 @@ export default {
   },
   computed: {
     isLoggedIn() {
-      if (this.userInfo == null) return false;
-      return this.userInfo.cert_user_id != null;
+      if (this.userInfo === null) return false;
+      return this.userInfo.cert_user_id !== null;
     },
   },
   methods: {
@@ -91,7 +91,7 @@ export default {
       return false;
     },
     toggleDarkTheme() {
-      if (this.siteTheme == 'light') { this.siteTheme = 'dark'; } else { this.siteTheme = 'light'; }
+      if (this.siteTheme === 'light') { this.siteTheme = 'dark'; } else { this.siteTheme = 'light'; }
 
       this.setTheme();
       this.setThemeSetting();

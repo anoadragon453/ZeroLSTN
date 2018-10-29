@@ -102,7 +102,7 @@ export default {
       const self = this;
 
       const name = document.getElementById('name').value;
-      if (name == '') {
+      if (name === '') {
         M.toast({ html: 'Please enter a name.' });
         return;
       }

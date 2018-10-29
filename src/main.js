@@ -62,7 +62,7 @@ const app = new Vue({
   },
   methods: {
     getUserInfo(f = null) {
-      if (this.siteInfo == null || this.siteInfo.cert_user_id == null) {
+      if (this.siteInfo === null || this.siteInfo.cert_user_id === null) {
         this.userInfo = null;
         return;
       }
@@ -176,7 +176,7 @@ class ZeroApp extends ZeroFrame {
   // Gets all known decades and their addresses
   getDecades() {
     // If we haven't gotten the addresses yet, get them
-    if (!app.decadeAddresses || app.decadeAddresses.length == 0) {
+    if (!app.decadeAddresses || app.decadeAddresses.length === 0) {
       console.log("Wasn't available, returning json file contents");
       return this.cmdp('fileGet', { inner_path: 'decades.json', required: false }).then((decades) => {
         console.log('Returning:', JSON.parse(decades));
@@ -212,7 +212,7 @@ class ZeroApp extends ZeroFrame {
 
   isUserSignedIn() {
     if (!app.siteInfo) { return false; }
-    return app.siteInfo.cert_user_id != null;
+    return app.siteInfo.cert_user_id !== null;
   }
 
   getLocalStorage(key) {
@@ -299,7 +299,7 @@ class ZeroApp extends ZeroFrame {
         // Write (and Sign and Publish is doSignPublish)
         this.cmd('fileWrite', [content_inner_path, btoa(json_raw)], (res) => {
           if (res === 'ok') {
-            if (f != null && typeof f === 'function') f();
+            if (f !== null && typeof f === 'function') f();
             if (doSignPublish) {
               this.cmd('siteSign', { inner_path: content_inner_path }, () => {
                 this.cmd('sitePublish', { inner_path: content_inner_path, sign: false });
@@ -309,7 +309,7 @@ class ZeroApp extends ZeroFrame {
             this.cmd('wrapperNotification', ['error', `File write error: ${JSON.stringify(res)}`]);
           }
         });
-      } else if (f != null && typeof f === 'function') f();
+      } else if (f !== null && typeof f === 'function') f();
     });
   }
 
@@ -470,7 +470,7 @@ class ZeroApp extends ZeroFrame {
 
         return this.cmdp('dbQuery', [query])
           .then((hashes) => {
-            if (hashes.length == 0) {
+            if (hashes.length === 0) {
               // Couldn't find the file hash
               console.log('Unable to find file hash for', filepath);
               return this.newPromise(null);
@@ -580,7 +580,7 @@ class ZeroApp extends ZeroFrame {
               const song = songsInDecade[i];
 
               // Create a new songID if it doesn't exist
-              if (song.id == null) { song.id = Date.now().toString(); }
+              if (song.id === null) { song.id = Date.now().toString(); }
 
               // Store album art on disk if necessary
               if (song.art) {
@@ -632,7 +632,7 @@ class ZeroApp extends ZeroFrame {
             // Write values back to JSON string and the data.json
             return unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
           }).then(json_raw => this.cmdp('fileWrite', [data_inner_path, btoa(json_raw)])).then((res) => {
-            if (res != 'ok') {
+            if (res !== 'ok') {
               self.cmd('wrapperNotification', ['error writing to file:', res]);
               return;
             }
@@ -721,7 +721,7 @@ class ZeroApp extends ZeroFrame {
       LIMIT 1
     `;
     const count = await this.cmdp('dbQuery', [query]);
-    if (count[0]['COUNT (songs.id)'] == 0) {
+    if (count[0]['COUNT (songs.id)'] === 0) {
       return 'Invalid song ID';
     }
 
@@ -766,7 +766,7 @@ class ZeroApp extends ZeroFrame {
     // Write the new data
     const json_raw = unescape(encodeURIComponent(JSON.stringify(data, undefined, '\t')));
     const ok = await this.cmdp('fileWrite', [data_inner_path, btoa(json_raw)]);
-    if (ok != 'ok') {
+    if (ok !== 'ok') {
       return ok;
     }
 
@@ -820,7 +820,7 @@ class ZeroApp extends ZeroFrame {
       })
       .then((res) => {
         // If delete was not successful, show the error in a notification
-        if (res != 'ok') {
+        if (res !== 'ok') {
           return this.cmdp('wrapperNotification', ['error', res]);
         }
 
@@ -833,7 +833,7 @@ class ZeroApp extends ZeroFrame {
       })
       .then((res) => {
         // If delete was not successful, show the error in a notification
-        if (res != 'ok') {
+        if (res !== 'ok') {
           return this.cmdp('wrapperNotification', ['error', res]);
         }
 
@@ -862,11 +862,11 @@ class ZeroApp extends ZeroFrame {
     // TODO: Have a randomize search button
     let extraParams = '';
     const yearKeywordValueIndex = searchTerm.indexOf('year:');
-    if (yearKeywordValueIndex != -1) {
+    if (yearKeywordValueIndex !== -1) {
       // Only search for songs in given year name/address
 
       // Find the end of the keyword value
-      var end = searchTerm.indexOf(' ', yearKeywordValueIndex) == -1 ? searchTerm.length - 1 : searchTerm.indexOf(' ', yearKeywordValueIndex);
+      var end = searchTerm.indexOf(' ', yearKeywordValueIndex) === -1 ? searchTerm.length - 1 : searchTerm.indexOf(' ', yearKeywordValueIndex);
 
       // Deduce the year keyword value: '80s' or an exact address
       const yearKeywordValue = searchTerm.substring(yearKeywordValueIndex + 5, end);
@@ -874,7 +874,7 @@ class ZeroApp extends ZeroFrame {
       // Check to see if keyword value is in decade address/name
       for (const i in app.decadeAddresses) {
         const decade = app.decadeAddresses[i];
-        if (decade.name.indexOf(yearKeywordValue) != -1 || decade.address == yearKeywordValue) {
+        if (decade.name.indexOf(yearKeywordValue) !== -1 || decade.address === yearKeywordValue) {
           // If so, only search for songs within this decade
           extraParams += `AND site = "${decade.address}" `;
           break;
@@ -887,11 +887,11 @@ class ZeroApp extends ZeroFrame {
 
     const genreKeywordValueIndex = searchTerm.indexOf('genre:');
     // TODO: Put in for loop for multiple genres
-    if (genreKeywordValueIndex != -1) {
+    if (genreKeywordValueIndex !== -1) {
       // Only search for songs in given genre
 
       // Find the end of the keyword value
-      var end = searchTerm.indexOf(' ', genreKeywordValueIndex) == -1 ? searchTerm.length - 1 : searchTerm.indexOf(' ', genreKeywordValueIndex);
+      var end = searchTerm.indexOf(' ', genreKeywordValueIndex) === -1 ? searchTerm.length - 1 : searchTerm.indexOf(' ', genreKeywordValueIndex);
 
       // Deduce the genre keyword value: 'Rock'
       const genreKeywordValue = searchTerm.substring(genreKeywordValueIndex + 6, end);
@@ -1087,7 +1087,7 @@ class ZeroApp extends ZeroFrame {
 
     // Return true if there is at least one hash already in the DB
     const result = await this.cmdp('dbQuery', [query]);
-    return result[0]['COUNT (*)'] != 0;
+    return result[0]['COUNT (*)'] !== 0;
   }
 
   // Returns a list of all song IDs that have the same filename and filesize as
@@ -1124,7 +1124,7 @@ class ZeroApp extends ZeroFrame {
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
         INNER JOIN songs ON songs.date_added = aux.maxDate
         AND songs.id = aux.id
-        AND songs.album != ""
+        AND songs.album !== ""
         AND songs.has_merged is null
         LEFT JOIN json USING (json_id)
         GROUP BY album, compilation
@@ -1140,7 +1140,7 @@ class ZeroApp extends ZeroFrame {
   }
 
   // Returns an array of all known artist names, with an optional max song amount and offset
-  getAllArtists(limit = 0, offset = 0) {
+  async getAllArtists(limit = 0, offset = 0) {
     const query = `
         SELECT DISTINCT artist FROM
         (SELECT MAX(date_added) AS maxDate, id FROM songs GROUP BY id) AS aux
@@ -1151,12 +1151,10 @@ class ZeroApp extends ZeroFrame {
         ORDER BY artist COLLATE NOCASE
         `;
 
-    return this.cmdp('dbQuery', [query])
-      .then(artistObjs =>
-        // Unpack "artist" string attribute into its own array of strings
-        new Promise((resolve, reject) => {
-          resolve(artistObjs.map(a => a.artist));
-        }));
+    const artistObjs = await this.cmdp('dbQuery', [query]);
+
+    // Unpack "artist" string attribute into its own array of strings
+    return this.newPromise(artistObjs.map(a => a.artist));
   }
 
   // Returns an array of album titles, made by the given artist
@@ -1265,7 +1263,7 @@ class ZeroApp extends ZeroFrame {
       this.cmd('fileWrite', [data_inner_path, btoa(json_raw)], (res) => {
         if (res === 'ok') {
           // Call callback
-          if (f != null && typeof f === 'function') f();
+          if (f !== null && typeof f === 'function') f();
 
           this.cmd('siteSign', { inner_path: content_inner_path }, () => {
             this.cmd('sitePublish', { inner_path: content_inner_path, sign: false });
@@ -1357,7 +1355,7 @@ class ZeroApp extends ZeroFrame {
         this.cmd('fileWrite', [data_inner_path, btoa(json_raw)], (res) => {
           if (res === 'ok') {
             // Call callback
-            if (f != null && typeof f === 'function') f();
+            if (f !== null && typeof f === 'function') f();
 
             this.cmd('siteSign', { inner_path: content_inner_path }, () => {
               this.cmd('sitePublish', { inner_path: content_inner_path, sign: false });
@@ -1397,7 +1395,7 @@ class ZeroApp extends ZeroFrame {
         // Remove song from playlist
         for (let i = 0; i < data.playlist_songs.length; i++) {
           const listing = data.playlist_songs[i];
-          if (listing.song_id == song.id && listing.playlist_id == id) {
+          if (listing.song_id === song.id && listing.playlist_id === id) {
             data.playlist_songs.splice(i, 1);
             break;
           }
@@ -1408,7 +1406,7 @@ class ZeroApp extends ZeroFrame {
         this.cmd('fileWrite', [data_inner_path, btoa(json_raw)], (res) => {
           if (res === 'ok') {
             // Call callback
-            if (f != null && typeof f === 'function') f();
+            if (f !== null && typeof f === 'function') f();
 
             this.cmd('siteSign', { inner_path: content_inner_path }, () => {
               this.cmd('sitePublish', { inner_path: content_inner_path, sign: false });
@@ -1440,7 +1438,7 @@ class ZeroApp extends ZeroFrame {
       if (data.playlists) {
         for (let i = 0; i < data.playlists.length; i++) {
           const list = data.playlists[i];
-          if (list.id == id) {
+          if (list.id === id) {
             data.playlists.splice(i, 1);
             break;
           }
@@ -1449,7 +1447,7 @@ class ZeroApp extends ZeroFrame {
       if (data.playlist_songs) {
         for (let i = 0; i < data.playlist_songs.length; i++) {
           const song = data.playlist_songs[i];
-          if (song.playlist_id == id) {
+          if (song.playlist_id === id) {
             data.playlist_songs.splice(i, 1);
             i--;
           }
@@ -1461,7 +1459,7 @@ class ZeroApp extends ZeroFrame {
       this.cmd('fileWrite', [data_inner_path, btoa(json_raw)], (res) => {
         if (res === 'ok') {
           // Call callback
-          if (f != null && typeof f === 'function') f();
+          if (f !== null && typeof f === 'function') f();
 
           this.cmd('siteSign', { inner_path: content_inner_path }, () => {
             this.cmd('sitePublish', { inner_path: content_inner_path, sign: false });
@@ -1483,7 +1481,7 @@ class ZeroApp extends ZeroFrame {
     console.log('Song loading...');
 
     // Show song information in the title
-    this.cmd('wrapperSetTitle', song.title + (song.artist != '' ? ` by ${song.artist}` : ''), null);
+    this.cmd('wrapperSetTitle', song.title + (song.artist !== '' ? ` by ${song.artist}` : ''), null);
 
     // Invalidate existing song timers if any
     if (this.store.state.shortTimeout) {
@@ -1498,9 +1496,9 @@ class ZeroApp extends ZeroFrame {
       const songsWithInfo = await this.getInfoForSongs([song]);
       console.log('Info is:', songsWithInfo[0].info);
       if (songsWithInfo[0].info &&
-          (!songsWithInfo[0].info.peer_seed || songsWithInfo[0].info.peer_seed == 0)) {
+          (!songsWithInfo[0].info.peer_seed || songsWithInfo[0].info.peer_seed === 0)) {
         // Check if this is the last song in the play queue and don't skip if so
-        if (app.queueIndex != app.playQueue.length - 1) {
+        if (app.queueIndex !== app.playQueue.length - 1) {
           M.toast({ html: 'Skipped song with 0 peers.' });
           this.nextSong();
         }
@@ -1510,7 +1508,7 @@ class ZeroApp extends ZeroFrame {
     // Timeout for 15s. Skip song.
     this.store.state.longTimeout = setTimeout(() => {
       // Check if this is the last song in the play queue and don't skip if so
-      if (app.queueIndex != app.playQueue.length - 1) {
+      if (app.queueIndex !== app.playQueue.length - 1) {
         M.toast({ html: 'Skipped slow-loading song.' });
         this.nextSong();
       }
@@ -1617,7 +1615,7 @@ class ZeroApp extends ZeroFrame {
   songEnded() {
     console.log(`Song ended. Current index: ${app.queueIndex}`);
     // Check if this is the last song in the queue. Stop if not looping
-    if (app.queueIndex == app.playQueue.length - 1 && this.store.state.loop == 0) {
+    if (app.queueIndex === app.playQueue.length - 1 && this.store.state.loop === 0) {
       return;
     }
 
@@ -1628,7 +1626,7 @@ class ZeroApp extends ZeroFrame {
   // Place a song at end of play queue and skip to it.
   playSongImmediately(song) {
     // If this song is currently playing, just unpause
-    if (app.currentSong && song.filename == app.currentSong.filename) {
+    if (app.currentSong && song.filename === app.currentSong.filename) {
       this.playCurrentSong();
       return;
     }
@@ -1654,19 +1652,19 @@ class ZeroApp extends ZeroFrame {
 
   // Removes a single song from the play queue
   removeSongFromQueue(index) {
-    if (index != -1) {
+    if (index !== -1) {
       app.playQueue.splice(index, 1);
       if (index < app.queueIndex) {
         app.queueIndex--;
         if (app.queueIndex < 0) { app.queueIndex = 0; }
-      } else if (index == app.queueIndex && app.playQueue.length != 0) {
+      } else if (index === app.queueIndex && app.playQueue.length !== 0) {
         // If the current song was removed, try to play the next song
         this.playSongAtQueueIndex(app.queueIndex);
       }
     }
 
     // Stop playing if there's no queue left
-    if (app.playQueue.length == 0) {
+    if (app.playQueue.length === 0) {
       this.stopPlaying();
     }
   }
@@ -1742,7 +1740,7 @@ class ZeroApp extends ZeroFrame {
     // from 1 - queue length and run through them
 
     // If looping on one song, repeat song
-    if (this.store.state.loop == 2) {
+    if (this.store.state.loop === 2) {
       // Don't change current queue index
     } else if (this.store.state.shuffle) {
       // Randomize queue index
@@ -1752,7 +1750,7 @@ class ZeroApp extends ZeroFrame {
       app.queueIndex++;
       if (app.queueIndex >= app.playQueue.length) {
         // If looping in general, repeat from beginning of playqueue
-        if (this.store.state.loop == 1) {
+        if (this.store.state.loop === 1) {
           app.queueIndex = 0;
         } else {
           // We've reached the end of the queue, stop playing

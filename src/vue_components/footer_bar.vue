@@ -11,7 +11,7 @@
         <b>{{ songProgressLeft }}</b>
       </div>
       <div class="col s10 m6 l6 center">
-        <a @click.prevent="loop()" class="btn-floating waves-effect waves-light" :class="isLooping ? 'purple darken-2' : 'indigo'"><i class="material-icons">{{ isLooping == 2 ? 'looks_one' : 'loop' }}</i></a>
+        <a @click.prevent="loop()" class="btn-floating waves-effect waves-light" :class="isLooping ? 'purple darken-2' : 'indigo'"><i class="material-icons">{{ isLooping === 2 ? 'looks_one' : 'loop' }}</i></a>
         <a @click.prevent="prev()" class="btn-floating waves-effect waves-light indigo"><i class="material-icons">fast_rewind</i></a>
         <playerSpinner v-if="songLoading"></playerSpinner>
         <a v-else @click.prevent="playPause()" class="btn-floating waves-effect waves-light btn-large indigo"><i class="material-icons">{{ audioPlaying ? "pause" : "play_arrow" }}</i></a>
@@ -72,20 +72,20 @@ export default {
     // Listen for keyboard presses
     document.addEventListener('keydown', (ev) => {
       // Prevent blocking of input fields
-      if (ev.target != document.body) {
+      if (ev.target !== document.body) {
         return true;
       }
 
-      if (ev.key == ' ') {
+      if (ev.key === ' ') {
         window.page.togglePlayback();
         ev.preventDefault(); // Prevent space-to-scroll
-      } else if (ev.key == 'n') {
+      } else if (ev.key === 'n') {
         window.page.nextSong();
-      } else if (ev.key == 'b') {
+      } else if (ev.key === 'b') {
         window.page.prevSong();
-      } else if (ev.key == 's') {
+      } else if (ev.key === 's') {
         self.shuffle();
-      } else if (ev.key == 'l') {
+      } else if (ev.key === 'l') {
         self.loop();
       }
     });

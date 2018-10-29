@@ -16,7 +16,7 @@
                 <div class="popper">Download Artist</div>
                 <i slot="reference" @click.prevent="downloadArtist()" class="material-icons tooltip right">cloud_download</i>
               </popper>
-              <popper v-if="downloaded == 1" trigger="hover" :options="{placement: 'bottom'}">
+              <popper v-if="downloaded === 1" trigger="hover" :options="{placement: 'bottom'}">
                 <div class="popper">Remove Artist</div>
                 <i slot="reference" @click.prevent="removeArtist()" class="material-icons tooltip right">cloud_done</i>
               </popper>
@@ -91,7 +91,7 @@ export default {
       // Go to album's page
 
       // Account for blank artist in URL
-      this.artist = this.artist != '' ? this.artist : 'Blank';
+      this.artist = this.artist !== '' ? this.artist : 'Blank';
       Router.navigate(`/album/${this.artist}/${album !== '' ? album : 'Blank'}`);
     },
     playArtist() {
@@ -110,7 +110,7 @@ export default {
             window.page.queueSongs(songs);
 
             // Figure out where in the play queue to jump to
-            if (queueLength == 0) {
+            if (queueLength === 0) {
               window.page.playSongAtQueueIndex(queueIndex);
             } else {
               window.page.playSongAtQueueIndex(queueLength);

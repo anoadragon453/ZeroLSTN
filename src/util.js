@@ -35,7 +35,7 @@ function SQLReplace_multi(innermost, arrayObjects) {
   let string = innermost;
   for (let i = 0; i < arrayObjects.length; i++) {
     const object = arrayObjects[i];
-    if (i == arrayObjects.length - 1) {
+    if (i === arrayObjects.length - 1) {
       string = SQLReplace(string, object.from, object.to, '');
       break;
     }

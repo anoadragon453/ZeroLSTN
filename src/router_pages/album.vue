@@ -115,7 +115,7 @@ export default {
       window.page.queueSongs(this.songs);
 
       // Figure out where in the play queue to jump to
-      if (queueLength == 0) {
+      if (queueLength === 0) {
         window.page.playSongAtQueueIndex(queueIndex);
       } else {
         window.page.playSongAtQueueIndex(queueLength);

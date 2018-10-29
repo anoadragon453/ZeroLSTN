@@ -44,7 +44,7 @@ const VueZeroFrameRouter = {
     /* Router.hooks({
       after: function(currentRoute, params) {
         vueInstance.currentView = 'route-' + currentRoute.replace(/:/g, '').replace(/\//g, '-');
-        if (currentRoute == '') {
+        if (currentRoute === '') {
           vueInstance.currentView = 'route-home';
         }
       }
