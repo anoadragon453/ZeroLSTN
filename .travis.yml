@@ -7,3 +7,8 @@ install:
 
 script:
   - /bin/sh .travis.sh
+
+# Only build pushes to master branch, prevents duplicate jobs in PRs
+branches:
+  only: 
+    - master
