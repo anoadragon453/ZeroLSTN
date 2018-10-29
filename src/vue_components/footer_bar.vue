@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 import PlayerSpinner from '../vue_components/player_spinner.vue';
 
 export default {

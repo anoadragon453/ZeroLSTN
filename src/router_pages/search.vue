@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 
 // Vue components that make up the search page
 import PlayQueue from '../vue_components/play_queue.vue';

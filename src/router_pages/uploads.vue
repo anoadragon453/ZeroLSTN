@@ -117,7 +117,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 import SongItem from '../vue_components/song_item.vue';
 
 import jsmediatags from 'jsmediatags';

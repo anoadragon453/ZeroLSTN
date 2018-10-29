@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 import Popper from 'vue-popperjs';
 import SongItem from '../vue_components/song_item.vue';
 import PlayQueue from '../vue_components/play_queue.vue';
