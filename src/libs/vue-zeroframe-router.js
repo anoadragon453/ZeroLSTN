@@ -44,7 +44,7 @@ const VueZeroFrameRouter = {
     /* Router.hooks({
       after: function(currentRoute, params) {
         vueInstance.currentView = 'route-' + currentRoute.replace(/:/g, '').replace(/\//g, '-');
-        if (currentRoute == '') {
+        if (currentRoute === '') {
           vueInstance.currentView = 'route-home';
         }
       }
@@ -66,7 +66,7 @@ const VueZeroFrameRouterInit = (Router, vueInstance, routes) => {
   Router.vueInstance = vueInstance;
   Router.setView = (i, object) => {
     Router.vueInstance.currentView = object;
-    console.log("Set view to:", Router.vueInstance)
+    console.log('Set view to:', Router.vueInstance);
   };
   Router.init();
 };

@@ -24,13 +24,13 @@
             </div>
             <div class="card-content">
               <div id="all" class="container">
-                <span v-if="allSongs.length != 0">
+                <span v-if="allSongs.length !== 0">
                   <h4>Songs</h4>
                   <ul class="collection">
                     <songitem :song="song" :key="song.id" :editable="false" v-for="song in allSongs"></songitem>
                   </ul>
                 </span>
-                <span v-if="allArtists.length != 0">
+                <span v-if="allArtists.length !== 0">
                   <h4>Artists</h4>
                   <ul class="collection left-align">
                     <li v-for="artist in allArtists" :key="artist.artist" class="collection-item">
@@ -38,7 +38,7 @@
                     </li>
                   </ul>
                 </span>
-                <span v-if="allAlbums.length != 0">
+                <span v-if="allAlbums.length !== 0">
                   <h4>Albums</h4>
                   <ul class="collection left-align">
                     <li v-for="album in allAlbums" :key="album.album" class="collection-item">
@@ -46,10 +46,10 @@
                     </li>
                   </ul>
                 </span>
-                <span v-if="lastSearch != '' && allSongs.length == 0 && allAlbums.length == 0 && allArtists.length == 0">Nothing found.</span>
+                <span v-if="lastSearch !== '' && allSongs.length === 0 && allAlbums.length === 0 && allArtists.length === 0">Nothing found.</span>
               </div>
               <div id="artists" class="container">
-                <span v-if="artists.length != 0">
+                <span v-if="artists.length !== 0">
                   <h4>Artists</h4>
                   <ul class="collection left-align">
                     <li v-for="artist in artists" :key="artist.artist" class="collection-item">
@@ -58,11 +58,11 @@
                   </ul>
                 </span>
                 <span v-else>
-                  <span v-if="lastSearch != ''">Nothing found.</span>
+                  <span v-if="lastSearch !== ''">Nothing found.</span>
                 </span>
               </div>
               <div id="albums" class="container">
-                <span v-if="albums.length != 0">
+                <span v-if="albums.length !== 0">
                   <h4>Albums</h4>
                   <ul class="collection left-align">
                     <li v-for="album in albums" :key="album.album" class="collection-item">
@@ -71,21 +71,21 @@
                   </ul>
                 </span>
                 <span v-else>
-                  <span v-if="lastSearch != ''">Nothing found.</span>
+                  <span v-if="lastSearch !== ''">Nothing found.</span>
                 </span>
               </div>
               <div id="songs" class="container">
-                <span v-if="songs.length != 0">
+                <span v-if="songs.length !== 0">
                   <h4>Songs</h4>
                   <ul class="collection">
                     <songitem :song="song" :editable="false" v-for="song in songs" :key="song.id"></songitem>
                   </ul>
                 </span>
                 <span v-else>
-                  <span v-if="lastSearch != ''">Nothing found.</span>
+                  <span v-if="lastSearch !== ''">Nothing found.</span>
                 </span>
               </div>
-              <div v-if="lastSearch == ''" id="searchContent">Type a search query to begin</div>
+              <div v-if="lastSearch === ''" id="searchContent">Type a search query to begin</div>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import Router from '../libs/router.js';
+import Router from '../libs/router';
 
 // Vue components that make up the search page
 import PlayQueue from '../vue_components/play_queue.vue';
@@ -159,7 +159,7 @@ export default {
   methods: {
     searchStoppedTyping(searchText, key) {
       // Don't auto-search search if less than 3 characters
-      if (key != 'Enter' && searchText.length <= 3) {
+      if (key !== 'Enter' && searchText.length <= 3) {
         return;
       }
 
